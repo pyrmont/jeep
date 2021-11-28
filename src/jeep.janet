@@ -5,7 +5,10 @@
 (import /src/argy-bargy :as argy)
 
 
+# Global bindings
+
 (def- meta @{})
+(def- executable (dyn :executable))
 
 
 # Subcommand functions
@@ -149,12 +152,6 @@
 
 (defn- load-project
   []
-  (jpm/config/read-env-variables)
-  (if-let [cd (dyn :jpm-config)]
-    (jpm/config/load-config cd true)
-    (if-let [cf (dyn :config-file (os/getenv "JANET_JPM_CONFIG"))]
-      (jpm/config/load-config-file cf false)
-      (jpm/config/load-config jpm/default-config/config false)))
   (def env (jpm/pm/require-jpm "./project.janet" true))
   (merge-into meta (env :project)))
 
@@ -171,9 +168,21 @@
     (com (args :opts) (args :params))))
 
 
+(defn- setup
+  []
+  (setdyn :executable executable)
+  (jpm/config/read-env-variables)
+  (if-let [cd (dyn :jpm-config)]
+    (jpm/config/load-config cd true)
+    (if-let [cf (dyn :config-file (os/getenv "JANET_JPM_CONFIG"))]
+      (jpm/config/load-config-file cf false)
+      (jpm/config/load-config jpm/default-config/config false))))
+
+
 # Main
 
 (defn main [& argv]
+  (setup)
   (load-project)
 
   (def subcommand (find-subcommand (dyn :args)))
