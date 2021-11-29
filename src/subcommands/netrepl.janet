@@ -20,7 +20,7 @@
                      :help    "The port for the netrepl server."
                      :default 9365
                      :value   :integer}]
-   :info  {:about   `Run a netrepl server for Janet projects
+   :info  {:about   `Start a netrepl server for Janet projects
 
                     The netrepl subcommand starts a netrepl server to which
                     clients can connect.`}
