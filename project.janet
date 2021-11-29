@@ -13,7 +13,10 @@
 
 
 (declare-source
-  :source ["src/jeep.janet"])
+  :source ["src/jeep.janet"
+           "src/subcommands/dev-deps.janet"
+           "src/subcommands/netrepl.janet"
+           "src/subcommands/test.janet"])
 
 
 (declare-executable
