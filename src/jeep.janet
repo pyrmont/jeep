@@ -2,7 +2,7 @@
 (import jpm/cli :as jpm/cli)
 (import spork/netrepl)
 
-(import /src/argy-bargy :as argy)
+(import ./argy-bargy :as argy)
 
 
 # Global bindings
