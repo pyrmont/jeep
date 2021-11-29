@@ -4,81 +4,9 @@
 
 (import ./argy-bargy :as argy)
 
-
-# Global bindings
-
-(def- meta @{})
-(def- executable (dyn :executable))
-
-
-# Subcommand functions
-
-(defn dev-deps [opts params]
-  (jpm/commands/deps)
-  (if-let [deps (meta :jeep/dev-dependencies)]
-    (each dep deps
-      (jpm/pm/bundle-install dep))
-    (do (print "no dev dependencies found") (flush))))
-
-
-(defn netrepl [opts params]
-  (def syspath (dyn :modpath))
-
-  (defn netrepl-env [& args]
-    (def env (make-env))
-    (put env :syspath syspath)
-    (put env :pretty-format "%.20M"))
-
-  (netrepl/server (opts "host") (opts "port") netrepl-env))
-
-
-(defn test [opts params]
-  (defn run-tests [&opt root-directory build-directory]
-    (def monkey-patch
-      (string
-        `(setdyn :jeep/tests `
-        (string/format "%j" (params :tests))
-        `)
-        (defn- check-is-dep [x] (unless (or (string/has-prefix? "/" x) (string/has-prefix? "." x)) x))
-        (array/push module/paths  ["./build/:all:`
-        (jpm/config/dyn:modext)
-        `" :native check-is-dep])`))
-    (def environ (merge-into (os/environ) {"JANET_PATH" (jpm/config/dyn:modpath)}))
-    (var errors-found 0)
-    (defn dodir
-      [dir bdir]
-      (each sub (sort (os/dir dir))
-        (def ndir (string dir "/" sub))
-        (case (os/stat ndir :mode)
-          :directory
-          (dodir ndir bdir)
-
-          :file
-          (when (string/has-suffix? ".janet" ndir)
-            (print "running " ndir "...")
-            (flush)
-            (def result
-              (os/execute
-                [(jpm/config/dyn:janet) "-e" monkey-patch ndir]
-                :ep
-                environ))
-            (when (not= 0 result)
-              (++ errors-found)
-              (eprintf "non-zero exit code in %s: %d" ndir result))))))
-    (dodir "test" "build")
-    (if (zero? errors-found)
-      (print "All tests passed.")
-      (do
-        (printf "Failing test scripts: %d" errors-found)
-        (os/exit 1)))
-    (flush))
-
-  (jpm/pm/import-rules "./project.janet" false)
-  (def rules (jpm/rules/getrules))
-  (def task (rules "test"))
-  (put (task :recipe) 0 run-tests)
-
-  (jpm/pm/do-rule "test"))
+(import ./subcommands/dev-deps :as cmd/dev-deps)
+(import ./subcommands/netrepl :as cmd/netrepl)
+(import ./subcommands/test :as cmd/test)
 
 
 # Configuration
@@ -87,28 +15,11 @@
   ```
   Subcommands supported by jeep.
   ```
-  {"dev-deps" {:help  "Install dependencies and development dependencies."
-               :fn    dev-deps}
-   "help"     {:help  "Show help for a subcommand."}
-   "netrepl"  {:rules ["--host" {:kind    :single
-                                 :help    "The hostname for the netrepl server."
-                                 :default "127.0.0.1"}
-                       "--port" {:kind    :single
-                                 :help    "The port for the netrepl server."
-                                 :default 9365
-                                 :value   :integer}]
-               :help  "Start a netrepl server."
-               :fn    netrepl}
-   "test"     {:rules [:tests   {:rest true
-                                 :help `One or more tests to run.`}]
-               :info  {:about  `A test runner for Janet projects
+  {"help"     {:help "Show help for a subcommand."}
 
-                               The jeep test runner jpm's 'test' task.
-                               It allows a user to provide one or more TESTS.
-                               Each test file is run with the dynamic binding
-                               :jpm/tests set to the value of TESTS.`}
-               :help  "Run tests."
-               :fn    test}})
+   "dev-deps" cmd/dev-deps/config
+   "netrepl"  cmd/netrepl/config
+   "test"     cmd/test/config})
 
 
 (def config
@@ -127,6 +38,12 @@
                     arguments through to jpm. For a full list of commands
                     supported by jpm, type 'jpm'.`}
   })
+
+
+# Global bindings
+
+(def- meta @{})
+(def- executable (dyn :executable))
 
 
 # Utility functions
@@ -160,12 +77,12 @@
   []
   (when-let [args (argy/parse-args-with-subcommands config subcommands)
              opts (args :opts)
-             com  (-> subcommands (get (args :sub)) (get :fn))]
+             cmd  (-> subcommands (get (args :sub)) (get :fn))]
     (when-let [tree (or (when (opts "local") "jpm_tree")
                         (opts "tree")
                         (meta :jeep/tree))]
       (jpm/commands/set-tree tree))
-    (com (args :opts) (args :params))))
+    (cmd meta (args :opts) (args :params))))
 
 
 (defn- setup
