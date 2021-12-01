@@ -15,7 +15,7 @@
 (def config
   {:rules ["--format" {:kind    :single
                        :help    "The format to use for output."
-                       :default "%.20M"}
+                       :default "%.20m"}
            "--host" {:kind    :single
                      :help    "The hostname for the netrepl server."
                      :default "127.0.0.1"}
