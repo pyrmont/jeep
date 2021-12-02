@@ -20,6 +20,7 @@ subcommands:
 
 - **`dev-deps`**: Install dependencies and development dependencies
 - **`netrepl`**: Start a netrepl server
+- **`plonk`**: Move built executables to the system :binpath
 - **`test`**: Execute the Janet files in `test/`
 
 Additional subcommands are passed through to `jpm`. For example, running `jeep
