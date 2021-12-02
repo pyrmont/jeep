@@ -12,7 +12,25 @@
                           "https://github.com/pyrmont/testament"])
 
 
+(def jeep-src-files
+  (do
+    (def res @[])
+    (defn get-entries [path] (->> (os/dir path) (map |(string path "/" $))))
+    (def src-root "jeep")
+    (def entries (get-entries src-root))
+    (each e entries
+      (unless (or (= "." e) (= ".." e))
+        (case ((os/stat e) :mode)
+          :file
+          (array/push res e)
+
+          :directory
+          (array/concat entries (get-entries e)))))
+    res))
+
+
 (declare-executable
   :name "jeep"
   :entry "jeep/cli.janet"
-  :install true)
+  :install true
+  :deps jeep-src-files)

@@ -1,8 +1,13 @@
+(import jpm/commands :as jpm/commands)
+
 (import spork/netrepl)
 
 
 (defn- cmd-fn [meta opts params]
-  (def syspath (dyn :modpath))
+  (if-let [tree (get-in meta [:project :jeep/tree])]
+    (jpm/commands/set-tree tree))
+
+  (def syspath (dyn :modpath (dyn :syspath)))
 
   (defn netrepl-env [& args]
     (def env (make-env))

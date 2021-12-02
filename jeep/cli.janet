@@ -8,6 +8,7 @@
 
 (import ./subcommands/dev-deps :as cmd/dev-deps)
 (import ./subcommands/netrepl :as cmd/netrepl)
+(import ./subcommands/plonk :as cmd/plonk)
 (import ./subcommands/test :as cmd/test)
 
 
@@ -21,6 +22,7 @@
 
    "dev-deps" cmd/dev-deps/config
    "netrepl"  cmd/netrepl/config
+   "plonk"    cmd/plonk/config
    "test"     cmd/test/config})
 
 
@@ -70,8 +72,24 @@
 
 (defn- load-project
   [tree]
-  (def env (jpm/pm/require-jpm "./project.janet" true))
-  (merge (env :project) {:jeep/tree tree}))
+  (case (get (os/stat "./project.janet") :mode)
+    nil
+    {}
+
+    :file
+    (do
+      (def env (jpm/pm/require-jpm "./project.janet" true))
+      (def meta (merge (env :project) {:jeep/tree tree} {:jeep/exes @[]}))
+      (def src (slurp "./project.janet"))
+      (def p (parser/new))
+      (parser/consume p src)
+      (parser/eof p)
+      (while (parser/has-more p)
+        (def form (parser/produce p))
+        (when (= 'declare-executable (first form))
+          (def exe (struct ;(tuple/slice form 1)))
+          (array/push (meta :jeep/exes) exe)))
+      meta)))
 
 
 (defn- process-with-jeep
@@ -79,13 +97,6 @@
   (when-let [args   (argy/parse-args-with-subcommands config subcommands)
              sub-fn (get-in subcommands [sub :fn])]
     (sub-fn meta (args :opts) (args :params))))
-
-
-(defn- setup
-  [meta]
-  (setdyn :executable (dyn:janet))
-  (if-let [tree (meta :jeep/tree)]
-    (jpm/commands/set-tree tree)))
 
 
 # Main
@@ -96,7 +107,7 @@
              sub  (args :sub)]
     (configure (opts "config-file"))
     (def meta (load-project (get-tree opts)))
-    (setup meta)
+    (setdyn :executable (dyn:janet))
 
     (cond
       (subcommands sub)

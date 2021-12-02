@@ -3,8 +3,12 @@
 
 
 (defn- cmd-fn [meta opts params]
+  (if-let [tree (get-in meta [:project :jeep/tree])]
+    (jpm/commands/set-tree tree))
+
   (jpm/commands/deps)
-  (if-let [deps (meta :jeep/dev-dependencies)]
+
+  (if-let [deps (get-in meta [:project :jeep/dev-dependencies])]
     (each dep deps
       (jpm/pm/bundle-install dep))
     (do (print "no dev dependencies found") (flush))))
