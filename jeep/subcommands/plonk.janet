@@ -20,8 +20,9 @@
         (jpm/shutil/copy src (string binpath "/" exe-name))))))
 
 
-(defn- plonk-repo [repo &opt temp-root]
+(defn- plonk-repo [repo &opt temp-root binpath]
   (default temp-root (if (is-win?) "%TEMP%" "/tmp" ))
+  (default binpath (dyn :binpath))
   (def rng (math/rng (os/cryptorand 10)))
   (def temp-dir (string temp-root "/plonk-" (math/rng-int rng)))
   (if (not (os/mkdir temp-dir))
@@ -30,7 +31,6 @@
       (os/exit 1))
     (defer (jpm/shutil/rimraf temp-dir)
       (setdyn :modpath temp-dir)
-      (def binpath (dyn :binpath))
       (def repo-dir (jpm/pm/download-bundle repo :git))
       (def old-dir (os/cwd))
       (defer (os/cd old-dir)
@@ -46,26 +46,29 @@
 
 (defn- cmd-fn [meta opts params]
   (if (params :repo)
-    (plonk-repo (params :repo) (opts "temp-dir"))
-    (plonk-project (meta :jeep/exes))))
+    (plonk-repo (params :repo) (opts "temp-dir") (opts "binpath"))
+    (plonk-project (meta :jeep/exes) (opts "binpath"))))
 
 
 (def config
   {:rules ["--temp-dir" {:kind :single
-                         :help "A temporary directory to use during installation"
+                         :help "A temporary directory to use during installation of a REPO"
                          :name "DIR"}
+           "--binpath"  {:kind :single
+                         :help "The binpath to use during installation (Default: system :binpath)"
+                         :name "PATH"}
            :repo {:kind     :single
                   :help     "A repository that produces an executable"
                   :required false}]
-   :info {:about `Move built executables to the system :binpath
+   :info {:about `Move built executables to a binpath
 
                  If run without REPO, the plonk subcommand will install the
                  executables declared in the current working directory's
-                 project.janet file to the system :binpath.
+                 project.janet file to the binpath.
 
-                 If run with REPO, the plonk subcommand will download the
-                 REPO into a temporary directory, build the project and then
-                 move the executables from that project to the system :binpath.
-                 Finally, it will remove the temporary directory.`}
-   :help "Move built executables to the system :binpath."
+                 If run with REPO, the plonk subcommand will download the REPO
+                 into a temporary directory, build the project and then move
+                 the executables from that project to the binpath. Finally, it
+                 will remove the temporary directory.`}
+   :help "Move built executables to a binpath."
    :fn   cmd-fn})
