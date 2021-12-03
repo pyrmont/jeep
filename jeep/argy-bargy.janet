@@ -7,6 +7,7 @@
 
 (var- cols nil)
 (var- command "")
+(var- helped? false)
 (var- errored? false)
 
 
@@ -133,12 +134,7 @@
   (var ppad 0)
 
   (each [name rule] prules
-    (def usage-prefix
-      (stitch [""
-               (string/ascii-upper name)
-               (when (or (= :single (rule :kind)) (= :multi (rule :kind)))
-                 (or (rule :value-name) "<value>"))
-               (rule :default)]))
+    (def usage-prefix (string " " (string/ascii-upper name)))
     (def usage-help
       (stitch [(rule :help)
                (when (rule :default)
@@ -225,11 +221,11 @@
   Print the usage message
   ```
   [&opt info [orules prules]]
-  (set errored? true)
-
   (default info {})
   (default orules {})
   (default prules [])
+
+  (set helped? true)
 
   (if (info :examples)
     (each example (info :examples)
@@ -267,7 +263,7 @@
   Print the usage message with subcommands
   ```
   [info [orules subcommands]]
-  (set errored? true)
+  (set helped? true)
 
   (if (info :examples)
     (each example (info :examples)
@@ -555,20 +551,22 @@
     (when (nil? i)
       (break)))
 
-  (unless errored?
-    (each [name rule] prules
-      (when (nil? (pargs name))
-        (if (rule :required)
-          (usage-error (string/ascii-upper name) " is required")
-          (put pargs name (rule :default)))))
+  (if errored?
+    (os/exit 1)
+    (unless helped?
+      (each [name rule] prules
+        (when (nil? (pargs name))
+          (if (rule :required)
+            (usage-error (string/ascii-upper name) " is required")
+            (put pargs name (rule :default)))))
 
-    (each [name rule] (long-opts orules)
-      (when (nil? (oargs name))
-        (when (rule :required)
-          (usage-error "--" name " is required"))
-        (put oargs name (rule :default))))
+      (each [name rule] (long-opts orules)
+        (when (nil? (oargs name))
+          (when (rule :required)
+            (usage-error "--" name " is required"))
+          (put oargs name (rule :default))))
 
-    @{:opts oargs :params pargs}))
+      @{:opts oargs :params pargs})))
 
 
 (defn parse-args-with-subcommands
@@ -624,7 +622,7 @@
     (def arg (get all-args i))
     (set i (cond
              (or (nil? arg) (= "--help" arg) (= "-h" arg))
-             (usage-with-subcommands (config :info) [orules subcommands])
+             nil
 
              (string/has-prefix? "--" arg)
              (consume-option orules oargs all-args i)
@@ -669,5 +667,6 @@
   (if errored?
     (os/exit 1)
     (if (nil? subcommand)
-      (usage-with-subcommands (config :info) [orules subcommands])
+      (unless helped?
+        (usage-with-subcommands (config :info) [orules subcommands]))
       @{:opts oargs :params pargs :sub subcommand})))

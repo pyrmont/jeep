@@ -52,13 +52,20 @@
 
 (def config
   {:rules ["--temp-dir" {:kind :single
-                         :help "A temporary directory to use during installation"}
+                         :help "A temporary directory to use during installation"
+                         :name "DIR"}
            :repo {:kind     :single
                   :help     "A repository that produces an executable"
                   :required false}]
-   :info {:about `Move built executables in a Janet project to the system :binpath
+   :info {:about `Move built executables to the system :binpath
 
-                 The plonk subcommand moves built executables declared in the
-                 project.janet file to the system :binpath.`}
+                 If run without REPO, the plonk subcommand will install the
+                 executables declared in the current working directory's
+                 project.janet file to the system :binpath.
+
+                 If run with a REPO, the plonk subcommand will download the
+                 REPO into a temporary directory, build the project and then
+                 move the executables from that project to the system :binpath.
+                 Finally, it will remove the temporary directory.`}
    :help "Move built executables to the system :binpath."
    :fn   cmd-fn})
