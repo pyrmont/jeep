@@ -22,7 +22,8 @@
 
 (defn- plonk-repo [repo &opt temp-root]
   (default temp-root (if (is-win?) "%TEMP%" "/tmp" ))
-  (def temp-dir (string temp-root "/plonk-" (math/round (* 100 (math/random)))))
+  (def rng (math/rng (os/cryptorand 10)))
+  (def temp-dir (string temp-root "/plonk-" (math/rng-int rng)))
   (if (not (os/mkdir temp-dir))
     (do
       (eprint "Could not create temporary directory")
@@ -30,7 +31,6 @@
     (defer (jpm/shutil/rimraf temp-dir)
       (setdyn :modpath temp-dir)
       (def binpath (dyn :binpath))
-      # (jpm/commands/set-tree temp-dir)
       (def repo-dir (jpm/pm/download-bundle repo :git))
       (def old-dir (os/cwd))
       (defer (os/cd old-dir)
@@ -63,7 +63,7 @@
                  executables declared in the current working directory's
                  project.janet file to the system :binpath.
 
-                 If run with a REPO, the plonk subcommand will download the
+                 If run with REPO, the plonk subcommand will download the
                  REPO into a temporary directory, build the project and then
                  move the executables from that project to the system :binpath.
                  Finally, it will remove the temporary directory.`}
