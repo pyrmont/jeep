@@ -424,7 +424,7 @@
     (unless (or (string? k) (keyword? k))
       (errorf "names of rules must be strings or keywords: %p" k))
     (unless (or (struct? v) (table? v))
-      (errorf "each rule must be struct or struct or table: %p" v))
+      (errorf "each rule must be struct or table: %p" v))
     (unless (or (keyword? k) ({:flag true :count true :single true :multi true} (v :kind)))
       (errorf "each option rule must be of kind :flag, :count, :single or :multi: %p" v))
     (when (and (keyword? k) rest-capture?)
@@ -441,7 +441,7 @@
 
       (keyword? k)
       (do
-        (array/push prules [k (if (v :rest) v (merge v {:required true}))])
+        (array/push prules [k v])
         (set rest-capture? (v :rest)))))
   [orules prules])
 
