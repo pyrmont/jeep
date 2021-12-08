@@ -5,58 +5,67 @@
 (import ../utilities :as util)
 
 
+(defn- sudo-copy [src dest]
+  (jpm/shutil/shell "sudo" "cp" "-rf" src dest)
+  (print  "copying file " src " to " dest "..."))
+
 (defn- is-win? []
   (= :windows (os/which)))
 
 
-(defn- plonk-project [exes &opt binpath]
+(defn- plonk-project [exes &opt binpath sudo-copy?]
   (default binpath (dyn :binpath))
+  (default sudo-copy? false)
   (if (nil? exes)
     (print "No executables to plonk")
     (each exe exes
       (def exe-name (string (exe :name) (when (is-win?) ".exe")))
       (def src (string "./build/" exe-name))
+      (def dest (string binpath "/" exe-name))
       (when (= :file (get (os/stat src) :mode))
-        (jpm/shutil/copy src (string binpath "/" exe-name))))))
+        (if sudo-copy?
+          (sudo-copy src dest)
+          (jpm/shutil/copy src dest))))))
 
 
-(defn- plonk-repo [repo &opt temp-root binpath]
-  (default temp-root (if (is-win?) "%TEMP%" "/tmp" ))
-  (default binpath (dyn :binpath))
-  (def rng (math/rng (os/cryptorand 10)))
-  (def temp-dir (string temp-root "/plonk-" (math/rng-int rng)))
-  (if (not (os/mkdir temp-dir))
-    (do
-      (eprint "Could not create temporary directory")
-      (os/exit 1))
-    (defer (jpm/shutil/rimraf temp-dir)
-      (setdyn :modpath temp-dir)
-      (def repo-dir (jpm/pm/download-bundle repo :git))
-      (def old-dir (os/cwd))
-      (defer (os/cd old-dir)
-        (os/cd repo-dir)
-        (def tree "jpm_tree")
-        (jpm/commands/set-tree tree)
-        (setdyn :syspath (dyn :modpath))
-        (def meta (util/load-project tree))
-        (jpm/commands/deps)
-        (jpm/commands/build)
-        (plonk-project (meta :jeep/exes) binpath)))))
+(defn- plonk-repo [repo &opt temp-root binpath sudo-copy?]
+  (def install-root
+    (string (or temp-root
+                (string ((os/environ) "HOME") "/.jeep"))
+            "/plonk"))
+  (def remove-root? (not (nil? temp-root)))
+  (defer (if remove-root? (jpm/shutil/rimraf install-root))
+    (jpm/shutil/create-dirs (string install-root "/.cache"))
+    (setdyn :modpath install-root)
+    (def repo-dir (jpm/pm/download-bundle repo :git))
+    (def old-dir (os/cwd))
+    (defer (os/cd old-dir)
+      (os/cd repo-dir)
+      (def tree "jpm_tree")
+      (jpm/commands/set-tree tree)
+      (setdyn :syspath (dyn :modpath))
+      (def meta (util/load-project tree))
+      (jpm/commands/deps)
+      (jpm/commands/build)
+      (plonk-project (meta :jeep/exes) binpath sudo-copy?))))
 
 
 (defn- cmd-fn [meta opts params]
   (if (params :repo)
-    (plonk-repo (params :repo) (opts "temp-dir") (opts "binpath"))
-    (plonk-project (meta :jeep/exes) (opts "binpath"))))
+    (plonk-repo (params :repo) (opts "temp-dir") (opts "binpath") (opts "sudo-copy"))
+    (plonk-project (meta :jeep/exes) (opts "binpath") (opts "sudo-copy"))))
 
 
 (def config
-  {:rules ["--temp-dir" {:kind :single
-                         :help "A temporary directory to use during installation of a REPO"
-                         :name "DIR"}
-           "--binpath"  {:kind :single
-                         :help "The binpath to use during installation (Default: system :binpath)"
-                         :name "PATH"}
+  {:rules ["--binpath"   {:kind :single
+                          :help "The binpath to use during installation (Default: system :binpath)"
+                          :name "PATH"}
+           "--temp-dir"  {:kind :single
+                          :help "A temporary directory to use during installation of a REPO"
+                          :name "TEMP"}
+           "--sudo-copy" {:kind :flag
+                          :short "S"
+                          :help "Copy executables to the binpath using sudo"}
            :repo {:kind     :single
                   :help     "A repository that produces an executable"
                   :required false}]
@@ -67,8 +76,9 @@
                  project.janet file to the binpath.
 
                  If run with REPO, the plonk subcommand will download the REPO
-                 into a temporary directory, build the project and then move
-                 the executables from that project to the binpath. Finally, it
-                 will remove the temporary directory.`}
+                 into $HOME/.jeep/plonk (or --temp-dir), build the project and then
+                 move the executables from that project to the binpath.
+                 Finally, if --temp-dir was provided, the plonk subcommand will
+                 remove all files added to --temp-dir.`}
    :help "Move built executables to a binpath."
    :fn   cmd-fn})

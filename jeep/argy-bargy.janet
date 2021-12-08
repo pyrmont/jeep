@@ -319,6 +319,7 @@
   (def arg (in args i))
   (def name (string/slice arg (if is-short? 1 2)))
   (if-let [rule (orules name)
+           name (rule :long)
            kind (rule :kind)]
     (case kind
       :flag
@@ -432,8 +433,9 @@
           (errorf "long option name must be provided: %p" name))
         (unless (> (length name) 2)
           (errorf "option names must be at least two characters: %p" name))
-        (put orules name v)
-        (put orules (v :short) v))
+        (def rule (merge v {:long name}))
+        (put orules name rule)
+        (put orules (v :short) rule))
 
       (keyword? k)
       (do
