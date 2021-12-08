@@ -32,5 +32,6 @@
 (declare-executable
   :name "jeep"
   :entry "jeep/cli.janet"
+  :ldflags ["-rdynamic"]
   :install true
   :deps jeep-src-files)
