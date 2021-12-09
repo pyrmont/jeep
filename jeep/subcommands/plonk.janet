@@ -13,7 +13,7 @@
   (= :windows (os/which)))
 
 
-(defn- plonk-project [exes &opt binpath sudo-copy?]
+(defn- plonk-install [exes &opt binpath sudo-copy?]
   (default binpath (dyn :binpath))
   (default sudo-copy? false)
   (if (nil? exes)
@@ -28,7 +28,16 @@
           (jpm/shutil/copy src dest))))))
 
 
-(defn- plonk-repo [repo &opt temp-root binpath sudo-copy?]
+(defn- plonk-local [meta &opt binpath sudo-copy?]
+  (default binpath (dyn :binpath))
+  (if-let [tree (meta :jeep/tree)]
+    (jpm/commands/set-tree tree))
+  (setdyn :syspath (dyn :modpath))
+  (jpm/commands/build)
+  (plonk-install (meta :jeep/exes) binpath sudo-copy?))
+
+
+(defn- plonk-remote [repo &opt temp-root binpath sudo-copy?]
   (def install-root
     (string (or temp-root
                 (string ((os/environ) "HOME") "/.jeep"))
@@ -47,13 +56,13 @@
       (def meta (util/load-project tree))
       (jpm/commands/deps)
       (jpm/commands/build)
-      (plonk-project (meta :jeep/exes) binpath sudo-copy?))))
+      (plonk-install (meta :jeep/exes) binpath sudo-copy?))))
 
 
 (defn- cmd-fn [meta opts params]
   (if (params :repo)
-    (plonk-repo (params :repo) (opts "temp-dir") (opts "binpath") (opts "sudo-copy"))
-    (plonk-project (meta :jeep/exes) (opts "binpath") (opts "sudo-copy"))))
+    (plonk-remote (params :repo) (opts "temp-dir") (opts "binpath") (opts "sudo-copy"))
+    (plonk-local meta (opts "binpath") (opts "sudo-copy"))))
 
 
 (def config
@@ -69,7 +78,7 @@
            :repo {:kind     :single
                   :help     "A repository that produces an executable"
                   :required false}]
-   :info {:about `Move built executables to a binpath
+   :info {:about `Build and move executables to a binpath
 
                  If run without REPO, the plonk subcommand will install the
                  executables declared in the current working directory's
@@ -80,5 +89,5 @@
                  move the executables from that project to the binpath.
                  Finally, if --temp-dir was provided, the plonk subcommand will
                  remove all files added to --temp-dir.`}
-   :help "Move built executables to a binpath."
+   :help "Build and move executables to a binpath."
    :fn   cmd-fn})

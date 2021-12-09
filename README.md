@@ -8,6 +8,7 @@ It has the following features:
 - development dependencies
 - built-in netrepl server
 - arguments to `test` task
+- isolated installation of executables
 
 ## Installation
 
@@ -20,7 +21,7 @@ subcommands:
 
 - **`dev-deps`**: Install dependencies and development dependencies
 - **`netrepl`**: Start a netrepl server
-- **`plonk`**: Move built executables to the system :binpath
+- **`plonk`**: Build and move executables to a binpath
 - **`test`**: Execute the Janet files in `test/`
 
 Additional subcommands are passed through to `jpm`. For example, running `jeep
