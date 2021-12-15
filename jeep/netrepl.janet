@@ -335,8 +335,8 @@
               (def res (compile source env* where lints))
               (each [name data] (pairs env*)
                 (when (= :symbol (type name))
-                  (array/push bindings [name (get env name {:ref @[nil]})])
-                  (put env name data)))
+                  (array/push bindings [name (get env name {:ref @[nil]})]))
+                (put env name data))
               res)
             (compile source env where lints)))
         (defn evaluator [res source env where]
@@ -357,9 +357,10 @@
              :on-status (make-onsignal getline-async e e 1)
              :on-compile-error (wrapio bad-compile)
              :on-parse-error (wrapio bad-parse)
-             :compiler compiler
-             :evaluator evaluator
-             # :evaluator (fn [x &] (setdyn :out outbuf) (setdyn :err outbuf) (x))
+             :compiler (if ref-binding? compiler compile)
+             :evaluator (if ref-binding?
+                          evaluator
+                          (fn [x &] (setdyn :out outbuf) (setdyn :err outbuf) (x)))
              :source :repl
              :parser p})
           coro
