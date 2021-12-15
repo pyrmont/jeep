@@ -5,8 +5,7 @@
   :license "MIT"
   :url "https://github.com/pyrmont/jeep"
   :repo "git+https://github.com/pyrmont/jeep"
-  :dependencies ["https://github.com/janet-lang/jpm"
-                 "https://github.com/janet-lang/spork"]
+  :dependencies ["https://github.com/janet-lang/jpm"]
   :jeep/tree ".jeep"
   :jeep/dev-dependencies ["https://github.com/pyrmont/documentarian"
                           "https://github.com/pyrmont/testament"])

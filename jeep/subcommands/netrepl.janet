@@ -1,6 +1,6 @@
 (import jpm/commands :as jpm/commands)
 
-(import spork/netrepl)
+(import ../netrepl)
 
 
 (defn- cmd-fn [meta opts params]
@@ -14,7 +14,7 @@
     (put env :syspath syspath)
     (put env :pretty-format (opts "format")))
 
-  (netrepl/server (opts "host") (opts "port") netrepl-env))
+  (netrepl/server (opts "host") (opts "port") netrepl-env nil (opts "ref-binding")))
 
 
 (def config
@@ -27,7 +27,10 @@
            "--port" {:kind    :single
                      :help    "The port for the netrepl server."
                      :default 9365
-                     :value   :integer}]
+                     :value   :integer}
+           "--ref-binding" {:kind  :flag
+                            :short "r"
+                            :help  "Replace value bindings with reference bindings."}]
    :info  {:about `Start a netrepl server for Janet projects
 
                   The netrepl subcommand starts a netrepl server to which
