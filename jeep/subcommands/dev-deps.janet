@@ -3,15 +3,17 @@
 
 
 (defn- cmd-fn [meta opts params]
-  (if-let [tree (get-in meta [:project :jeep/tree])]
+  (if-let [tree (meta :jeep/tree)]
     (jpm/commands/set-tree tree))
+  (setdyn :syspath (dyn :modpath))
 
   (jpm/commands/deps)
 
-  (if-let [deps (get-in meta [:project :jeep/dev-dependencies])]
+  (if-let [deps (meta :jeep/dev-dependencies)]
     (each dep deps
       (jpm/pm/bundle-install dep))
-    (do (print "no dev dependencies found") (flush))))
+    (do (print "no dev dependencies found") (flush)))
+  )
 
 
 (def config
