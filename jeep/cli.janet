@@ -9,6 +9,7 @@
 (import ./utilities :as util)
 (import ./subcommands/dev-deps :as cmd/dev-deps)
 (import ./subcommands/netrepl :as cmd/netrepl)
+(import ./subcommands/new :as cmd/new)
 (import ./subcommands/plonk :as cmd/plonk)
 (import ./subcommands/test :as cmd/test)
 
@@ -23,6 +24,7 @@
 
    "dev-deps" cmd/dev-deps/config
    "netrepl"  cmd/netrepl/config
+   "new"      cmd/new/config
    "plonk"    cmd/plonk/config
    "test"     cmd/test/config})
 
