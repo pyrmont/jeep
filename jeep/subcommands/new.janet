@@ -101,57 +101,86 @@
 # File creation
 
 (defn- create-dirs [path]
+  (var made-dir? false)
   (def start (os/cwd))
   (def dirs (peg/match dir-peg path))
   (each dir dirs
     (def [exists? _] (protect (os/cd dir)))
     (unless exists?
-      (os/mkdir dir)))
-  (os/cd start))
+      (os/mkdir dir)
+      (set made-dir? true)))
+  (os/cd start)
+  (def real-path (os/realpath path))
+  (if made-dir?
+    [true real-path]
+    [false real-path]))
 
 
 (defn- create-gitignore-file [project-dir src]
-  (def from (expand src))
-  (def to (string project-dir "/" ".gitignore"))
-  (if (-?> (os/stat from) (get :mode) (= :file))
-    (spit to (slurp from))
-    (spit to "")))
-
-
-(defn- create-project-file [project-dir details]
-  (def buf @"")
-  (with-dyns [:out buf]
-    (print `(declare-project`)
-    (print `  :name "` (details :name) `"`)
-    (print `  :description "` (details :desc) `"`)
-    (print `  :author "` (details :author) `"`)
-    (print `  :license "` (details :license) `"`)
-    (print `  :url "` (details :url) `"`)
-    (print `  :repo "` (details :repo) `"`)
-    (print `  :dependencies [])`)
-    (print)
-    (case (details :kind)
-      :executable
+  (unless (dyn :no-git)
+    (def to (string project-dir "/" ".gitignore"))
+    (if (not (nil? (os/stat to)))
+      [false to]
       (do
-        (print `(declare-executable`)
-        (print `  :name "` (string/ascii-lower (details :name)) `"`)
-        (print `  :entry ""`)
-        (print `  :install true)`))
+        (def from (expand src))
+        (if (-?> (os/stat from) (get :mode) (= :file))
+          (spit to (slurp from))
+          (spit to ""))
+        [true to]))))
 
-      :native
-      (do
-        (print `(declare-native`)
-        (print `  :name "` (string/ascii-lower (details :name)) `"`)
-        (print `  :clfags [;default-cflags]`)
-        (print `  :lflags [;default-lflags]`)
-        (print `  :headers []`)
-        (print `  :source [])`))
 
-      :source
-      (do
-        (print `(declare-source`)
-        (print `  :source [])`))))
-  (spit (string project-dir "/" "project.janet") buf))
+(defn- create-project-file [project-dir opts]
+  (def to (string project-dir "/" "project.janet"))
+  (if (not (nil? (os/stat to)))
+    [false to]
+    (do
+      (def answers {:name (base-dir project-dir)
+                    :desc (opts "project-desc")
+                    :author (opts "project-author")
+                    :license (opts "project-license")
+                    :url (opts "project-url")
+                    :repo (opts "project-repo")
+                    :kind (opts "type")})
+      (def details (quiz answers (read-meta (opts "metadata")) (opts "auto")))
+      (def buf @"")
+      (with-dyns [:out buf]
+        (print `(declare-project`)
+        (print `  :name "` (details :name) `"`)
+        (print `  :description "` (details :desc) `"`)
+        (print `  :author "` (details :author) `"`)
+        (print `  :license "` (details :license) `"`)
+        (print `  :url "` (details :url) `"`)
+        (print `  :repo "` (details :repo) `"`)
+        (print `  :dependencies [])`)
+        (print)
+        (case (details :kind)
+          :executable
+          (do
+            (print `(declare-executable`)
+            (print `  :name "` (string/ascii-lower (details :name)) `"`)
+            (print `  :entry ""`)
+            (print `  :install true)`))
+
+          :native
+          (do
+            (print `(declare-native`)
+            (print `  :name "` (string/ascii-lower (details :name)) `"`)
+            (print `  :clfags [;default-cflags]`)
+            (print `  :lflags [;default-lflags]`)
+            (print `  :headers []`)
+            (print `  :source [])`))
+
+          :source
+          (do
+            (print `(declare-source`)
+            (print `  :source [])`))))
+      (spit to buf)
+      [true to])))
+
+
+(defn- create-test-dir [project-dir]
+  (unless (dyn :no-tests)
+    (create-dirs (string project-dir "/" "test"))))
 
 
 # Verification
@@ -173,20 +202,54 @@
     "src" "src"))
 
 
+# Utilities
+
+(defn- clean-up [events]
+  (each event events
+    (unless (nil? event)
+      (def [made? path] event)
+      (when made?
+        (def dir? (= :directory (os/stat path)))
+        (if dir?
+          (os/rmdir path)
+          (os/rm path))))))
+
+
+(defn- color [k s]
+  (def code
+    (case k
+      :green "\u001b[32;1m"
+      :yellow "\u001b[33m"))
+  (if (dyn :no-color)
+    s
+    (string code s "\u001b[0m")))
+
+
+(defn- log [event events]
+  (array/push events event))
+
+
+(defn- report [events]
+  (each event events
+    (unless (nil? event)
+      (def [made? path] event)
+      (print (if made? (color :green "Created") (color :yellow "Skipped")) "  " path)))
+  true)
+
+
 (defn- cmd-fn [meta opts params]
-  (create-dirs (params :dir))
-  (def project-dir (os/realpath (params :dir)))
-  (def answers {:name (base-dir project-dir)
-                :desc (opts "project-desc")
-                :author (opts "project-author")
-                :license (opts "project-license")
-                :url (opts "project-url")
-                :repo (opts "project-repo")
-                :kind (opts "type")})
-  (def details (quiz answers (read-meta (opts "metadata")) (opts "auto")))
-  (create-project-file project-dir details)
-  (create-gitignore-file project-dir (opts "gitignore"))
-  (create-dirs (string project-dir "/test")))
+  (def events @[])
+  (var reported? false)
+  (setdyn :no-color (opts "no-color"))
+  (setdyn :no-tests (opts "no-tests"))
+  (setdyn :no-git (opts "no-git"))
+  (defer (unless reported? (clean-up log))
+    (log (create-dirs (params :dir)) events)
+    (def project-dir (get-in events [0 1]))
+    (log (create-project-file project-dir opts) events)
+    (log (create-gitignore-file project-dir (opts "gitignore")) events)
+    (log (create-test-dir project-dir) events)
+    (set reported? (report events))))
 
 
 (def config
@@ -206,6 +269,12 @@
                                   project.janet.`
                          :name    "PATH"
                          :default DEFAULT-META}
+           "--no-color" {:kind :flag
+                         :help "Do not use colored output."}
+           "--no-tests" {:kind :flag
+                         :help "Do not create test directory."}
+           "--no-git" {:kind :flag
+                       :help "Do not create .gitignore file."}
            "--project-author" {:kind :single
                                :help "The value to use for the project author."
                                :name "NAME"}
@@ -227,16 +296,14 @@
                               for a Janet library.`
                      :value   type-value
                      :default "src"}
-           :dir {:kind    :single
-                 :help    "The directory in which to create the project."
-                 :value   dir-value
-                 :default "."}]
+           :dir {:kind     :single
+                 :help     "The directory in which to create the project."
+                 :value    dir-value
+                 :required true}]
    :info {:about `Create a new Janet project in a given directory
 
                  The new subcommand creates the files for a new Janet project.
-                 By default, the files will be created in the current directory
-                 but a user can specify the directory in which to create the
-                 files. Unless run with the --auto option, the user will be prompted to
+                 Unless run with the --auto option, the user will be prompted to
                  enter the details used to create the project.janet file.`}
    :help "Create a new project."
    :fn   cmd-fn})
