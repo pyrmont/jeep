@@ -15,13 +15,17 @@
     (def env (make-env))
     (put env :syspath syspath)
     (put env :pretty-format (opts "format"))
-    (put env :redef (opts "redef")))
+    (put env :redef (opts "redef"))
+    (merge-into env user-env))
 
   (netrepl/server (opts "host") (opts "port") netrepl-env))
 
 
 (def config
-  {:rules ["--format" {:kind    :single
+  {:rules ["--env" {:kind    :single
+                    :help    "A struct to use to create the netrepl environment."
+                    :default "{}"}
+           "--format" {:kind    :single
                        :help    "The format to use for output."
                        :default "%.20m"}
            "--host" {:kind    :single
