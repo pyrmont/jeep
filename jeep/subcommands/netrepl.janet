@@ -4,7 +4,7 @@
 
 
 (defn- cmd-fn [meta opts params]
-  (if-let [tree (get-in meta [:project :jeep/tree])]
+  (if-let [tree (meta :jeep/tree)]
     (jpm/commands/set-tree tree))
 
   (def syspath (dyn :modpath (dyn :syspath)))
