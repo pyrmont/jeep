@@ -1,17 +1,8 @@
-(use jpm/config)
+(import argy-bargy :as argy)
 
-(import jpm/cli :as jpm/cli)
-(import jpm/commands :as jpm/commands)
-(import jpm/pm :as jpm/pm)
-
-(import ./argy-bargy :as argy)
-
-(import ./utilities :as util)
 (import ./subcommands/dev-deps :as cmd/dev-deps)
-(import ./subcommands/netrepl :as cmd/netrepl)
-(import ./subcommands/new :as cmd/new)
-(import ./subcommands/plonk :as cmd/plonk)
-(import ./subcommands/test :as cmd/test)
+# (import ./subcommands/netrepl :as cmd/netrepl)
+# (import ./subcommands/plonk :as cmd/plonk)
 
 
 # Configuration
@@ -20,23 +11,19 @@
   ```
   Subcommands supported by jeep.
   ```
-  {"help"     {:help "Show help for a subcommand."}
-
+  {"help"     {:help "Show help for a subcommand."
+               :info {:about `Yes, very funny`}}
    "dev-deps" cmd/dev-deps/config
-   "netrepl"  cmd/netrepl/config
-   "new"      cmd/new/config
-   "plonk"    cmd/plonk/config
-   "test"     cmd/test/config})
+   # "netrepl"  cmd/netrepl/config
+   # "plonk"    cmd/plonk/config
+   })
 
 
 (def config
   ```
   Top-level information about the jeep tool.
   ```
-  {:rules ["--config-file" {:kind :single
-                            :name "FILE"
-                            :help "Use FILE for configuration."}
-           "--tree"  {:kind  :single
+  {:rules ["--tree"  {:kind  :single
                       :help  "Use directory TREE for dependencies."}
            "--local" {:kind  :flag
                       :short "l"
@@ -50,40 +37,56 @@
   })
 
 
-# Functions
+# Utilities
 
-(defn- configure
-  [config-file]
-  (read-env-variables)
-  (if config-file
-    (load-config-file config-file false)
-    (load-config-file (string (dyn :syspath) "/jpm/default-config.janet") false)))
+(defn- get-subcommand
+  ```
+  Find the first subcommand in an array
+  ```
+  [argv]
+  (find (fn [x] (not (string/has-prefix? "-" x))) (array/slice argv 1)))
 
 
-(defn- process-with-jeep
-  [meta sub]
-  (when-let [args   (argy/parse-args-with-subcommands config subcommands)
-             sub-fn (get-in subcommands [sub :fn])]
-    (sub-fn meta (args :opts) (args :params))))
+(defn- get-meta
+  ```
+  Get the metadata for the project
+  ```
+  []
+  (def meta @{})
+  (unless (nil? (get (os/stat "./project.janet") :mode))
+    (def p (parser/new))
+    (parser/consume p (slurp "./project.janet"))
+    (parser/eof p)
+    (while (parser/has-more p)
+      (def form (parser/produce p))
+      (when (= 'declare-project (first form))
+        (merge-into meta (struct ;(tuple/slice form 1)))
+        (break))))
+  meta)
 
 
 # Main
 
 (defn main [& argv]
-  (when-let [args (argy/parse-args-with-subcommands config subcommands true)
-             opts (args :opts)
-             sub  (args :sub)]
-    (configure (opts "config-file"))
-    (def meta (util/load-project (util/get-tree opts)))
-    (setdyn :executable (dyn:janet))
+  (def out @"")
+  (def err @"")
+  (def args (with-dyns [:out out :err err]
+              (argy/parse-args-with-subcommands config subcommands)))
+  (def subcommand (args :sub))
+  (def pass-thru? (not (or (nil? subcommand)
+                           (= "help" subcommand)
+                           (subcommands subcommand))))
+  (def errored? (args :error?))
+  (def helped? (args :help?))
 
-    (cond
-      (subcommands sub)
-      (process-with-jeep meta sub)
+  (cond
+    pass-thru?
+    (os/shell (string "jpm " (string/join (array/slice argv 1) " ")))
 
-      (jpm/commands/subcommands sub)
-      (jpm/cli/main ;(util/add-tree meta argv))
+    errored?
+    (eprin err)
 
-      (do
-        (argy/usage-error "unrecognized subcommand '" sub "'")
-        (os/exit 1)))))
+    helped?
+    (prin out)
+
+    (((subcommands subcommand) :fn) (get-meta) args)))

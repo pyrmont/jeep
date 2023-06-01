@@ -5,32 +5,22 @@
   :license "MIT"
   :url "https://github.com/pyrmont/jeep"
   :repo "git+https://github.com/pyrmont/jeep"
-  :dependencies ["https://github.com/janet-lang/jpm"]
-  :jeep/tree ".jeep"
-  :jeep/dev-dependencies ["https://github.com/pyrmont/documentarian"
-                          "https://github.com/pyrmont/testament"])
-
-
-(def jeep-src-files
-  (do
-    (def res @[])
-    (defn get-entries [path] (->> (os/dir path) (map |(string path "/" $))))
-    (def src-root "jeep")
-    (def entries (get-entries src-root))
-    (each e entries
-      (unless (or (= "." e) (= ".." e))
-        (case ((os/stat e) :mode)
-          :file
-          (array/push res e)
-
-          :directory
-          (array/concat entries (get-entries e)))))
-    res))
+  :dependencies ["https://github.com/pyrmont/argy-bargy"
+                 "https://github.com/janet-lang/spork"]
+  :dev-dependencies ["https://github.com/pyrmont/documentarian"
+                     "https://github.com/pyrmont/testament"])
 
 
 (declare-executable
   :name "jeep"
   :entry "jeep/cli.janet"
-  :ldflags ["-rdynamic"]
-  :install true
-  :deps jeep-src-files)
+  :install true)
+
+
+(task "dev-deps" []
+  (if-let [deps ((dyn :project) :dev-dependencies)]
+    (each dep deps
+      (bundle-install dep))
+    (do
+      (print "no dependencies found")
+      (flush))))

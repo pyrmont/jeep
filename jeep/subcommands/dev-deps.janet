@@ -1,26 +1,25 @@
-(import jpm/commands :as jpm/commands)
-(import jpm/pm :as jpm/pm)
+(defn- get-tree-option
+  [args]
+  (def globals (args :globals))
+  (cond
+    (get globals "local")
+    "-l "
+
+    (get globals "tree")
+    (string "--tree=" (get globals "tree") " ")))
 
 
-(defn- cmd-fn [meta opts params]
-  (if-let [tree (meta :jeep/tree)]
-    (jpm/commands/set-tree tree))
-  (setdyn :syspath (dyn :modpath))
-
-  (jpm/commands/deps)
-
-  (if-let [deps (meta :jeep/dev-dependencies)]
-    (each dep deps
-      (jpm/pm/bundle-install dep))
-    (do (print "no dev dependencies found") (flush)))
-  )
+(defn- subcommand [meta args]
+  (def deps (meta :dev-dependencies))
+  (def tree-option (get-tree-option args))
+  (each dep deps
+    (os/shell (string "jpm " tree-option "install " dep))))
 
 
 (def config
   {:info {:about `Install dependencies and development dependencies for Janet projects
 
                  The dev-deps subcommand installs the dependencies that are
-                 specified under the :dependencies and :jeep/dev-dependencies
-                 keywords in the project.janet file.`}
+                 specified under the :dev-dependencies keyword in the project.janet file.`}
    :help "Install dependencies and development dependencies."
-   :fn   cmd-fn})
+   :fn   subcommand})
