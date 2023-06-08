@@ -1,6 +1,6 @@
 # Jeep
 
-Jeep is a batteries-included project management tool for Janet.
+Jeep is a project management utility for Janet.
 
 It has the following features:
 
@@ -12,8 +12,8 @@ Clone the repository and run `jpm install`.
 
 ## Usage
 
-Jeep is invoked using the `jeep` command-line utility. `jeep` supports five
-subcommands:
+Jeep is invoked using the `jeep` command-line utility. `jeep` supports one
+subcommand:
 
 - **`dev-deps`**: Install dependencies and development dependencies
 
