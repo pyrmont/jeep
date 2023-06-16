@@ -1,6 +1,7 @@
 (import argy-bargy :as argy)
 
 (import ./subcommands/dev-deps :as cmd/dev-deps)
+(import ./subcommands/doc :as cmd/doc)
 # (import ./subcommands/netrepl :as cmd/netrepl)
 # (import ./subcommands/plonk :as cmd/plonk)
 
@@ -11,9 +12,8 @@
   ```
   Subcommands supported by jeep.
   ```
-  {"help"     {:help "Show help for a subcommand."
-               :info {:about `Yes, very funny`}}
-   "dev-deps" cmd/dev-deps/config
+  {"dev-deps" cmd/dev-deps/config
+   "doc"      cmd/doc/config
    # "netrepl"  cmd/netrepl/config
    # "plonk"    cmd/plonk/config
    })

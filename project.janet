@@ -5,14 +5,15 @@
   :license "MIT"
   :url "https://github.com/pyrmont/jeep"
   :repo "git+https://github.com/pyrmont/jeep"
-  :dependencies ["https://github.com/pyrmont/argy-bargy"]
-  :dev-dependencies ["https://github.com/pyrmont/documentarian"
-                     "https://github.com/pyrmont/testament"])
+  :dependencies ["https://github.com/pyrmont/argy-bargy"
+                 "https://github.com/pyrmont/documentarian"]
+  :dev-dependencies ["https://github.com/pyrmont/testament"])
 
 (declare-executable
   :name "jeep"
   :entry "jeep/cli.janet"
-  :install true)
+  :install true
+  :deps ["jeep/subcommands"])
 
 (task "dev-deps" []
   (if-let [deps ((dyn :project) :dependencies)]

@@ -12,10 +12,11 @@ Clone the repository and run `jpm install`.
 
 ## Usage
 
-Jeep is invoked using the `jeep` command-line utility. `jeep` supports one
-subcommand:
+Jeep is invoked using the `jeep` command-line utility. `jeep` supports
+the following subcommands:
 
 - **`dev-deps`**: Install dependencies and development dependencies
+- **`doc`**: Generate an API document
 
 Additional subcommands are passed through to `jpm`. For example, running `jeep
 build` will invoke `jpm build`.
