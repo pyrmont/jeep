@@ -17,9 +17,10 @@
 
 
 (def config
-  {:info {:about `Install dependencies and development dependencies for Janet projects
+  {:info {:about `Install all dependencies for Janet projects
 
                  The dev-deps subcommand installs the dependencies that are
-                 specified under the :dev-dependencies keyword in the project.janet file.`}
+                 specified under the :dependencies and :dev-dependencies
+                 keywords in the project.janet file.`}
    :help "Install dependencies and development dependencies."
    :fn   subcommand})
