@@ -5,22 +5,25 @@
   :license "MIT"
   :url "https://github.com/pyrmont/jeep"
   :repo "git+https://github.com/pyrmont/jeep"
-  :dependencies ["https://github.com/pyrmont/argy-bargy"
-                 "https://github.com/janet-lang/spork"]
+  :dependencies ["https://github.com/pyrmont/argy-bargy"]
   :dev-dependencies ["https://github.com/pyrmont/documentarian"
                      "https://github.com/pyrmont/testament"])
-
 
 (declare-executable
   :name "jeep"
   :entry "jeep/cli.janet"
   :install true)
 
-
 (task "dev-deps" []
-  (if-let [deps ((dyn :project) :dev-dependencies)]
+  (if-let [deps ((dyn :project) :dependencies)]
     (each dep deps
       (bundle-install dep))
     (do
       (print "no dependencies found")
+      (flush)))
+  (if-let [deps ((dyn :project) :dev-dependencies)]
+    (each dep deps
+      (bundle-install dep))
+    (do
+      (print "no dev-dependencies found")
       (flush))))
