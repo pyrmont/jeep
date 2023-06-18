@@ -29,7 +29,7 @@
                       :short "l"
                       :help  "Use directory 'jpm_tree' for dependencies."}]
    :info  {:about   "A tool for developing Janet projects"
-           :opts    "The following options are available:\n"
+           :opts    "The following global options are available:\n"
            :subcmds "The following subcommands are available:\n"
            :rider   `If jeep does not recognize the subcommand, it will pass all
                     arguments through to jpm. For a full list of commands
