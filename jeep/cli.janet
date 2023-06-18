@@ -8,15 +8,12 @@
 
 # Configuration
 
-(def subcommands
+(def builtin-subcommands
   ```
   Subcommands supported by jeep.
   ```
-  {"dev-deps" cmd/dev-deps/config
-   "doc"      cmd/doc/config
-   # "netrepl"  cmd/netrepl/config
-   # "plonk"    cmd/plonk/config
-   })
+  ["dev-deps" cmd/dev-deps/config
+   "doc"      cmd/doc/config])
 
 
 (def config
@@ -39,14 +36,6 @@
 
 # Utilities
 
-(defn- get-subcommand
-  ```
-  Find the first subcommand in an array
-  ```
-  [argv]
-  (find (fn [x] (not (string/has-prefix? "-" x))) (array/slice argv 1)))
-
-
 (defn- get-meta
   ```
   Get the metadata for the project
@@ -65,17 +54,51 @@
   meta)
 
 
+(defn- get-subconfig
+  ```
+  Gets the subconfig
+  ```
+  [subcommand subcommands]
+  (def i (find-index (fn [x] (= subcommand x)) subcommands))
+  (unless (nil? i)
+    (get subcommands (inc i))))
+
+
+(defn load-subcommands
+  ```
+  Loads the subcommands
+  ```
+  [builtins]
+  (def subconfigs (table ;builtins))
+  (def user-dir (string (os/getenv "HOME" "~") "/.jeep/subcommands"))
+  (def dir-exists? (= :directory (os/stat user-dir :mode)))
+  (when dir-exists?
+    (each filename (os/dir user-dir)
+      (when (string/has-suffix? ".janet" filename)
+        (def path (string user-dir "/" filename))
+        (def basename (string/slice filename 0 -7))
+        (def env (dofile path))
+        (unless (env 'config)
+          (error (string path ": missing `config` binding")))
+        (put subconfigs basename (get-in env ['config :value])))))
+  (reduce (fn [result name] (array/push result name (subconfigs name)))
+          @[]
+          (sort (keys subconfigs))))
+
+
 # Main
 
 (defn main [& argv]
+  (def subcommands (load-subcommands builtin-subcommands))
   (def out @"")
   (def err @"")
   (def args (with-dyns [:out out :err err]
               (argy/parse-args-with-subcommands config subcommands)))
   (def subcommand (args :sub))
+  (def subconfig (get-subconfig subcommand subcommands))
   (def pass-thru? (not (or (nil? subcommand)
                            (= "help" subcommand)
-                           (subcommands subcommand))))
+                           subconfig)))
   (def errored? (args :error?))
   (def helped? (args :help?))
 
@@ -89,4 +112,4 @@
     helped?
     (prin out)
 
-    (((subcommands subcommand) :fn) (get-meta) args)))
+    ((subconfig :fn) (get-meta) args)))
