@@ -17,6 +17,7 @@ the following subcommands:
 
 - **`dev-deps`**: Install dependencies and development dependencies
 - **`doc`**: Generate an API document
+- **`netrepl`**: Start a netrepl server
 
 Additional subcommands are passed through to `jpm`. For example, running `jeep
 build` will invoke `jpm build`.

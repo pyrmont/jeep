@@ -2,7 +2,7 @@
 
 (import ./subcommands/dev-deps :as cmd/dev-deps)
 (import ./subcommands/doc :as cmd/doc)
-# (import ./subcommands/netrepl :as cmd/netrepl)
+(import ./subcommands/netrepl :as cmd/netrepl)
 # (import ./subcommands/plonk :as cmd/plonk)
 
 
@@ -13,7 +13,8 @@
   Subcommands supported by jeep.
   ```
   ["dev-deps" cmd/dev-deps/config
-   "doc"      cmd/doc/config])
+   "doc"      cmd/doc/config
+   "netrepl"  cmd/netrepl/config])
 
 
 (def config
