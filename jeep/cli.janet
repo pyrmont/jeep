@@ -22,7 +22,8 @@
   Top-level information about the jeep tool.
   ```
   {:rules ["--tree"  {:kind  :single
-                      :help  "Use directory TREE for dependencies."}
+                      :help  "Use directory <path> for dependencies."
+                      :proxy "path"}
            "--local" {:kind  :flag
                       :short "l"
                       :help  "Use directory 'jpm_tree' for dependencies."}]
