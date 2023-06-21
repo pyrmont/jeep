@@ -8,7 +8,7 @@
 
 # Configuration
 
-(def builtin-subcommands
+(def default-subcommands
   ```
   Subcommands supported by jeep.
   ```
@@ -70,28 +70,24 @@
   ```
   Loads the subcommands
   ```
-  [builtins]
-  (def subconfigs (table ;builtins))
-  (def user-dir (string (os/getenv "HOME" "~") "/.jeep/subcommands"))
-  (def dir-exists? (= :directory (os/stat user-dir :mode)))
-  (when dir-exists?
-    (each filename (os/dir user-dir)
-      (when (string/has-suffix? ".janet" filename)
-        (def path (string user-dir "/" filename))
-        (def basename (string/slice filename 0 -7))
-        (def env (dofile path))
-        (unless (env 'config)
-          (error (string path ": missing `config` binding")))
-        (put subconfigs basename (get-in env ['config :value])))))
-  (reduce (fn [result name] (array/push result name (subconfigs name)))
-          @[]
-          (sort (keys subconfigs))))
+  [defaults]
+  (def subcommands (array ;defaults))
+  (def user-file (string (os/getenv "HOME" "~") "/.jeep/subcommands.janet"))
+  (def file-exists? (= :file (os/stat user-file :mode)))
+  (when file-exists?
+    (def env (dofile user-file))
+    (unless (env 'subcommands)
+      (error (string user-file ": missing `subcommands` binding")))
+    (def users (get-in env ['subcommands :value]))
+    (array/push subcommands "---")
+    (array/concat subcommands users))
+  subcommands)
 
 
 # Main
 
 (defn main [& argv]
-  (def subcommands (load-subcommands builtin-subcommands))
+  (def subcommands (load-subcommands default-subcommands))
   (def out @"")
   (def err @"")
   (def args (with-dyns [:out out :err err]
