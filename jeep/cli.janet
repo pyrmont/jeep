@@ -28,8 +28,8 @@
                       :short "l"
                       :help  "Use directory 'jpm_tree' for dependencies."}]
    :info  {:about   "A tool for developing Janet projects"
-           :opts    "The following global options are available:\n"
-           :subcmds "The following subcommands are available:\n"
+           :opts-header "The following global options are available:\n"
+           :subs-header "The following subcommands are available:\n"
            :rider   `If jeep does not recognize the subcommand, it will pass all
                     arguments through to jpm. For a full list of commands
                     supported by jpm, type 'jpm'.`}
@@ -44,7 +44,7 @@
   ```
   []
   (def meta @{})
-  (unless (nil? (get (os/stat "./project.janet") :mode))
+  (unless (= :file (os/stat "./project.janet" :mode))
     (def p (parser/new))
     (parser/consume p (slurp "./project.janet"))
     (parser/eof p)
@@ -60,27 +60,30 @@
   ```
   Gets the subconfig
   ```
-  [subcommand subcommands]
-  (def i (find-index (fn [x] (= subcommand x)) subcommands))
-  (unless (nil? i)
-    (get subcommands (inc i))))
+  [subcommands args]
+  (var res nil)
+  (var sub args)
+  (while (set sub (get sub :sub))
+    (set res (get sub :cmd)))
+  res)
 
 
-(defn load-subcommands
+(defn- load-subcommands
   ```
   Loads the subcommands
   ```
   [defaults]
   (def subcommands (array ;defaults))
-  (def user-file (string (os/getenv "HOME" "~") "/.jeep/subcommands.janet"))
-  (def file-exists? (= :file (os/stat user-file :mode)))
-  (when file-exists?
-    (def env (dofile user-file))
-    (unless (env 'subcommands)
-      (error (string user-file ": missing `subcommands` binding")))
-    (def users (get-in env ['subcommands :value]))
-    (array/push subcommands "---")
-    (array/concat subcommands users))
+  (def user-file (or (os/getenv "JEEP_SUBCMDS")
+                     (string (os/getenv "HOME") "/.jeep/subcommands.janet")))
+  (when user-file
+    (when (= :file (os/stat user-file :mode))
+      (def env (dofile user-file))
+      (unless (env 'subcommands)
+        (error (string user-file ": missing `subcommands` binding")))
+      (def users (get-in env ['subcommands :value]))
+      (array/push subcommands "---")
+      (array/concat subcommands users)))
   subcommands)
 
 
@@ -91,23 +94,20 @@
   (def out @"")
   (def err @"")
   (def args (with-dyns [:out out :err err]
-              (argy/parse-args-with-subcommands config subcommands)))
-  (def subcommand (args :sub))
-  (def subconfig (get-subconfig subcommand subcommands))
-  (def pass-thru? (not (or (nil? subcommand)
-                           (= "help" subcommand)
-                           subconfig)))
-  (def errored? (args :error?))
-  (def helped? (args :help?))
+              (argy/parse-args "jeep" (merge config {:subs subcommands}))))
+
+  (when (string/has-prefix? "jeep: unrecognized subcommand" err)
+    (os/exit (os/shell (string "jpm " (string/join (array/slice argv 1) " ")))))
 
   (cond
-    pass-thru?
-    (os/shell (string "jpm " (string/join (array/slice argv 1) " ")))
+      (args :help?)
+      (prin out)
 
-    errored?
-    (eprin err)
+      (args :error?)
+      (eprin err)
 
-    helped?
-    (prin out)
-
-    ((subconfig :fn) (get-meta) args)))
+      (do
+        (def subconfig (get-subconfig subcommands args))
+        (if subconfig
+          ((subconfig :fn) (get-meta) args)
+          (eprint "jeep: missing subcommand\nTry 'jeep --help' for more information.")))))
