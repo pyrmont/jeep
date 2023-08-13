@@ -18,11 +18,10 @@
 
 
 (defn- subcommand [meta args]
-  (def globals (args :globals))
-  (def opts (args :opts))
-  (put (args :opts) "local" ((args :globals) "local"))
-  (put (args :opts) "tree" ((args :globals) "tree"))
-  (doc/generate-doc (doc/args->opts args)))
+  (def sub-args (get args :sub))
+  (put (sub-args :opts) "local" ((args :opts) "local"))
+  (put (sub-args :opts) "tree" ((args :opts) "tree"))
+  (doc/generate-doc (doc/args->opts sub-args)))
 
 
 (def config

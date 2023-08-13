@@ -1,26 +1,9 @@
 (use testament)
-
-
-(defn run-cmd [& args]
-  (def cmd "./build/jeep")
-  (def env {"JEEP_SUBCMDS" "" "TERM" (os/getenv "TERM") :out :pipe :err :pipe})
-  (def proc (os/spawn [cmd ;args] :ep env))
-  (def out (get proc :out))
-  (def err (get proc :err))
-  (def out-buf @"")
-  (def err-buf @"")
-  (var status 0)
-  (ev/gather
-    (:read out :all out-buf)
-    (:read err :all err-buf)
-    (set status (:wait proc)))
-  {:err err-buf
-   :out out-buf
-   :status status})
+(use ../test-utils)
 
 
 (deftest cli-no-args
-  (def msg `Usage: jeep [--tree <path>] [--local]
+  (def msg `Usage: jeep [--tree <path>] [--local] <subcommand> [<args>]
 
            A tool for developing Janet projects
 
@@ -28,7 +11,13 @@
 
                 --tree <path>    Use directory <path> for dependencies.
             -l, --local          Use directory 'jpm_tree' for dependencies.
-            -h, --help           Show this help message.`)
+            -h, --help           Show this help message.
+
+           The following subcommands are available:
+
+            doc    Generate API documentation.
+
+           For more information on each subcommand, type 'jeep help <subcommand>'.`)
   (def expect {:err "" :out (string msg "\n") :status 1})
   (def actual (run-cmd))
   (is (== expect actual)))

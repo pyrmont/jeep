@@ -1,25 +1,14 @@
 (import argy-bargy :as argy)
 
 # (import ./subcommands/dev-deps :as cmd/dev-deps)
-# (import ./subcommands/doc :as cmd/doc)
+(import ./subcommands/doc :as cmd/doc)
 # (import ./subcommands/netrepl :as cmd/netrepl)
 # (import ./subcommands/plonk :as cmd/plonk)
 
 
 # Configuration
 
-(def default-subcommands
-  ```
-  Subcommands supported by jeep.
-  ```
-  [
-   # "deps"     cmd/dev-deps/config
-   # "doc"      cmd/doc/config
-   # "netrepl"  cmd/netrepl/config
-   ])
-
-
-(def config
+(def base-config
   ```
   Top-level information about the jeep tool.
   ```
@@ -32,6 +21,17 @@
    :info  {:about   "A tool for developing Janet projects"
            :opts-header "The following global options are available:"
            :subs-header "The following subcommands are available:"}})
+
+
+(def base-subcommands
+  ```
+  Subcommands supported by jeep.
+  ```
+  [
+   # "deps"     cmd/dev-deps/config
+   "doc"      cmd/doc/config
+   # "netrepl"  cmd/netrepl/config
+   ])
 
 
 # Utilities
@@ -58,12 +58,15 @@
   ```
   Gets the subconfig
   ```
-  [subcommands args]
-  (var res nil)
+  [config args]
+  (var res config)
   (var sub args)
   (while (set sub (get sub :sub))
-    (set res (get sub :cmd)))
-  res)
+    (def subconfigs (res :subs))
+    (def i (find-index (fn [x] (= (sub :cmd) x)) subconfigs))
+    (set res (get subconfigs (inc i))))
+  (unless (= config res)
+    res))
 
 
 (defn- load-subcommands
@@ -88,8 +91,9 @@
 # Main
 
 (defn main [& args]
-  (def subcommands (load-subcommands default-subcommands))
-  (def parsed (argy/parse-args "jeep" (merge config {:subs subcommands})))
+  (def subcommands (load-subcommands base-subcommands))
+  (def config (merge base-config {:subs subcommands}))
+  (def parsed (argy/parse-args "jeep" config))
   (def err (parsed :err))
   (def help (parsed :help))
 
@@ -105,7 +109,7 @@
       (os/exit 1))
 
     (do
-      (def subconfig (get-subconfig subcommands parsed))
+      (def subconfig (get-subconfig config parsed))
       (if subconfig
         ((subconfig :fn) (get-meta) parsed)
         (do
