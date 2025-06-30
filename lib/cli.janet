@@ -43,6 +43,10 @@
     (do
       (def name (symbol "cmd/" (get-in parsed [:sub :cmd]) "/run"))
       (def sub/run (module/value (curenv) name true))
-      (sub/run parsed))))
+      (try
+        (sub/run parsed)
+        ([e _]
+         (eprint e)
+         (os/exit 1))))))
 
 (defn- main [& args] (run))
