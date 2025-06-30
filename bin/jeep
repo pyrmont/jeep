@@ -1,0 +1,4 @@
+#!/usr/bin/env janet
+(import jeep/lib/cli)
+
+(cli/run)
