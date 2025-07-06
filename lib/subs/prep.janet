@@ -12,10 +12,8 @@
              :help "Prepare the system for development of the current project."})
 
 (defn run
-  [args]
-  (def local? (get-in args [:opts "local"]))
-  (when local?
-    (def local-dir "_modules")
+  [args &named local-dir]
+  (when local-dir
     (def syspath (if (util/abspath? local-dir)
                    local-dir
                    (string (os/realpath ".") util/sep local-dir)))

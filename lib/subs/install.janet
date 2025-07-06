@@ -8,7 +8,7 @@
              :help "Install a bundle of Janet code."})
 
 (defn run
-  [args]
+  [args &named]
   (def repo (get-in args [:sub :params :bundle]))
   (if (nil? repo)
     (install/install "file::." :force-update true :no-deps true)

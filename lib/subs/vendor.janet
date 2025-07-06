@@ -13,7 +13,7 @@
              :help "Vendor certain dependencies for the current project."})
 
 (defn run
-  [args]
+  [args &named]
   (def path (get-in args [:sub :opts "path"]))
   (util/vendor-deps path)
   )

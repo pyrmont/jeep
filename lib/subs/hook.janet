@@ -27,7 +27,7 @@
   (prin msg))
 
 (defn run
-  [args]
+  [args &named]
   (def [ok module] (protect (require (string util/sep "bundle"))))
   (unless ok (error "could not read 'bundle.janet' or 'bundle/init.janet'"))
   (def sargs (get-in args [:sub :args]))

@@ -1,4 +1,5 @@
 (import ../deps/argy-bargy/argy-bargy :as argy)
+(import ./util)
 
 # commands
 (import ./subs/hook :as cmd/hook)
@@ -13,10 +14,9 @@
   ```
   {:rules ["--local" {:kind  :flag
                       :short "l"
-                      :help  `Use a local directory for JANET_PATH. Jeep will
-                             use the ':path' value in a config file located in
-                             the '.jeep' directory. If no config file exists,
-                             uses '_modules'.`}
+                      :help  `Use a local directory for the system path. Jeep will
+                             use the ':syspath' value in '.jeep/config.jdn' if
+                             it exists, otherwise it uses '_modules'.`}
            "---------------------------------"]
    :info  {:about "A tool for installing, building and managing Janet projects"
            :opts-header "The following global options are available:"
@@ -48,10 +48,14 @@
       (eprin err)
       (os/exit 1))
     (do
+      (def jeep-config-path (string/join ["." ".jeep" "config.jdn"] util/sep))
+      (def jeep-config (when (util/fexists? jeep-config-path) (parse (slurp jeep-config-path))))
+      (def local-dir (when (get-in parsed [:opts "local"])
+                       (or (get jeep-config :syspath) "_modules")))
       (def name (symbol "cmd/" (get-in parsed [:sub :cmd]) "/run"))
       (def sub/run (module/value (curenv) name true))
       (try
-        (sub/run parsed)
+        (sub/run parsed :local-dir local-dir)
         ([e _]
          (eprint e)
          (os/exit 1))))))
