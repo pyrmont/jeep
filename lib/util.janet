@@ -4,12 +4,19 @@
 
 (def sep (get {:windows "\\" :cygwin "\\" :mingw "\\"} (os/which) "/"))
 
-(def pathg ~{:main (* (some (+ :sep :part)) -1)
+(def pathg ~{:main (* (? :root) (some (+ :sep :part)) -1)
+             :root '(+ "/" (* (? (* :a ":")) `\`))
              :sep  ,sep
              :part (* (+ :quoted :unquoted) (> (+ :sep -1)))
              :quoted (* `"` '(some (+ `\\` `\"` (* (! `"`) 1))) `"`)
              :unquoted '(some (+ :escaped (* (! :sep) 1)))
              :escaped (* `\` 1)})
+
+(defn abspath?
+  [path]
+  (if (= :windows (os/which))
+    (peg/match '(* (? (* :a ":")) `\`) path)
+    (string/has-prefix? "/" path)))
 
 (defn apart
   [path]

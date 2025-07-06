@@ -10,7 +10,7 @@
              :info {:about `Download the dependencies specified under the
                            :vendored key in info.jdn and save these to a
                            directory within the project root.`}
-             :help "Vendor dependencies to a directory in the project root."})
+             :help "Vendor certain dependencies for the current project."})
 
 (defn run
   [args]

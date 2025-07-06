@@ -29,18 +29,6 @@
   [bundle-name]
   (manifest-pm-extract (bundle/manifest bundle-name)))
 
-(defn- dyn-env
-  []
-  (def e (make-env))
-  (defn add1 [x]
-    (eachp [k v] x
-      (if (keyword? k)
-        (put e k v)))
-    (if-let [p (getproto x)]
-      (add1 p)))
-  (add1 (curenv))
-  e)
-
 (defn install
   [id &named no-deps force-update no-install auto-remove]
   (def bundle (pm/resolve-bundle id))
@@ -54,22 +42,17 @@
   (when (nil? info)
     (errorf "bundle at %s does not include info.jdn file" url))
   (def info-name (get info :name))
-  (when (bundle/installed? info-name)
+  (when (and (not inst-name) (bundle/installed? info-name))
     (def existing (bundle-name-to-bundle info-name))
     (eprintf "a conflicting bundle %v is already installed, skipping" info-name)
     (eprintf "  existing bundle: %.99M" existing)
     (eprintf "  skipped bundle:  %.99M" bundle)
     (break))
   (def deps (get info :dependencies []))
-  (def dnames @[])
   (each d deps
-    (install d :force-update force-update :auto-remove true)
-    (def dbundle (pm/resolve-bundle d))
-    (def dname (name-lookup dbundle))
-    (array/push dnames))
+    (install d :force-update force-update :auto-remove true))
   (def config @{:pm bundle :installed-with "jeep" :auto-remove auto-remove})
   (unless no-install
-    (with-env (dyn-env) # work around bundle/* quirk with accidentally injecting hooks.
-      (if (and inst-name (bundle/installed? inst-name))
-        (bundle/reinstall inst-name :config config ;(kvs config))
-        (bundle/install bdir :config config ;(kvs config))))))
+    (if (and inst-name (bundle/installed? inst-name))
+      (bundle/replace inst-name bdir :config config ;(kvs config))
+      (bundle/install bdir :config config ;(kvs config)))))

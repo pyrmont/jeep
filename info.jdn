@@ -1,4 +1,4 @@
-{:name "Jeep"
+{:name "jeep"
  :description "A tool for development Janet projects"
  :author "Michael Camilleri"
  :license "MIT"
