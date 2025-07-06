@@ -10,10 +10,12 @@
     :prefix "argy-bargy"
     :include ["argy-bargy.janet"
               "LICENSE"]}
-   {:url "https://github.com/pyrmont/testament"
-    :prefix "testament"
-    :include ["lib/testament.janet"
-              "init.janet"
+   {:url "https://github.com/janet-lang/spork"
+    :prefix "spork"
+    :include ["spork/path.janet"
+              "spork/pm.janet"
+              "spork/pm-config.janet"
+              "spork/sh.janet"
               "LICENSE"]}]
 
  :executable ["bin/jeep"]

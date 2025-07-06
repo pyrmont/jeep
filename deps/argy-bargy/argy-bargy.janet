@@ -620,7 +620,9 @@
                  (if subconfig
                    (if (not help?)
                      (with-dyns [:args (array/slice args i)]
-                       (def subresult (parse-args-impl (string command " " subcommand) subconfig))
+                       (def subresult (if (nil? (subconfig :rules))
+                                        @{:cmd subcommand :args (array/slice (dyn :args) 1)}
+                                        (parse-args-impl (string command " " subcommand) subconfig)))
                        (when (and (empty? err) (empty? help))
                          (put subresult :cmd subcommand)
                          (put result :sub subresult)
@@ -727,7 +729,12 @@
   subcommand's `config` struct contain a `:subs` key with a subcommands tuple
   of its own.
 
-  In  addition to names and configs, the tuple can contain instances of the
+  If the subcommand config struct does not contain a `:rules` key, parsing will
+  stop and all subsequent arguments will be returned under an `:args` key. This
+  can be useful for situations where the user wants to handle parsing in a
+  separate function.
+
+  In addition to names and configs, the tuple can contain instances of the
   string "---". When printing usage information, subcommands that were
   separated by a "---" will be separated by a line break.
 
