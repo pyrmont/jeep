@@ -78,32 +78,31 @@
          :prefix prefix
          :include includes
          :exclude excludes} deps
-    (if-not url
-      (error "Vended dependencies need a :url key")
+    (unless url
+      (error "vended dependencies need a :url key"))
+    (default tag "HEAD")
+    (def tarball (if (is-tarball? url) url (string url "/archive/" tag ".tar.gz")))
+    (def dest-dir (if prefix (string/join [deps-dir prefix] sep) deps-dir))
+    (def filename (-> (string/split "/" tarball) last))
+    (print "vendoring " tarball " to " dest-dir)
+    (defer (rmrf temp-dir)
       (do
-        (default tag "HEAD")
-        (def tarball (if (is-tarball? url) url (string url "/archive/" tag ".tar.gz")))
-        (def dest-dir (if prefix (string/join [deps-dir prefix] sep) deps-dir))
-        (def filename (-> (string/split "/" tarball) last))
-        (print "vendoring " tarball " to " dest-dir)
-        (defer (rmrf temp-dir)
-          (do
-            (os/mkdir temp-dir)
-            (def tar-file (string/join [temp-dir filename] sep))
-            (exec :curl "-sL" tarball "-o" tar-file)
-            (exec :tar "xf" tar-file "-C" temp-dir "--strip-components" "1")
-            (rmrf tar-file)
-            (when excludes
-              (each exclude excludes
-                (rmrf (string/join [temp-dir exclude] sep))))
-            (def files (if includes includes (os/dir temp-dir)))
-            (each file files
-              (def file-parts (apart file))
-              (def from (string/join [temp-dir ;file-parts] sep))
-              (def to (string/join [dest-dir ;file-parts] sep))
-              (def to-parts (apart to))
-              (if (= :directory (os/stat from :mode))
-                (mkdir-from-parts to-parts)
-                (mkdir-from-parts (array/slice to-parts 0 -2)))
-              (print "copying " from " to " to)
-              (copy from to))))))))
+        (os/mkdir temp-dir)
+        (def tar-file (string/join [temp-dir filename] sep))
+        (exec :curl "-sL" tarball "-o" tar-file)
+        (exec :tar "xf" tar-file "-C" temp-dir "--strip-components" "1")
+        (rmrf tar-file)
+        (when excludes
+          (each exclude excludes
+            (rmrf (string/join [temp-dir exclude] sep))))
+        (def files (if includes includes (os/dir temp-dir)))
+        (each file files
+          (def file-parts (apart file))
+          (def from (string/join [temp-dir ;file-parts] sep))
+          (def to (string/join [dest-dir ;file-parts] sep))
+          (def to-parts (apart to))
+          (if (= :directory (os/stat from :mode))
+            (mkdir-from-parts to-parts)
+            (mkdir-from-parts (array/slice to-parts 0 -2)))
+          (print "copying " from " to " to)
+          (copy from to))))))
