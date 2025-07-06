@@ -1,8 +1,10 @@
 (import ../deps/argy-bargy/argy-bargy :as argy)
 
 # commands
+(import ./subs/hook :as cmd/hook)
 (import ./subs/install :as cmd/install)
 (import ./subs/uninstall :as cmd/uninstall)
+(import ./subs/vendor :as cmd/vendor)
 
 (def top-config
   ```
@@ -23,8 +25,10 @@
   ```
   Subcommands supported by jeep.
   ```
-  ["install" cmd/install/config
-   "uninstall" cmd/uninstall/config])
+  ["hook" cmd/hook/config
+   "install" cmd/install/config
+   "uninstall" cmd/uninstall/config
+   "vendor" cmd/vendor/config])
 
 (defn run []
   (def config (merge top-config {:subs top-subcommands}))
