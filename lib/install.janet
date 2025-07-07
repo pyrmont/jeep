@@ -56,3 +56,16 @@
     (if (and inst-name (bundle/installed? inst-name))
       (bundle/replace inst-name bdir :config config ;(kvs config))
       (bundle/install bdir :config config ;(kvs config)))))
+
+# (defn manifest
+#   [path]
+#   (def abspath (os/realpath path))
+#   (def bundle (pm/resolve-bundle (string "file::" abspath)))
+#   (def info (util/load-meta abspath))
+#   (def [ok module] (protect (require "/bundle")))
+#   {:name (get info :name)
+#    :dependencies (get info :dependencies)
+#    :files @[]
+#    :hooks (when ok (seq [[k v] :pairs module :when (symbol? k) :unless (get v :private)] (keyword k)))
+#    :info info
+#    :local-source abspath})

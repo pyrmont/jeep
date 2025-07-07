@@ -43,5 +43,4 @@
 
     (do
       (def hookf (module/value module hook))
-      (def hargs (array/slice sargs 1))
-      (apply hookf hargs))))
+      (hookf @{} ;(array/slice sargs 1)))))
