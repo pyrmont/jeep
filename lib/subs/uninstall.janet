@@ -9,7 +9,7 @@
              :help "Uninstall a bundle of Janet code."})
 
 (defn run
-  [args &named]
+  [args &opt jeep-config]
   (def repo (get-in args [:sub :params :bundle]))
   (if (nil? repo)
     (let [meta (util/load-meta ".")]

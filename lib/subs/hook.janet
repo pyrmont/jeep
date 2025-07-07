@@ -27,9 +27,8 @@
   (prin msg))
 
 (defn run
-  [args &named]
-  (def [ok module] (protect (require (string util/sep "bundle"))))
-  (unless ok (error "could not read 'bundle.janet' or 'bundle/init.janet'"))
+  [args &opt jeep-config]
+  (unless module-loaded? (error "could not read 'bundle.janet' or 'bundle/init.janet'"))
   (def sargs (get-in args [:sub :args]))
   (def arg1 (first sargs))
   (def hook (-?> (first sargs) symbol))

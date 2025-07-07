@@ -50,12 +50,12 @@
     (do
       (def jeep-config-path (string/join ["." ".jeep" "config.jdn"] util/sep))
       (def jeep-config (when (util/fexists? jeep-config-path) (parse (slurp jeep-config-path))))
-      (def local-dir (when (get-in parsed [:opts "local"])
-                       (or (get jeep-config :syspath) "_modules")))
+      (when (get-in parsed [:opts "local"])
+        (util/change-syspath (or (get jeep-config :syspath) "_modules")))
       (def name (symbol "cmd/" (get-in parsed [:sub :cmd]) "/run"))
       (def sub/run (module/value (curenv) name true))
       (try
-        (sub/run parsed :local-dir local-dir)
+        (sub/run parsed)
         ([e _]
          (eprint e)
          (os/exit 1))))))

@@ -12,6 +12,8 @@
              :unquoted '(some (+ :escaped (* (! :sep) 1)))
              :escaped (* `\` 1)})
 
+# Independent functions
+
 (defn abspath?
   [path]
   (if (= :windows (os/which))
@@ -72,6 +74,17 @@
                  (os/rmdir path))
     nil nil # do nothing if file does not exist
     (os/rm path)))
+
+# Dependent functions
+
+(defn change-syspath
+  [path]
+  (def abspath (if (abspath? path)
+                 path
+                 (string (os/cwd) sep path)))
+  (unless (= :directory (os/stat abspath :mode))
+    (mkdir-from-parts (apart abspath)))
+  (setdyn *syspath* abspath))
 
 (defn vendor-deps
   [deps-dir]

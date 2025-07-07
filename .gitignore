@@ -1,4 +1,4 @@
 /.jeep/
-/build/
-/jpm_tree/
+/_build/
+/_modules/
 .DS_Store
