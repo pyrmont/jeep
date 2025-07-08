@@ -51,7 +51,7 @@
   [path &opt args]
   (default args [])
   (print "running " path "...")
-  (def err (os/execute ["janet" path ;args] :p))
+  (def err (os/execute ["janet" "-m" (dyn *syspath*) path ;args] :p))
   (unless (zero? err)
     (++ errors)
     (eprinf (util/colour :red "non-zero exit code in %s: ") path)
