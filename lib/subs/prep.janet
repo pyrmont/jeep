@@ -15,10 +15,7 @@
   [args &opt jeep-config]
   (def force? (get-in args [:sub :opts "force"]))
   (def info (util/load-meta "."))
-  (def [module-loaded? module] (protect (require "/bundle")))
-  (when module-loaded?
-    (when-let [hookf (module/value module (symbol "prep"))]
-      (hookf @{})))
+  (util/local-hook :prep)
   (def deps (get info :dependencies []))
   (each d deps
     (install/install d :force-update force? :auto-remove true)))

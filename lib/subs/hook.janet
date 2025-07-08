@@ -41,6 +41,4 @@
     (nil? (get module hook))
     (errorf "no hook '%s', type 'jeep hook' for a list of valid hooks" hook)
 
-    (do
-      (def hookf (module/value module hook))
-      (hookf @{} ;(array/slice sargs 1)))))
+    (util/local-hook hook ;(array/slice sargs 1))))

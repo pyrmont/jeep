@@ -2,6 +2,8 @@
 (defdyn *tarpath* "What tar command to use to fetch dependencies")
 (defdyn *curlpath* "What curl command to use to fetch dependencies")
 
+(def colours {:green "\e[32m" :red "\e[31m"})
+
 (def sep (get {:windows "\\" :cygwin "\\" :mingw "\\"} (os/which) "/"))
 
 (def pathg ~{:main (* (? :root) (some (+ :sep :part)) -1)
@@ -26,6 +28,12 @@
     []
     (or (peg/match pathg path)
         (error "invalid path"))))
+
+(defn colour
+  [c text]
+  (if (os/isatty)
+    (string (get colours c "\e[0m") text "\e[0m")
+    text))
 
 (defn copy
   [src dest]
@@ -85,6 +93,12 @@
   (unless (= :directory (os/stat abspath :mode))
     (mkdir-from-parts (apart abspath)))
   (setdyn *syspath* abspath))
+
+(defn local-hook
+  [name & args]
+  (def [ok module] (protect (require "/bundle")))
+  (when-let [hookf (and ok (module/value module (symbol name)))]
+    (apply hookf @{} args)))
 
 (defn vendor-deps
   [deps-dir]

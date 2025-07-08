@@ -1,10 +1,13 @@
 (import ../deps/argy-bargy/argy-bargy :as argy)
 (import ./util)
 
-# commands
+# Commands
+(import ./subs/build :as cmd/build)
+(import ./subs/clean :as cmd/clean)
 (import ./subs/hook :as cmd/hook)
 (import ./subs/install :as cmd/install)
 (import ./subs/prep :as cmd/prep)
+(import ./subs/test :as cmd/test)
 (import ./subs/uninstall :as cmd/uninstall)
 (import ./subs/vendor :as cmd/vendor)
 
@@ -29,8 +32,11 @@
   ["install" cmd/install/config
    "uninstall" cmd/uninstall/config
    "---"
+   "build" cmd/build/config
+   "clean" cmd/clean/config
    "hook" cmd/hook/config
    "prep" cmd/prep/config
+   "test" cmd/test/config
    "vendor" cmd/vendor/config])
 
 (defn run []
@@ -56,8 +62,10 @@
       (def sub/run (module/value (curenv) name true))
       (try
         (sub/run parsed)
-        ([e _]
-         (eprint e)
+        ([e f]
+         (eprint "error: " e)
+         (if (os/getenv "JEEP_DEBUG")
+           (debug/stacktrace f))
          (os/exit 1))))))
 
 (defn- main [& args] (run))
