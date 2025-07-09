@@ -9,7 +9,9 @@
                      "----"]
              :info {:about `Cleans the contents of certain directories using
                            the clean hook defined in the project's
-                           'bundle.janet' or 'bundle/init.janet' file.`}
+                           'bundle.janet' or 'bundle/init.janet' file. The user
+                           can also delete the build and syspath directories
+                           using command line options.`}
              :help "Clean directories of the current project."})
 
 (defn run
