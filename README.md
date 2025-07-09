@@ -2,6 +2,9 @@
 
 Jeep is a project management utility for Janet bundles.
 
+Jeep only supports projects that use the `info.jdn` format for describing
+metadata. It does not work with bundles that use `project.janet`.
+
 > [!WARNING]
 > Jeep is in an alpha stage of development. There are likely to be bugs and
 > gaps in its implementation.
