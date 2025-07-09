@@ -2,7 +2,9 @@
 
 Jeep is a project management utility for Janet bundles.
 
-> :warning: **Warning:** Jeep is in an alpha stage of development.
+> [!WARNING]
+> Jeep is in an alpha stage of development. There are likely to be bugs and
+> gaps in its implementation.
 
 ## Installation
 
