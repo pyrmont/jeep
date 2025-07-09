@@ -18,4 +18,5 @@
   (util/local-hook :prep)
   (def deps (get info :dependencies []))
   (each d deps
-    (install/install d :force-update force? :auto-remove true)))
+    (install/install d :force-update force? :auto-remove true))
+  (print "Ready for development."))
