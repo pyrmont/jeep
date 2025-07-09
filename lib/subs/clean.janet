@@ -21,4 +21,5 @@
   (if (get opts "build")
     (util/rmrf "_build"))
   (if (get opts "syspath")
-    (util/rmrf "_modules")))
+    (util/rmrf "_modules"))
+  (print "Cleaning completed."))

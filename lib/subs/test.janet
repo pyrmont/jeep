@@ -30,16 +30,16 @@
                            listed or '--exclude' to exclude the files listed.
 
                            If the '--test' or '--skip' options are set, the
-                           'janet' binary is called with the argument '--test'
+                           janet executable is called with the argument '--test'
                            or '--skip' and the names written in JDN as a tuple
                            of keywords. So 'jeep test --test foo --test bar'
-                           would cause 'janet <file> --test "[:foo :bar]"' to be
+                           will cause 'janet <file> --test "[:foo :bar]"' to be
                            run for each file tested. The design puts the
                            responsibility on the user's testing library to run
                            or skip tests based on this information.
 
-                           If (a) the '--only' and '--exclude' options are both
-                           set or (b) the '--test' and '--skip' options are both
+                           If (1) the '--only' and '--exclude' options are both
+                           set or (2) the '--test' and '--skip' options are both
                            set, Jeep will error. By default, the check hook is
                            not run but this can be toggled with the '--check'
                            flag.`}

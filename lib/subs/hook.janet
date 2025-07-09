@@ -15,8 +15,20 @@
     (string/join ["Hooks:\n" ;hooks] "\n")))
 
 (def config {:rules nil
-             :info {:about `Run a bundle hook in the current project.`
-                    :usages ["jeep hook <hook>"]
+             :info {:about `Runs the bundle hook defined in the 'bundle.janet'
+                           or 'bundle/init.janet' file.
+
+                           Bundle hooks typically expect a struct/table containing the
+                           values in the bundle manifest as the first argument.
+                           However, since the hook command is used during
+                           development when the bundle has not been installed,
+                           hooks called with 'jeep hook' are given an empty
+                           table as the first argument.
+
+                           All arguments given after the name of the hook,
+                           including both parameters and options are passed
+                           through as arguments to the hook.`
+                    :usages ["Usage: jeep hook <hook>"]
                     :rider (print-hooks)}
              :help "Run a bundle hook in the current project."})
 

@@ -12,4 +12,5 @@
   [args &opt jeep-config]
   (os/mkdir "_build")
   (def bargs (get-in args [:sub :params :args] []))
-  (util/local-hook :build ;bargs))
+  (util/local-hook :build ;bargs)
+  (print "Build completed."))
