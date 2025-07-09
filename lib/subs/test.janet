@@ -45,21 +45,27 @@
                            flag.`}
              :help "Run tests for the current project."})
 
-(var- errors 0)
+(var- script-count 0)
+(var- failures @[])
+
+(defn- relpath
+  [path]
+  (string/replace (os/cwd) "." path))
 
 (defn- run-janet
   [path &opt args]
   (default args [])
-  (print "running " path "...")
-  (def err (os/execute ["janet" "-m" (dyn *syspath*) path ;args] :p))
-  (unless (zero? err)
-    (++ errors)
-    (eprinf (util/colour :red "non-zero exit code in %s: ") path)
-    (eprintf "%d" err)))
+  (prin "running " (relpath path) "... ")
+  (if (zero? (os/execute ["janet" "-m" (dyn *syspath*) path ;args] :p))
+    (print (util/colour :green "pass"))
+    (do
+      (print (util/colour :red "fail"))
+      (array/push failures path)))
+  (++ script-count))
 
 (defn- test
   [path &named use? test skip]
-  (each f (os/dir path)
+  (each f (sorted (os/dir path))
     (def fpath (string path util/sep f))
     (case (os/stat fpath :mode)
     :file
@@ -87,9 +93,10 @@
       (not (find match? excl-paths))
       (string/has-suffix? ".janet" path)))
   (test (os/realpath "test") :use? use? :test (get opts "test") :skip (get opts "skip"))
-  (if (zero? errors)
-    (print (util/colour :green "✓ All tests passed."))
+  (if (empty? failures)
+    (print "All scripts passed.")
     (do
-      (prin (util/colour :red "✘ Failing test scripts: "))
-      (printf "%d" errors)
+      (print (length failures) " of " script-count " scripts failed:")
+      (each f failures
+        (print "  " (string/replace (string (os/cwd)) "." f)))
       (os/exit 1))))
