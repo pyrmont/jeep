@@ -17,7 +17,7 @@
 
                            The prep hook is the location that a user can define
                            additional tasks to be performed prior to development
-                           (e.g. in some project's it may make sense to start a
+                           (e.g. in some projects it may make sense to start a
                            server).`}
              :help "Prepare the system for development of the current project."})
 
