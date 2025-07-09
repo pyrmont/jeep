@@ -1,26 +1,28 @@
 # Jeep
 
-Jeep is a project management utility for Janet.
+Jeep is a project management utility for Janet bundles.
 
-It has the following features:
-
-- development dependencies
+> :warning: **Warning:** Jeep is in an alpha stage of development.
 
 ## Installation
 
-Clone the repository and run `jpm install`.
+Clone the repository and run `janet lib/cli.janet install`.
 
 ## Usage
 
-Jeep is invoked using the `jeep` command-line utility. `jeep` supports
-the following subcommands:
+Jeep offers the following commands for use at both the global and project level:
 
-- **`dev-deps`**: Install dependencies and development dependencies
-- **`doc`**: Generate an API document
-- **`netrepl`**: Start a netrepl server
+- `jeep install`
+- `jeep uninstall`
 
-Additional subcommands are passed through to `jpm`. For example, running `jeep
-build` will invoke `jpm build`.
+The following commands work at the project level only:
+
+- `jeep build`
+- `jeep clean`
+- `jeep hook`
+- `jeep prep`
+- `jeep test`
+- `jeep vendor`
 
 More information about each subcommand is available by running `jeep help
 <subcommand>`.
