@@ -1,15 +1,17 @@
 (import ../util)
 
-(def config {:rules ["--path" {:default "vendor"
-                               :kind    :single
-                               :proxy   "dir"
-                               :short   "p"
-                               :help    `The directory where the vendored
-                                        dependencies will be saved.`}
-                     "----"]
+(def config {:rules []
              :info {:about `Downloads the dependencies specified under the
                            ':vendored' key in 'info.jdn' and save these to a
                            directory within the project root.
+
+                           The ':vendored' key should map to a struct/table. The
+                           keys in the struct/table are strings and the values
+                           are tuple/arrays. Each key is a directory into which
+                           to vendor the dependencies defined in the
+                           tuple/array. A dependency is a struct/table which
+                           must include a ':url' key and optionally ':tag',
+                           ':prefix', ':include' and ':exclude' keys.
 
                            Vendored dependencies should be imported into the
                            user's code using relative paths rather than by
@@ -21,6 +23,5 @@
 
 (defn run
   [args &opt jeep-config]
-  (def path (get-in args [:sub :opts "path"]))
-  (util/vendor-deps path)
+  (util/vendor-deps)
   (print "All dependencies vendored."))

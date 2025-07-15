@@ -2,6 +2,4 @@
 
 (defn main
   [& args]
-  (def deps-dir "deps")
-  (unless (= :directory (os/stat deps-dir :mode))
-    (util/vendor-deps deps-dir)))
+  (util/vendor-deps))

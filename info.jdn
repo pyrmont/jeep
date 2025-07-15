@@ -5,18 +5,19 @@
  :url "https://github.com/pyrmont/jeep"
  :repo "git+https://github.com/pyrmont/jeep"
 
- :vendored [
-   {:url "https://github.com/pyrmont/argy-bargy"
-    :prefix "argy-bargy"
-    :include ["argy-bargy.janet"
-              "LICENSE"]}
-   {:url "https://github.com/janet-lang/spork"
-    :prefix "spork"
-    :include ["spork/path.janet"
-              "spork/pm.janet"
-              "spork/pm-config.janet"
-              "spork/sh.janet"
-              "LICENSE"]}]
+ :vendored {
+   "deps" [
+     {:url "https://github.com/pyrmont/argy-bargy"
+      :prefix "argy-bargy"
+      :include ["argy-bargy.janet"
+                "LICENSE"]}
+     {:url "https://github.com/janet-lang/spork"
+      :prefix "spork"
+      :include ["spork/path.janet"
+                "spork/pm.janet"
+                "spork/pm-config.janet"
+                "spork/sh.janet"
+                "LICENSE"]}]}
 
  :executable ["bin/jeep"]
  :source {:prefix "jeep"

@@ -101,22 +101,22 @@
     (apply hookf @{} args)))
 
 (defn vendor-deps
-  [deps-dir]
+  []
   (def temp-dir "tmp")
   (defn is-tarball? [url]
     (or (string/has-suffix? ".gz" url)
         (string/has-suffix? ".tar" url)))
-  (def deps (get (load-meta) :vendored))
-  (each {:url url
-         :tag tag
-         :prefix prefix
-         :include includes
-         :exclude excludes} deps
+  (defn vendor [vendor-dir dep]
+    (def {:url url
+          :tag tag
+          :prefix prefix
+          :include includes
+          :exclude excludes} dep)
     (unless url
       (error "vended dependencies need a :url key"))
     (default tag "HEAD")
     (def tarball (if (is-tarball? url) url (string url "/archive/" tag ".tar.gz")))
-    (def dest-dir (if prefix (string/join [deps-dir prefix] sep) deps-dir))
+    (def dest-dir (string vendor-dir (when prefix (string sep prefix))))
     (def filename (-> (string/split "/" tarball) last))
     (print "vendoring " tarball " to " dest-dir)
     (defer (rmrf temp-dir)
@@ -138,5 +138,9 @@
           (if (= :directory (os/stat from :mode))
             (mkdir-from-parts to-parts)
             (mkdir-from-parts (array/slice to-parts 0 -2)))
-          (print "copying " from " to " to)
-          (copy from to))))))
+          (print "  copying " from " to " to)
+          (copy from to)))))
+  (def vendored (get (load-meta) :vendored))
+  (each [dir deps] (pairs vendored)
+    (each d deps
+      (vendor dir d))))
