@@ -46,24 +46,13 @@
     (os/execute ["cp" "-rf" src dest] :px)))
 
 (defn exec
-  [cmd & args]
-  (os/execute [(dyn (keyword cmd "path") (string cmd)) ;args] :p))
+  [cmd stdio & args]
+  (default stdio {})
+  (os/execute [(dyn (keyword cmd "path") (string cmd)) ;args] :px stdio))
 
 (defn fexists?
   [p]
   (= :file (os/stat p :mode)))
-
-(defn load-meta
-  [&opt dir]
-  (default dir ".")
-  (defn slurp-maybe
-    [path]
-    (when-with [f (file/open path)]
-      (file/read f :all)))
-  (def info-path (string/join [dir "bundle" "info.jdn"] sep))
-  (def info-path2 (string/join [dir "info.jdn"] sep))
-  (when-let [d (slurp-maybe info-path)] (break (parse d)))
-  (when-let [d (slurp-maybe info-path2)] (break (parse d))))
 
 (defn mkdir-from-parts
   [parts]
@@ -83,6 +72,28 @@
     nil nil # do nothing if file does not exist
     (os/rm path)))
 
+(defn slurp-maybe
+  [path]
+  (when-with [f (file/open path)]
+    (file/read f :all)))
+
+(defn spit-maybe
+  [path s]
+  (when-with [f (file/open path :w)]
+    (file/write f s)))
+
+(defn url?
+  [s]
+  (def res (peg/match
+             ~{:main (* :prot :domain :path :qs -1)
+               :prot (? (* :w+ "://"))
+               :domain (* :-w+ (some (* "." :-w+)))
+               :-w+ (some (+ "-" :w))
+               :path (? (* "/" (any (+ :w (set "./-_")))))
+               :qs (? (* "?" (any (+ :w (set "./-_=")))))}
+             s))
+  (not (nil? res)))
+
 # Dependent functions
 
 (defn change-syspath
@@ -94,11 +105,31 @@
     (mkdir-from-parts (apart abspath)))
   (setdyn *syspath* abspath))
 
+(defn load-info
+  [&opt dir]
+  (default dir ".")
+  (def info-path1 (string/join [dir "bundle" "info.jdn"] sep))
+  (def info-path2 (string/join [dir "info.jdn"] sep))
+  (or (slurp-maybe info-path1) (slurp-maybe info-path2)))
+
+(defn load-meta
+  [&opt dir]
+  (default dir ".")
+  (when-let [info (load-info dir)]
+   (parse info)))
+
 (defn local-hook
   [name & args]
   (def [ok module] (protect (require "/bundle")))
   (when-let [hookf (and ok (module/value module (symbol name)))]
     (apply hookf @{} args)))
+
+(defn save-info
+  [jdn &opt dir]
+  (default dir ".")
+  (def info-path1 (string/join [dir "bundle" "info.jdn"] sep))
+  (def info-path2 (string/join [dir "info.jdn"] sep))
+  (or (spit-maybe info-path1 jdn) (spit-maybe info-path2 jdn)))
 
 (defn vendor-deps
   []
@@ -120,26 +151,25 @@
     (def filename (-> (string/split "/" tarball) last))
     (print "vendoring " tarball " to " dest-dir)
     (defer (rmrf temp-dir)
-      (do
-        (os/mkdir temp-dir)
-        (def tar-file (string/join [temp-dir filename] sep))
-        (exec :curl "-sL" tarball "-o" tar-file)
-        (exec :tar "xf" tar-file "-C" temp-dir "--strip-components" "1")
-        (rmrf tar-file)
-        (when excludes
-          (each exclude excludes
-            (rmrf (string/join [temp-dir exclude] sep))))
-        (def files (if includes includes (os/dir temp-dir)))
-        (each file files
-          (def file-parts (apart file))
-          (def from (string/join [temp-dir ;file-parts] sep))
-          (def to (string/join [dest-dir ;file-parts] sep))
-          (def to-parts (apart to))
-          (if (= :directory (os/stat from :mode))
-            (mkdir-from-parts to-parts)
-            (mkdir-from-parts (array/slice to-parts 0 -2)))
-          (print "  copying " from " to " to)
-          (copy from to)))))
+      (os/mkdir temp-dir)
+      (def tar-file (string/join [temp-dir filename] sep))
+      (exec :curl nil "-sL" tarball "-o" tar-file)
+      (exec :tar nil "xf" tar-file "-C" temp-dir "--strip-components" "1")
+      (rmrf tar-file)
+      (when excludes
+        (each exclude excludes
+          (rmrf (string/join [temp-dir exclude] sep))))
+      (def files (if includes includes (os/dir temp-dir)))
+      (each file files
+        (def file-parts (apart file))
+        (def from (string/join [temp-dir ;file-parts] sep))
+        (def to (string/join [dest-dir ;file-parts] sep))
+        (def to-parts (apart to))
+        (if (= :directory (os/stat from :mode))
+          (mkdir-from-parts to-parts)
+          (mkdir-from-parts (array/slice to-parts 0 -2)))
+        (print "  copying " from " to " to)
+        (copy from to))))
   (def vendored (get (load-meta) :vendored))
   (each [dir deps] (pairs vendored)
     (each d deps

@@ -4,6 +4,7 @@
 # Commands
 (import ./subs/build :as cmd/build)
 (import ./subs/clean :as cmd/clean)
+(import ./subs/dep :as cmd/dep)
 (import ./subs/hook :as cmd/hook)
 (import ./subs/install :as cmd/install)
 (import ./subs/prep :as cmd/prep)
@@ -34,10 +35,13 @@
    "---"
    "build" cmd/build/config
    "clean" cmd/clean/config
+   "dep" cmd/dep/config
    "hook" cmd/hook/config
    "prep" cmd/prep/config
    "test" cmd/test/config
    "vendor" cmd/vendor/config])
+
+(def- file-env (curenv))
 
 (defn run []
   (def config (merge top-config {:subs top-subcommands}))
@@ -59,7 +63,7 @@
       (when (get-in parsed [:opts "local"])
         (util/change-syspath (or (get jeep-config :syspath) "_modules")))
       (def name (symbol "cmd/" (get-in parsed [:sub :cmd]) "/run"))
-      (def sub/run (module/value (curenv) name true))
+      (def sub/run (module/value file-env name true))
       (try
         (sub/run parsed)
         ([e f]
