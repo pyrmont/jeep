@@ -61,7 +61,6 @@
   (each d to-add
     (print "adding " (if (dictionary? d) (get d :name) d) "...")
     (jdn/add-in jdn group d))
-  (print (jdn/jdn-arr->jdn-str jdn))
   jdn)
 
 (defn- bundle-from-url
@@ -93,7 +92,6 @@
   (each d to-rem
     (print "removing " d "...")
     (jdn/rem-from jdn group (describe d)))
-  (print (jdn/jdn-arr->jdn-str jdn))
   jdn)
 
 (defn run
