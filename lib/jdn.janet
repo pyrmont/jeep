@@ -101,8 +101,7 @@
   [ds k v]
   (def indent @"")
   (var prev-indent nil)
-  (def ks (map describe (if (indexed? k) k [k])))
-  (pp ks)
+  (def ks (map describe k))
   (var ks-i 0)
   (var arr ds)
   (var i 0)
@@ -114,7 +113,7 @@
     [el]
     (and (not (comment? el))
          (not (whitespace? el))))
-  (defn first-indent [ds]
+  (defn first-indent [ds s-indent]
     (def res @"")
     (each el (array/slice ds 1 -2)
       (if (val? el)
@@ -122,7 +121,7 @@
       (if (eol? el)
         (buffer/clear res)
         (buffer/push res el)))
-    (if (empty? res) prev-indent (string res)))
+    (if (empty? res) (string s-indent) (string res)))
   (defn has-vals? [ds]
     (var res false)
     (each el (array/slice ds 1 -2)
@@ -153,7 +152,7 @@
           (if (< (++ ks-i) (length ks))
             (table/to-struct (put-in @{} (array/slice ks ks-i) [v]))
             [v]))
-        (def k-indent (first-indent arr))
+        (def k-indent (first-indent arr prev-indent))
         (def v-indent (string k-indent (string/repeat " " (inc (length curr-k)))))
         (def curr-v (jdn-str->jdn-arr (janet->string j v-indent)))
         (if (has-vals? arr)
@@ -175,7 +174,8 @@
       (if need-val?
         (if (= (length ks) ks-i)
           (do
-            (def v-indent (first-indent el))
+            (buffer/push indent " ")
+            (def v-indent (first-indent el indent))
             (if (has-vals? el)
               (array/insert el -2 eol v-indent (janet->string v v-indent))
               (array/insert el -2 (janet->string v v-indent)))
@@ -184,20 +184,85 @@
         (set key? true)))
     (++ i)))
 
-# (def s
-#   ```
-#   # this is a comment
-#   {:name "my-module"
-#    :dependencies ["some-dep"]
-#    :foo 5
-#     }
-#   ```)
-#
-# (def jdn (jdn-str->jdn-arr s))
-#
-# (print s)
-# (print)
-# (pp jdn)
-# (print)
-# (add-dep jdn {:git "https://github.com/pyrmont/testament" :name "testament"} ":dependencies")
-# (print (jdn-arr->jdn-str jdn))
+(defn rem-from
+  [ds k v]
+  (def ks (map describe k))
+  (var ks-i 0)
+  (var arr ds)
+  (var i 0)
+  (var dict? false)
+  (var key? false)
+  (var need-val? true)
+  # helpers
+  (defn val?
+    [el]
+    (and (not (comment? el))
+         (not (whitespace? el))))
+  (defn remove [ds v]
+    (var found? false)
+    (var i 1)
+    (var key? false)
+    (var need-val? false)
+    (while (< i (dec (length ds)))
+      (def el (get ds i))
+      (cond
+        (and (array? el)
+             (or (= "{" (first el))
+                 (= "@{" (first el))))
+        (do
+          (set key? true)
+          (each e (array/slice el 1 -2)
+            (cond
+              (and need-val? (val? e))
+              (do
+                (if (= e v)
+                  (set found? true))
+                (break))
+              (and key? (val? e))
+              (do
+                (if (= e ":name")
+                  (set need-val? true))
+                (set key? false))
+              (and (not key?) (val? e))
+              (set key? true))))
+        (= v el)
+        (set found? true))
+      (when found?
+        (array/remove ds i)
+        (while (< i (dec (length ds)))
+          (def el (get ds i))
+          (if (val? el)
+            (break)
+            (array/remove ds i)))
+        (break))
+      (++ i)))
+  # main loop
+  (while (def el (get arr i))
+    (cond
+      (and (array? el)
+           (or (= "{" (first el))
+               (= "@{" (first el)))
+           need-val?)
+      (do
+        (set need-val? false)
+        (set arr el)
+        (set i 0)
+        (set dict? true)
+        (set key? true))
+      (= "}" el)
+      (error "value missing")
+      (and dict? key? (val? el))
+      (do
+        (when (= (get ks ks-i) el)
+          (set need-val? true)
+          (++ ks-i))
+        (set key? false))
+      (and dict? (not key?) (val? el))
+      (if need-val?
+        (if (= (length ks) ks-i)
+          (do
+            (remove el v)
+            (break))
+          (error "intermediate key mapped to non-dictionary"))
+        (set key? true)))
+    (++ i)))

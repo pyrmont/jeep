@@ -31,12 +31,7 @@
                            by setting the '--remove' flag.`}
              :help "Add or remove dependencies in the current project."})
 
-(defn- add-deps
-  [jdn to-add group]
-  (each d to-add
-    (print "adding " (if (dictionary? d) (get d :name) d) "...")
-    (jdn/add-in jdn group d))
-  jdn)
+(def- peg '(* :w+ "://"))
 
 (defn- remote-name
   [url]
@@ -48,6 +43,59 @@
     (util/exec :git stdio "clone" "--depth" "1" url temp-dir)
     (get (util/load-meta "tmp") :name)))
 
+(defn- add-deps
+  [jdn meta group deps]
+  (def to-add @[])
+  (each d deps
+    (cond
+      (util/url? d)
+      (do
+        (def url (if (peg/match peg d) d (string "https://" d)))
+        (def name (remote-name url))
+        (array/push to-add {:name name :url url}))
+      (string? d)
+      (array/push to-add d))
+    (def resolved (array/peek to-add))
+    (if (find (partial = resolved) (get-in meta group []))
+      (array/pop to-add)))
+  (each d to-add
+    (print "adding " (if (dictionary? d) (get d :name) d) "...")
+    (jdn/add-in jdn group d))
+  (print (jdn/jdn-arr->jdn-str jdn))
+  jdn)
+
+(defn- bundle-from-url
+  [listed url]
+  (var res nil)
+  (each d listed
+    (when (and (dictionary? d)
+               (= url (get d :url)))
+      (set res d)
+      (break)))
+  (if (nil? res)
+    (error (string "no dependency with URL " url))
+    res))
+
+(defn- rem-deps
+  [jdn meta group deps]
+  (def listed (get-in meta group []))
+  (if (empty? listed) (break))
+  (def to-rem @[])
+  (each d deps
+    (cond
+      (util/url? d)
+      (do
+        (def url (if (peg/match peg d) d (string "https://" d)))
+        (def name (get (bundle-from-url listed url) :name))
+        (array/push to-rem name))
+      (string? d)
+      (array/push to-rem d)))
+  (each d to-rem
+    (print "removing " d "...")
+    (jdn/rem-from jdn group (describe d)))
+  (print (jdn/jdn-arr->jdn-str jdn))
+  jdn)
+
 (defn run
   [args &opt jeep-config]
   (def opts (get-in args [:sub :opts] {}))
@@ -55,25 +103,12 @@
   (def group (if-let [dir (get opts "vendor")]
                [:vendored dir]
                [:dependencies]))
+  (def remove? (get opts "remove"))
   (def info (util/load-info))
   (def meta (parse info))
   (def jdn (jdn/jdn-str->jdn-arr info))
-  (def to-add @[])
-  (each d deps
-    (cond
-      (util/url? d)
-      (do
-        (def url (if (peg/match '(* :w+ "://") d)
-                   d
-                   (string "https://" d)))
-        (def name (remote-name url))
-        (def dep {:name name :url url})
-        (array/push to-add {:name name :url url}))
-      (string? d)
-      (array/push to-add d))
-    (def resolved (array/peek to-add))
-    (if (find (partial = resolved) (get-in meta group []))
-      (array/pop to-add)))
-  (add-deps jdn to-add group)
+  (if remove?
+    (rem-deps jdn meta group deps)
+    (add-deps jdn meta group deps))
   (util/save-info (jdn/jdn-arr->jdn-str jdn))
-  (print "Dependencies added."))
+  (print "Dependencies updated."))
