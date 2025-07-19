@@ -52,6 +52,7 @@
       (do
         (def url (if (peg/match peg d) d (string "https://" d)))
         (def name (remote-name url))
+        (assert name (string "dependency at " url " is missing info.jdn file with :name key"))
         (array/push to-add {:name name :url url}))
       (string? d)
       (array/push to-add d))
@@ -103,7 +104,9 @@
                [:dependencies]))
   (def remove? (get opts "remove"))
   (def info (util/load-info))
+  (assert info "no info.jdn file found")
   (def meta (parse info))
+  (assert (get meta :name) "info.jdn file must contain the :name key")
   (def jdn (jdn/jdn-str->jdn-arr info))
   (if remove?
     (rem-deps jdn meta group deps)
