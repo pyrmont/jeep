@@ -24,6 +24,7 @@ The following commands work at the project level only:
 
 - `jeep build`
 - `jeep clean`
+- `jeep dep`
 - `jeep hook`
 - `jeep prep`
 - `jeep test`
