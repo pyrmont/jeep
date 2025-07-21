@@ -86,7 +86,7 @@
     (if (string? el)
       (buffer/push b el)
       (buffer/push b (jdn-arr->jdn-str el))))
-  b)
+  (string b))
 
 (defn jdn-str->jdn-arr
   [s]
@@ -98,6 +98,12 @@
   (array? (peg/match :s s)))
 
 # Dependent functions
+
+(defn- val?
+  [v]
+  (or (array? v)
+      (and (not (comment? v))
+           (not (whitespace? v)))))
 
 (defn add-in
   [ds k v]
@@ -111,10 +117,6 @@
   (var key? false)
   (var need-val? true)
   # helpers
-  (defn- val?
-    [el]
-    (and (not (comment? el))
-         (not (whitespace? el))))
   (defn first-indent [ds s-indent]
     (def res @"")
     (each el (array/slice ds 1 -2)
@@ -161,7 +163,7 @@
           (array/insert arr -2 eol k-indent curr-k " " ;curr-v)
           (array/insert arr -2 curr-k " " ;curr-v))
         (break))
-      (whitespace? el)
+      (and (string? el) (whitespace? el))
       (if (eol? el)
         (buffer/clear indent)
         (buffer/push indent el))
@@ -196,10 +198,6 @@
   (var key? false)
   (var need-val? true)
   # helpers
-  (defn val?
-    [el]
-    (and (not (comment? el))
-         (not (whitespace? el))))
   (defn remove [ds v]
     (var found? false)
     (var i 1)

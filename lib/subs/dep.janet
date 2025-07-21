@@ -4,6 +4,7 @@
 (import ../../deps/spork/spork/sh)
 
 (def config {:rules [:deps {:splat? true
+                            :req?   true
                             :help   `Deps to add or remove. Dependencies can be
                                     provided as short names, URLs or JDN
                                     values.`}
