@@ -23,7 +23,8 @@
 
 (defn comment?
   [s]
-  (and (string? s) (= "#" (first s))))
+  (assert (string? s) "expected string")
+  (= 35 (first s)))
 
 (defn eol?
   [s]
@@ -93,7 +94,8 @@
 
 (defn whitespace?
   [s]
-  (and (string? s) (peg/match :s s)))
+  (assert (string? s) "expected string")
+  (array? (peg/match :s s)))
 
 # Dependent functions
 

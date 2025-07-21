@@ -22,6 +22,10 @@
                                :short "s"
                                :proxy "name"
                                :help  "Name of test to skip."}
+                     "---"
+                     "--no-passfail" {:kind  :flag
+                                      :short "P"
+                                      :help  "Do not print pass/fail results."}
                      "----"]
              :info {:about `Runs tests in the test directory by starting a
                            separate instance of 'janet' for each file tested.
@@ -45,6 +49,7 @@
                            flag.`}
              :help "Run tests for the current project."})
 
+(var- no-results? false)
 (var- script-count 0)
 (var- failures @[])
 
@@ -52,14 +57,20 @@
   [path]
   (string/replace (os/cwd) "." path))
 
+(defn- result
+  [c m]
+  (unless no-results?
+    (print (util/colour c m))))
+
 (defn- run-janet
   [path &opt args]
   (default args [])
   (prin "running " (relpath path) "... ")
+  (flush)
   (if (zero? (os/execute ["janet" "-m" (dyn *syspath*) path ;args] :p))
-    (print (util/colour :green "pass"))
+    (result :green "pass")
     (do
-      (print (util/colour :red "fail"))
+      (result :red "fail")
       (array/push failures path)))
   (++ script-count))
 
@@ -82,6 +93,7 @@
     (error "cannot call with both '--test' and '--skip'"))
   (if (get opts "check")
     (util/local-hook :check))
+  (set no-results? (get opts "no-passfail"))
   (def only-paths (get opts "only"))
   (def excl-paths (get opts "exclude"))
   (defn use? [path]
