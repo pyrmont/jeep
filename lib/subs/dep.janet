@@ -1,5 +1,5 @@
 (import ../install)
-(import ../jdn)
+(import ../info)
 (import ../util)
 (import ../../deps/spork/spork/sh)
 
@@ -62,7 +62,7 @@
       (array/pop to-add)))
   (each d to-add
     (print "adding " (if (dictionary? d) (get d :name) d) "...")
-    (jdn/add-in jdn group d))
+    (info/add-to jdn group d))
   jdn)
 
 (defn- bundle-from-url
@@ -93,7 +93,7 @@
       (array/push to-rem d)))
   (each d to-rem
     (print "removing " d "...")
-    (jdn/rem-from jdn group (describe d)))
+    (info/rem-from jdn group d))
   jdn)
 
 (defn run
@@ -108,9 +108,9 @@
   (assert info "no info.jdn file found")
   (def meta (parse info))
   (assert (get meta :name) "info.jdn file must contain the :name key")
-  (def jdn (jdn/jdn-str->jdn-arr info))
+  (def jdn (info/jdn-str->jdn-arr info))
   (if remove?
     (rem-deps jdn meta group deps)
     (add-deps jdn meta group deps))
-  (util/save-info (jdn/jdn-arr->jdn-str jdn))
+  (util/save-info (info/jdn-arr->jdn-str jdn))
   (print "Dependencies updated."))
