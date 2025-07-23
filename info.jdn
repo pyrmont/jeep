@@ -7,18 +7,21 @@
 
  :vendored {
    "deps" [
-     {:url "https://github.com/pyrmont/argy-bargy"
+     {:name "argy-bargy"
+      :url "https://github.com/pyrmont/argy-bargy"
       :prefix "argy-bargy"
       :include ["argy-bargy.janet"
                 "LICENSE"]}
-     {:url "https://github.com/janet-lang/spork"
+     {:name "spork"
+      :url "https://github.com/janet-lang/spork"
       :prefix "spork"
       :include ["spork/path.janet"
                 "spork/pm.janet"
                 "spork/pm-config.janet"
                 "spork/sh.janet"
                 "LICENSE"]}
-     {:url "https://github.com/pyrmont/testament"
+     {:name "testament"
+      :url "https://github.com/pyrmont/testament"
       :prefix "testament"
       :include ["lib/testament.janet"
                 "init.janet"
