@@ -1,7 +1,6 @@
 (import ../install)
 (import ../info)
 (import ../util)
-(import ../../deps/spork/spork/sh)
 
 (def config {:rules [:deps {:splat? true
                             :req?   true
@@ -39,7 +38,7 @@
   (def temp-dir "tmp")
   (defer (util/rmrf temp-dir)
     (os/mkdir temp-dir)
-    (def devnull (sh/devnull))
+    (def devnull (util/devnull))
     (def stdio {:out devnull :err devnull})
     (util/exec :git stdio "clone" "--depth" "1" url temp-dir)
     (get (util/load-meta "tmp") :name)))
