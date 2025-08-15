@@ -33,14 +33,16 @@
                            the user can use '--only' to test only the files
                            listed or '--exclude' to exclude the files listed.
 
-                           If the '--test' or '--skip' options are set, the
-                           janet executable is called with the argument
-                           '--test' or '--skip' and a string of the name values
-                           separated by spaces. So 'jeep test --test foo --test
-                           bar' will cause 'janet <file> --test "foo bar"' to
-                           be run for each file tested. The design puts the
-                           responsibility on the user's testing library to run
-                           or skip tests based on this information.
+                           If the '--test' option is set, the janet executable
+                           is called for each file in the test/ directory with
+                           the dynamic binding :tests set to an array of the
+                           name values. So 'jeep test --test foo --test bar'
+                           will cause 'janet -e "(setdyn :tests @['foo 'bar]"
+                           <file>' to be run for each file tested. A similar
+                           dynamic binding is set if the '--skip' option is
+                           set. The design puts the responsibility on the
+                           user's testing library to run or skip tests based on
+                           this information.
 
                            If (1) the '--only' and '--exclude' options are both
                            set or (2) the '--test' and '--skip' options are both
@@ -66,11 +68,11 @@
   [path &opt args]
   (prin "running " (relpath path) "... ")
   (flush)
-  (def jargs
+  (def setup
     (if (nil? args)
-      []
-      [(first args) (string/join (last args) " ")]))
-  (if (zero? (os/execute ["janet" "-m" (dyn *syspath*) path ;jargs] :p))
+      ""
+      (string/format "(setdyn %s @['%s])" (first args) (string/join (last args) " '"))))
+  (if (zero? (os/execute ["janet" "-m" (dyn *syspath*) "-e" setup path] :p))
     (result :green "pass")
     (do
       (result :red "fail")
@@ -83,7 +85,7 @@
     (def fpath (string path util/sep f))
     (case (os/stat fpath :mode)
     :file
-    (when (use? fpath) (run-janet fpath (cond test ["--test" test] skip ["--skip" skip])))
+    (when (use? fpath) (run-janet fpath (cond test [":tests" test] skip [":skips" skip])))
     :directory
     (test fpath :use? use? :test test :skip skip))))
 
