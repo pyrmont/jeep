@@ -6,12 +6,14 @@
 
 (def sep (get {:windows "\\" :cygwin "\\" :mingw "\\"} (os/which) "/"))
 
-(def pathg ~{:main (* (? :root) (some (+ :sep :part)) -1)
+(def pathg ~{:main (* (+ :abspath :relpath) -1)
+             :abspath (* :root (any :relpath))
+             :relpath (* :part (any (* :sep :part)))
              :root '(+ "/" (* (? (* :a ":")) `\`))
              :sep  ,sep
              :part (* (+ :quoted :unquoted) (> (+ :sep -1)))
              :quoted (* `"` '(some (+ `\\` `\"` (* (! `"`) 1))) `"`)
-             :unquoted '(some (+ :escaped (* (! :sep) 1)))
+             :unquoted '(some (+ :escaped (* (! (set `"\/ `)) 1)))
              :escaped (* `\` 1)})
 
 # Independent functions
@@ -30,20 +32,15 @@
         (error "invalid path"))))
 
 (defn colour
-  [c text]
-  (if (os/isatty)
+  [c text &opt force?]
+  (default force? false)
+  (if (or (os/isatty) force?)
     (string (get colours c "\e[0m") text "\e[0m")
     text))
 
-(defn copy
-  [src dest]
-  (if (= :windows (os/which))
-    (let [isdir (= (os/stat src :mode) :directory)]
-      (os/shell (string "C:\\Windows\\System32\\xcopy.exe" " "
-                        src " "
-                        dest " "
-                        "/y /s /e /i > nul")))
-    (os/execute ["cp" "-rf" src dest] :px)))
+(defn devnull
+  []
+  (os/open (if (= :windows (os/which)) "NUL" "/dev/null") :rw))
 
 (defn exec
   [cmd stdio & args]
@@ -53,14 +50,6 @@
 (defn fexists?
   [p]
   (= :file (os/stat p :mode)))
-
-(defn mkdir-from-parts
-  [parts]
-  (def pwd (os/cwd))
-  (each part parts
-    (os/mkdir part)
-    (os/cd part))
-  (os/cd pwd))
 
 (defn rmrf
   [path]
@@ -96,14 +85,42 @@
 
 # Dependent functions
 
+(defn mkdir
+  [path]
+  (def parts (apart path))
+  (var res false)
+  (def pwd (os/cwd))
+  (each part parts
+    (set res (os/mkdir part))
+    (os/cd part))
+  (os/cd pwd)
+  res)
+
+(defn parent
+  [path]
+  (string/join (array/slice (apart path) 0 -2) sep))
+
 (defn change-syspath
   [path]
   (def abspath (if (abspath? path)
                  path
                  (string (os/cwd) sep path)))
   (unless (= :directory (os/stat abspath :mode))
-    (mkdir-from-parts (apart abspath)))
+    (mkdir abspath))
   (setdyn *syspath* abspath))
+
+(defn copy
+  [src dest]
+  (if (= :windows (os/which))
+    (let [dir? (= (os/stat src :mode) :directory)]
+      (os/shell (string "C:\\Windows\\System32\\xcopy.exe" " "
+                        src
+                        " "
+                        dest
+                        (when dir? (string sep (last (apart src))))
+                        " "
+                        "/y /s /e /i > nul")))
+    (os/execute ["cp" "-rf" src dest] :px)))
 
 (defn load-info
   [&opt dir]
@@ -134,9 +151,6 @@
 (defn vendor-deps
   []
   (def temp-dir "tmp")
-  (defn is-tarball? [url]
-    (or (string/has-suffix? ".gz" url)
-        (string/has-suffix? ".tar" url)))
   (defn vendor [vendor-dir dep]
     (def {:url url
           :tag tag
@@ -146,28 +160,31 @@
     (unless url
       (error "vended dependencies need a :url key"))
     (default tag "HEAD")
-    (def tarball (if (is-tarball? url) url (string url "/archive/" tag ".tar.gz")))
+    (def sha? (= [] (peg/match '(between 7 40 :h) tag)))
+    (def devnull (devnull))
+    (def stdio {:out devnull :err devnull})
     (def dest-dir (string vendor-dir (when prefix (string sep prefix))))
-    (def filename (-> (string/split "/" tarball) last))
-    (print "vendoring " tarball " to " dest-dir)
+    (print "vendoring " url " to " dest-dir)
     (defer (rmrf temp-dir)
       (os/mkdir temp-dir)
-      (def tar-file (string/join [temp-dir filename] sep))
-      (exec :curl nil "-sL" tarball "-o" tar-file)
-      (exec :tar nil "xf" tar-file "-C" temp-dir "--strip-components" "1")
-      (rmrf tar-file)
+      (if (= "HEAD" tag)
+        (exec :git stdio "clone" "--depth" "1" url temp-dir)
+        (if (not sha?)
+          (exec :git stdio "clone" "--branch" tag "--depth" "1" url temp-dir)
+          (do
+            (exec :git stdio "clone" "--filter" "blob:none" "--no-checkout" url temp-dir)
+            (exec :git stdio "-C" temp-dir "fetch" "origin" tag)
+            (exec :git stdio "-C" temp-dir "checkout" tag))))
       (when excludes
         (each exclude excludes
           (rmrf (string/join [temp-dir exclude] sep))))
       (def files (if includes includes (os/dir temp-dir)))
       (each file files
-        (def file-parts (apart file))
-        (def from (string/join [temp-dir ;file-parts] sep))
-        (def to (string/join [dest-dir ;file-parts] sep))
-        (def to-parts (apart to))
+        (def from (string temp-dir sep file))
+        (def to (string dest-dir sep file))
         (if (= :directory (os/stat from :mode))
-          (mkdir-from-parts to-parts)
-          (mkdir-from-parts (array/slice to-parts 0 -2)))
+          (mkdir to)
+          (mkdir (parent to)))
         (print "  copying " from " to " to)
         (copy from to))))
   (def vendored (get (load-meta) :vendored))
