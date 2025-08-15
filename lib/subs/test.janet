@@ -34,11 +34,11 @@
                            listed or '--exclude' to exclude the files listed.
 
                            If the '--test' or '--skip' options are set, the
-                           janet executable is called with the argument '--test'
-                           or '--skip' and the names written in JDN as a tuple
-                           of keywords. So 'jeep test --test foo --test bar'
-                           will cause 'janet <file> --test "[:foo :bar]"' to be
-                           run for each file tested. The design puts the
+                           janet executable is called with the argument
+                           '--test' or '--skip' and a string of the name values
+                           separated by spaces. So 'jeep test --test foo --test
+                           bar' will cause 'janet <file> --test "foo bar"' to
+                           be run for each file tested. The design puts the
                            responsibility on the user's testing library to run
                            or skip tests based on this information.
 
@@ -64,10 +64,13 @@
 
 (defn- run-janet
   [path &opt args]
-  (default args [])
   (prin "running " (relpath path) "... ")
   (flush)
-  (if (zero? (os/execute ["janet" "-m" (dyn *syspath*) path ;args] :p))
+  (def jargs
+    (if (nil? args)
+      []
+      [(first args) (string/join (last args) " ")]))
+  (if (zero? (os/execute ["janet" "-m" (dyn *syspath*) path ;jargs] :p))
     (result :green "pass")
     (do
       (result :red "fail")
