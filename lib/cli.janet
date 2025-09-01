@@ -8,6 +8,7 @@
 (import ./subs/hook :as cmd/hook)
 (import ./subs/install :as cmd/install)
 (import ./subs/prep :as cmd/prep)
+(import ./subs/quickbin :as cmd/quickbin)
 (import ./subs/test :as cmd/test)
 (import ./subs/uninstall :as cmd/uninstall)
 (import ./subs/vendor :as cmd/vendor)
@@ -32,6 +33,7 @@
   ```
   ["install" cmd/install/config
    "uninstall" cmd/uninstall/config
+   "quickbin" cmd/quickbin/config
    "---"
    "build" cmd/build/config
    "clean" cmd/clean/config
@@ -72,4 +74,4 @@
            (debug/stacktrace f))
          (os/exit 1))))))
 
-(defn- main [& args] (run))
+(defn main [& args] (run))

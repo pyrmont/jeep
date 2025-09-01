@@ -79,15 +79,15 @@
       (array/push failures path)))
   (++ script-count))
 
-(defn- test
+(defn- run-tests
   [path &named use? test skip]
   (each f (sorted (os/dir path))
     (def fpath (string path util/sep f))
     (case (os/stat fpath :mode)
-    :file
-    (when (use? fpath) (run-janet fpath (cond test [":tests" test] skip [":skips" skip])))
-    :directory
-    (test fpath :use? use? :test test :skip skip))))
+      :file
+      (when (use? fpath) (run-janet fpath (cond test [":tests" test] skip [":skips" skip])))
+      :directory
+      (run-tests fpath :use? use? :test test :skip skip))))
 
 (defn run
   [args &opt jeep-config]
@@ -109,7 +109,7 @@
       excl-paths
       (not (find match? excl-paths))
       (string/has-suffix? ".janet" path)))
-  (test (os/realpath "test") :use? use? :test (get opts "test") :skip (get opts "skip"))
+  (run-tests (os/realpath "test") :use? use? :test (get opts "test") :skip (get opts "skip"))
   (if (empty? failures)
     (print "All scripts passed.")
     (do
