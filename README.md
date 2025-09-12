@@ -2,12 +2,12 @@
 
 Jeep is a project management utility for Janet bundles.
 
+> [!WARNING]
+> Jeep is in a beta stage of development. There are likely to be bugs and gaps
+> in its implementation.
+
 Jeep only supports projects that use the `info.jdn` format for describing
 metadata. It does not work with bundles that use `project.janet`.
-
-> [!WARNING]
-> Jeep is in an alpha stage of development. There are likely to be bugs and
-> gaps in its implementation.
 
 ## Installation
 
@@ -18,6 +18,7 @@ Clone the repository and run `janet lib/cli.janet install`.
 Jeep offers the following commands for use at both the global and project level:
 
 - `jeep install`
+- `jeep quickbin`
 - `jeep uninstall`
 
 The following commands work at the project level only:
@@ -25,10 +26,8 @@ The following commands work at the project level only:
 - `jeep build`
 - `jeep clean`
 - `jeep dep`
-- `jeep hook`
 - `jeep prep`
 - `jeep test`
-- `jeep vendor`
 
 More information about each subcommand is available by running `jeep help
 <subcommand>`.
