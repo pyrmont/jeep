@@ -1,33 +1,97 @@
 (import ../install)
 (import ../util)
 
-(def config {:rules ["--force-deps" {:kind  :flag
-                                :short "f"
-                                :help  `Force installation of
-                                       dependencies.`}
-                     "--no-deps" {:kind :flag
-                                  :help "Skip installation of dependencies."}
-                     "----"]
-             :info {:about `Prepares the user's system for project development.
-                           This first involves the installation of any
-                           dependencies listed under the ':dependencies' key in
-                           the info.jdn' file. After this, the prep hook in the
-                           project's 'bundle.janet' or 'bundle/init.janet' file
-                           is run.
+(def- helps
+  {:profile
+   `The profile to use. Valid choices are 'system', 'build' and 'vendor'.`
+   :force-deps
+   `Force installation of dependencies.`
+   :no-deps
+   `Skip installation of dependencies.`
+   :about
+   `Prepares the project by installing dependencies and running the optional
+   prep hook. For more information, see jeep-prep(1).`
+   :help
+   `Install dependencies and run prep hook for the current project.`})
 
-                           The prep hook is the location that a user can define
-                           additional tasks to be performed prior to development
-                           (e.g. in some projects it may make sense to start a
-                           server).`}
-             :help "Prepare the system for development of the current project."})
+(def config
+  {:rules [:profile       {:default "system"
+                           :help (helps :profile)}
+           "--force-deps" {:kind  :flag
+                           :short "f"
+                           :help (helps :force-deps)}
+           "--no-deps"    {:kind :flag
+                           :short "D"
+                           :help (helps :no-deps)}
+           "----"]
+   :info {:about (get helps :about)}
+   :help (get helps :help)})
+
+(def- bundle-dir "bundle")
+
+(defn- vendor-deps
+  [all-deps &named force-deps?]
+  (each [dir deps] all-deps
+    (each d deps
+      (if (has-key? d :files)
+        (util/fetch-dep dir d)
+        (install/install-to dir d :force-update force-deps?)))))
+
+(defn- install-build
+  [info &named force-deps?]
+  (def essentials
+    ["build-rules.janet"
+     "cc.janet"
+     "cjanet.janet"
+     "declare-cc.janet"
+     "path.janet"
+     "pm-config.janet"
+     "sh.janet"
+     "stream.janet"])
+  (def spork-dir (string (util/parent (dyn :current-file)) util/sep  "../deps/spork/spork"))
+  (def spork-dir
+    (string
+      (if (string/has-prefix? (dyn :syspath) (dyn :current-file))
+        (string (dyn :syspath) "/jeep")
+        (string/slice (dyn :current-file) 0 -15))
+      "/deps/spork/spork"))
+  (os/mkdir bundle-dir)
+  (print "vendoring essential build files into " bundle-dir)
+  (each f essentials
+    (def from (string spork-dir util/sep f))
+    (def to (string bundle-dir util/sep f))
+    (print "  copying " f " to " to)
+    (util/copy from to)
+    ))
+
+(defn- install-system
+  [info &named force-deps?]
+  (def system-deps (get info :dependencies []))
+  (each d system-deps
+    (install/install d :force-update force-deps?)))
+
+(defn- install-vendor
+  [info &named force-deps?]
+  (def all-deps (->> (get info :vendored {}) (pairs)))
+  (if (empty? all-deps)
+    (error "no vendored dependencies in info.jdn"))
+  (vendor-deps all-deps :force-deps? force-deps?))
 
 (defn run
   [args &opt jeep-config]
   (def info (util/load-meta "."))
-  (def no-deps? (get-in args [:sub :opts "skip"]))
-  (def deps (unless no-deps? (get info :dependencies)))
-  (def force? (get-in args [:sub :opts "force"]))
-  (if deps
-    (each d deps
-      (install/install d :force-update force? :auto-remove true)))
-  (print "Ready for development."))
+  (def profile (get-in args [:sub :params :profile]))
+  (def no-deps? (get-in args [:sub :opts "no-deps"]))
+  (def force-deps? (get-in args [:sub :opts "force-deps"]))
+  (unless no-deps?
+    (case profile
+      "system"
+      (install-system info :force-deps? force-deps?)
+      "build"
+      (install-build info :force-deps? force-deps?)
+      "vendor"
+      (install-vendor info :force-deps? force-deps?)))
+  # run hook
+  (def man @{:info info})
+  (util/local-hook :prep man profile)
+  (print "Preparations completed."))

@@ -1,57 +1,56 @@
 (import ../util)
 
+(def- helps
+  {:args
+   `Arguments to pass to the check hook.`
+   :check
+   `Run the check hook.`
+   :file
+   `Path of file to run. Other files will not be run.`
+   :no-file
+   `Path of file not to run. Other files will be run.`
+   :test
+   `Name of test to run. Other tests will not be run.`
+   :no-test
+   `Name of test not to run. Other tests will be run.`
+   :no-result
+   `Skips printing pass/fail result.`
+   :about
+   `Runs tests in the ./test directory of the project.`
+   :help
+   `Run tests for the current project.`})
+
 (def config {:rules [:args {:splat? true
-                            :help   "Arguments to pass to the check hook."}
+                            :help   (helps :args)}
                      "--check" {:kind  :flag
                                 :short "c"
-                                :help  "Run the check hook."}
+                                :help  (helps :check)}
                      "----"
-                     "--only" {:kind  :multi
-                               :short "o"
+                     "--file" {:kind  :multi
+                               :short "f"
                                :proxy "path"
-                               :help  "Path of file to test."}
-                     "--exclude" {:kind :multi
-                                  :short "e"
+                               :help  (helps :file)}
+                     "--no-file" {:kind :multi
+                                  :short "F"
                                   :proxy "path"
-                                  :help "Path of file to exclude."}
+                                  :help (helps :no-file)}
                      "--test" {:kind  :multi
                                :short "t"
                                :proxy "name"
-                               :help  "Name of test to run."}
-                     "--skip" {:kind  :multi
-                               :short "s"
-                               :proxy "name"
-                               :help  "Name of test to skip."}
+                               :help  (helps :test)}
+                     "--no-test" {:kind  :multi
+                                  :short "T"
+                                  :proxy "name"
+                                  :help  (helps :no-test)}
                      "---"
-                     "--no-passfail" {:kind  :flag
-                                      :short "P"
-                                      :help  "Do not print pass/fail results."}
+                     "--no-result" {:kind  :flag
+                                    :short "R"
+                                    :help  (helps :no-result)}
                      "----"]
-             :info {:about `Runs tests in the test directory by starting a
-                           separate instance of 'janet' for each file tested.
-                           The default behaviour tests every '.janet' file but
-                           the user can use '--only' to test only the files
-                           listed or '--exclude' to exclude the files listed.
+             :info {:about (helps :about)}
+             :help (helps :help)})
 
-                           If the '--test' option is set, the janet executable
-                           is called for each file in the test/ directory with
-                           the dynamic binding :tests set to an array of the
-                           name values. So 'jeep test --test foo --test bar'
-                           will cause 'janet -e "(setdyn :tests @['foo 'bar]"
-                           <file>' to be run for each file tested. A similar
-                           dynamic binding is set if the '--skip' option is
-                           set. The design puts the responsibility on the
-                           user's testing library to run or skip tests based on
-                           this information.
-
-                           If (1) the '--only' and '--exclude' options are both
-                           set or (2) the '--test' and '--skip' options are both
-                           set, Jeep will error. By default, the check hook is
-                           not run but this can be toggled with the '--check'
-                           flag.`}
-             :help "Run tests for the current project."})
-
-(var- no-results? false)
+(var- no-result? false)
 (var- script-count 0)
 (var- failures @[])
 
@@ -61,7 +60,7 @@
 
 (defn- result
   [c m]
-  (unless no-results?
+  (unless no-result?
     (print (util/colour c m))))
 
 (defn- run-janet
@@ -92,15 +91,15 @@
 (defn run
   [args &opt jeep-config]
   (def opts (get-in args [:sub :opts] {}))
-  (when (and (get opts "only") (get opts "exclude"))
-    (error "cannot call with both '--only' and '--exclude'"))
-  (when (and (get opts "test") (get opts "skip"))
-    (error "cannot call with both '--test' and '--skip'"))
+  (when (and (get opts "file") (get opts "no-file"))
+    (error "cannot call with both --file and --no-file"))
+  (when (and (get opts "test") (get opts "no-test"))
+    (error "cannot call with both --test and --no-test"))
   (if (get opts "check")
     (util/local-hook :check))
-  (set no-results? (get opts "no-passfail"))
-  (def only-paths (get opts "only"))
-  (def excl-paths (get opts "exclude"))
+  (def only-paths (get opts "file"))
+  (def excl-paths (get opts "no-file"))
+  (set no-result? (get opts "no-result"))
   (defn use? [path]
     (defn match? [x] (string/has-suffix? x path))
     (cond
@@ -109,7 +108,7 @@
       excl-paths
       (not (find match? excl-paths))
       (string/has-suffix? ".janet" path)))
-  (run-tests (os/realpath "test") :use? use? :test (get opts "test") :skip (get opts "skip"))
+  (run-tests (os/realpath "test") :use? use? :test (get opts "test") :skip (get opts "no-test"))
   (if (empty? failures)
     (print "All scripts passed.")
     (do

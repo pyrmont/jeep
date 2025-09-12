@@ -1,18 +1,25 @@
 (import ../util)
 
-(def config {:rules ["--build" {:kind    :flag
-                                :short   "b"
-                                :help    "Delete the build directory."}
-                     "--syspath" {:kind  :flag
-                                  :short "s"
-                                  :help  "Delete the local syspath directory."}
+(def- helps
+  {:build
+   `Delete the ./_build directory.`
+   :system
+   `Delete the ./_system directory.`
+   :about
+   `Cleans certain directories using the clean function provided in the
+   project's bundle script.`
+   :help
+   `Clean directories of the current project.`})
+
+(def config {:rules ["--build" {:kind  :flag
+                                :short "b"
+                                :help  (helps :build)}
+                     "--system" {:kind  :flag
+                                 :short "s"
+                                 :help  (helps :system)}
                      "----"]
-             :info {:about `Cleans the contents of certain directories using
-                           the clean hook defined in the project's
-                           'bundle.janet' or 'bundle/init.janet' file. The user
-                           can also delete the build and syspath directories
-                           using command line options.`}
-             :help "Clean directories of the current project."})
+             :info {:about (helps :about)}
+             :help (helps :help)})
 
 (defn run
   [args &opt jeep-config]
@@ -21,5 +28,5 @@
   (if (get opts "build")
     (util/rmrf "_build"))
   (if (get opts "syspath")
-    (util/rmrf "_modules"))
+    (util/rmrf "_system"))
   (print "Cleaning completed."))

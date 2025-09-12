@@ -1,35 +1,33 @@
-(import ../install)
 (import ../info)
+(import ../install)
 (import ../util)
+
+(def- helps
+  {:deps
+   `Deps to add or remove. Dependencies can be provided as short names, URLs or
+   JDN structs/tables.`
+   :remove
+   `Remove the deps from the project.`
+   :vendor
+   `Update the deps under <dir> associated with the ':vendored' key.`
+   :about
+   `Adds or removes dependency information in the project's info file.`
+   :help
+   `Add or remove dependency information in the current project.`})
 
 (def config {:rules [:deps {:splat? true
                             :req?   true
-                            :help   `Deps to add or remove. Dependencies can be
-                                    provided as short names, URLs or JDN
-                                    values.`}
+                            :help   (helps :deps)}
                      "--remove" {:kind  :flag
                                  :short "r"
-                                 :help  "Remove the deps from the project."}
+                                 :help  (helps :remove)}
                      "--vendor" {:kind  :single
                                  :short "v"
                                  :proxy "dir"
-                                 :help  `Updates the deps under the ':vendored'
-                                        key associated with the specified
-                                        directory.`}
+                                 :help  (helps :vendor)}
                      "----"]
-             :info {:about `Adds or removes dependencies in the current
-                           project. Note that this command does not install
-                           dependencies (see 'jeep prep') but instead updates
-                           dependency information in the 'info.jdn' file.
-
-                           If the dependency is provided as a URL, Jeep will
-                           attempt to download the dependency to a temporary
-                           directory to extract the bundle name of the
-                           dependency.
-
-                           Dependencies are added by default but can be removed
-                           by setting the '--remove' flag.`}
-             :help "Add or remove dependencies in the current project."})
+             :info {:about (helps :about)}
+             :help (helps :help)})
 
 (def- peg '(* :w+ "://"))
 

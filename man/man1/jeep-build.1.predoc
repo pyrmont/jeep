@@ -1,0 +1,70 @@
+---
+Title: JEEP-BUILD(1)
+Date: 2025/09/11
+Authors: Michael Camilleri <mike@inqk.net>
+Project: Jeep
+Version: 0.1.0-dev
+---
+
+NAME
+====
+
+**jeep-build** - build native targets in a Janet project
+
+SYNOPSIS
+========
+
+**jeep-build** [_build-args_]
+
+DESCRIPTION
+===========
+
+**jeep-build** builds native targets in a Janet project. Native targets are
+built by calling the build function in the bundle script.
+
+A project author will almost always want to call helper functions from the build
+function. The Spork library comes with a number of these functions and Jeep can
+vendor the most common ones into the `./bundle` directory:
+
+````
+$ jeep prep build
+````
+
+This avoids an author needing to require a dependency be installed by the
+end-user to build the project. If additional modules from other bundles are
+required, `jeep-prep(1)` supports vendoring additional dependencies. For more
+information, see the manpage for `jeep-prep(1)`.
+
+Options
+-------
+
+- _build-args_:
+  Arguments to pass to the build __bundle hook__. The build __bundle hook__
+  calls a function ``build' defined in your bundle script. The first argument
+  passed to that function is the bundle manifest. The remaining arguments are
+  _build-args_.
+
+For more information about the __info file__, the __bundle script__ and __bundle
+hooks__, see CONCEPTS in `jeep(1)`.
+
+EXAMPLES
+========
+
+To build the native targets for a project with no additional arguments:
+
+````
+$ jeep build
+````
+
+To build the native targets for a project with additional arguments:
+
+````
+$ jeep build -Dfoo -Dbar
+````
+
+Note that your build function will need to parse the arguments passed to it.
+
+BUGS
+====
+
+Report issues at <https://github.com/pyrmont/jeep>

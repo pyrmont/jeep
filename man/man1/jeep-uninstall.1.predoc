@@ -1,0 +1,44 @@
+---
+Title: JEEP-UNINSTALL(1)
+Date: 2025/09/12
+Authors: Michael Camilleri <mike@inqk.net>
+Project: Jeep
+Version: 0.1.0-dev
+---
+
+NAME
+====
+
+**jeep-uninstall** - uninstall a Janet bundle
+
+SYNOPSIS
+========
+
+**jeep-uninstall** _bundle_ ...
+
+DESCRIPTION
+===========
+
+**jeep-uninstall** uninstalls a Janet bundle. The bundle is uninstalled using
+the ``bundle/uninstall`` function. If no argument is provided, Jeep will try to
+uninstall a bundle based on information in the current working directory.
+
+Options
+-------
+
+- _bundle_:
+  One or more bundles to install. The value must be the name of the bundle.
+
+EXAMPLES
+========
+
+To uninstall two bundles, `foo` and `bar`:
+
+````
+$ jeep uninstall foo bar
+````
+
+BUGS
+====
+
+Report issues at <https://github.com/pyrmont/jeep>

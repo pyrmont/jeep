@@ -1,0 +1,56 @@
+---
+Title: JEEP-CLEAN(1)
+Date: 2025/09/11
+Authors: Michael Camilleri <mike@inqk.net>
+Project: Jeep
+Version: 0.1.0-dev
+---
+
+NAME
+====
+
+**jeep-clean** - clean directories in a Janet project
+
+SYNOPSIS
+========
+
+**jeep-clean** [**-b** | **--build**] [**-s** | **--system**]
+
+DESCRIPTION
+===========
+
+**jeep-clean** cleans certain directories using the clean hook defined in the
+project's bundle script. The user can also delete the `./_build` and `./_system`
+directories.
+
+Options
+-------
+
+- **-b**, **--build**:
+  Deletes the `./build` directory.
+
+- **-s**, **--system**:
+  Deletes the `./system` directory.
+
+For more information about the info file, the bundle script and bundle hooks,
+see CONCEPTS in `jeep(1)`.
+
+EXAMPLES
+========
+
+To run the clean function in the bundle script:
+
+````
+$ jeep clean
+````
+
+To run the clean function and delete the `./_build` and `./_system` directories:
+
+````
+$ jeep clean --build --system
+````
+
+BUGS
+====
+
+Report issues at <https://github.com/pyrmont/jeep>

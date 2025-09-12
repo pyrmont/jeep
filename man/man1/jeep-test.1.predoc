@@ -1,0 +1,120 @@
+---
+Title: JEEP-TEST(1)
+Date: 2025/09/11
+Authors: Michael Camilleri <mike@inqk.net>
+Project: Jeep
+Version: 0.1.0-dev
+---
+
+NAME
+====
+
+**jeep-test** - run tests for a Janet project
+
+SYNOPSIS
+========
+
+**jeep-test** [**-c** | **--check**] [**-f** _path_ | **--file** _path_] [**-F**
+              _path_ | **--no-file** _path_] [**-t** _name_ | **--test** _name_]
+              [**-T** _name_ | **--no-test** _name_] [**-R** | **--no-result**]
+              [_check-args_]
+
+DESCRIPTION
+===========
+
+**jeep-test** runs the tests in the `./test` directory. The default behaviour
+tests every ``.janet`` file but the user can use command-line options to change
+what tests are run.
+
+Options
+-------
+
+- **-c**, **--check**:
+  Runs the check __bundle hook__.
+
+- **-f** _path_, **--file** _path_:
+  Path of the file to run. Other files are not run. The path is relative to the
+  `./test` directory. Can be used multiple times. This option is incompatible
+  with **--no-file**.
+
+- **-F** _path_, **--no-file** _path_:
+  Path of the file not to run. Other files will be run. The path is relative to
+  the `./test` directory. Can be used multiple times. This option is
+  incompatible with **--file**.
+
+- **-R**, **--no-result**:
+  Skips printing the pass/fail result that Janet prints by default. This is most
+  useful where your test files are responsible for printing their own results.
+
+- **-t** _name_, **--test** _name_:
+  Name of the test to run. Other tests are not run. Can be used multiple times.
+  This option is incompatible with **--no-test**.
+
+- **-T** _name_, **--no-test** _name_:
+  Name of the test not to run. Other tests will be run. Can be used multiple
+  times. This option is incompatible with **--test**.
+
+- _check-args_:
+  Arguments to pass to the check __bundle hook__. The check __bundle hook__
+  calls a function ``check`` defined in the user's __bundle script__. The first
+  argument passed to that function is the bundle manifest. The remaining
+  arguments are _check-args_.
+
+For more information about the __bundle script__ and __bundle hooks__, see
+CONCEPTS in `jeep(1)`.
+
+OPERATION
+=========
+
+**jeep-test** starts a separate instance of Janet for each file tested. By
+default, this will be each file ending in ``.janet``. **jeep-test** provides for
+two bases on which to control the tests which are run:
+
+- __File-based__ -
+  There are two mutually exclusive options:
+
+  1. The user selects the files to run using **--file**. All other files are
+     excluded.
+  2. The user selects the files not to run using **--no-file**. All other files
+     are included.
+
+- __Test-based__ -
+  There are two mutually exclusive options:
+
+  1. The user selects the tests to run using **--test**. All other tests are
+     excluded.
+  2. The user selects the tests not to run using **--no-test**. All other tests
+     are excluded.
+
+  This basis requires the testing framework to respect the dynamic binding
+  ``:tests`` (in the case of **--test**) or ``:skips`` (in the case of
+  **--no-test**).
+
+By default, the check __bundle hook__ is not run but this can be toggled with
+the **--check** flag.
+
+EXAMPLES
+========
+
+To test all the files in `./test`:
+
+````
+$ jeep test
+````
+
+To test only the file `./test/foo.janet`:
+
+````
+$ jeep test --file ./test/foo.janet
+````
+
+To skip the test ``bar``:
+
+````
+$ jeep test --no-test bar
+````
+
+BUGS
+====
+
+Report issues at <https://github.com/pyrmont/jeep>

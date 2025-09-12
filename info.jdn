@@ -10,28 +10,37 @@
      {:name "argy-bargy"
       :url "https://github.com/pyrmont/argy-bargy"
       :prefix "argy-bargy"
-      :include ["argy-bargy.janet"
-                "LICENSE"]}
+      :files ["argy-bargy.janet"
+              "LICENSE"]}
      {:name "spork"
       :url "https://github.com/janet-lang/spork"
       :prefix "spork"
-      :include ["spork/build-rules.janet"
-                "spork/cc.janet"
-                "spork/cjanet.janet"
-                "spork/declare-cc.janet"
-                "spork/path.janet"
-                "spork/pm.janet"
-                "spork/pm-config.janet"
-                "spork/sh.janet"
-                "spork/stream.janet"
-                "LICENSE"]}
+      :files ["spork/build-rules.janet"
+              "spork/cc.janet"
+              "spork/cjanet.janet"
+              "spork/declare-cc.janet"
+              "spork/path.janet"
+              "spork/pm.janet"
+              "spork/pm-config.janet"
+              "spork/sh.janet"
+              "spork/stream.janet"
+              "LICENSE"]}
      {:name "testament"
       :url "https://github.com/pyrmont/testament"
       :prefix "testament"
-      :include ["lib/testament.janet"
-                "init.janet"
-                "LICENSE"]}]}
+      :files ["lib/testament.janet"
+              "init.janet"
+              "LICENSE"]}]}
 
  :executable ["bin/jeep"]
+ :manpage ["man/man1/jeep.1"
+           "man/man1/jeep-build.1"
+           "man/man1/jeep-clean.1"
+           "man/man1/jeep-dep.1"
+           "man/man1/jeep-install.1"
+           "man/man1/jeep-prep.1"
+           "man/man1/jeep-quickbin.1"
+           "man/man1/jeep-test.1"
+           "man/man1/jeep-uninstall.1"]
  :source {:prefix "jeep"
           :files ["deps" "lib"]}}

@@ -1,0 +1,55 @@
+---
+Title: JEEP-QUICKBIN(1)
+Date: 2025/09/12
+Authors: Michael Camilleri <mike@inqk.net>
+Project: Jeep
+Version: 0.1.0-dev
+---
+
+NAME
+====
+
+**jeep-quickbin** - create a binary executable from a Janet script
+
+SYNOPSIS
+========
+
+**jeep-quickbin** _script_ _exe_
+
+DESCRIPTION
+===========
+
+**jeep-quickbin** creates a binary executable from a Janet script. The Janet
+script must contain a public ``main`` function. The executable is compiled and
+requires that the system have a C compiler. After creation, it does not require
+Janet to be installed to run but the executable is specific to the architecture
+and operating system on which it was created.
+
+A quickbin is created by marshalling the environment created by requiring the
+script. This means that dependencies which are included in the environment of
+the script will be included in the marshalled environment and written to the
+output file.
+
+Options
+-------
+
+- _script_:
+  The Janet script with a public ``main`` function.
+
+- _exe_:
+  The name of the executable to create.
+
+EXAMPLES
+========
+
+To create a quickbin with filename ``example`` from a Janet script located at
+`./example.janet`:
+
+````
+$ jeep quickbin example.janet example
+````
+
+BUGS
+====
+
+Report issues at <https://github.com/pyrmont/jeep>

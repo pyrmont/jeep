@@ -1,0 +1,143 @@
+---
+Title: JEEP-PREP(1)
+Date: 2025/09/09
+Authors: Michael Camilleri <mike@inqk.net>
+Project: Jeep
+Version: 0.1.0-dev
+---
+
+NAME
+====
+
+**jeep-prep** - prepare a Janet project
+
+SYNOPSIS
+========
+
+**jeep-prep** [**-f** | **--force-deps**] [**-D** | **--no-deps**] [_profile_]
+
+DESCRIPTION
+===========
+
+**jeep-prep** prepares a Janet project. A project is prepared by installing
+dependencies and running the prep __bundle hook__.
+
+Options
+-------
+
+- **-f**, **--force-deps**:
+  This forces the installation of dependencies. By default, Janet will not
+  install a dependency if it is already installed.
+
+- **-D**, **--no-deps**:
+  This skips the installation of dependencies. In other words, it only runs the
+  prep __bundle hook__.
+
+- _profile_:
+  Specifies one of the following profiles to use:
+
+  - ***system***:
+    By default, **jeep-prep** will use the ***system*** profile. This installs
+    the dependencies listed under ``:dependencies`` key in the __info
+    file__. The dependencies are installed to the __sysroot__.
+
+  - ***build***:
+    If the user specifies the ***build*** profile, this copies into the
+    `./bundle` directory several files from the Spork library that are commonly
+    used at build-time:
+
+    - build-rules.janet
+    - cc.janet
+    - cjanet.janet
+    - declare-cc.janet
+    - path.janet
+    - pm-config.janet
+    - sh.janet
+    - stream.janet
+
+  - ***vendor***:
+    If the user specifies the ***vendor*** profile, this vendors the
+    dependencies listed under the ``:vendored`` key in the __info file__.
+
+For more information about the __info file__, the __bundle script__,  __bundle
+hooks__ and the __sysroot__, see CONCEPTS in `jeep(1)`. For more information
+about vendoring, see Vendoring in `jeep-dep(1)`.
+
+OPERATION
+=========
+
+**jeep-prep** consists of a two-step workflow. First, dependencies are
+installed. Second, the prep __bundle hook__ is run.
+
+The project author specifies each dependency using a struct. The struct should,
+at a minimum, include the ``:name`` and ``:url`` keys. If the struct includes a
+``:files`` key, the dependency is not installed using the Janet's
+``bundle/install`` function. Instead **jeep-prep** downloads the dependency and
+then copies the files listed. If the ``:prefix`` key exists, the files are
+copied to a directory with a name that matches the associated value.
+Dependencies can be added to the __info file__ using `jeep-dep(1)`.
+
+The project author optionally binds a function to the prep __bundle hook__ by
+defining a function called ``prep`` in the __bundle script__. When invoked, the
+function will receive two arguments: (1) a table representing the bundle
+manifest and (2) a string matching the name of the profile specified by the
+user.
+
+EXAMPLES
+========
+
+The following examples assume an __info file__ as follows:
+
+````
+{:name "example"
+ :url "https://example.org/example"
+ :repo "git+https://example.org/example"
+
+ :dependencies [
+   {:name "dep1" :url "https://example.org/dep1"}
+   {:name "dep2" :url "https://example.org/dep2"}]
+
+ :vendored {
+   "bundle" [
+     {:name "dep3" :url "https://example.org/dep3"}]
+   "deps" [
+     {:name "dep4" :url "https://example.org/dep4"}
+     {:name "dep5"
+      :url "https://example.org/dep5"
+      :prefix "dep5"
+      :files ["foo.janet" "LICENSE"]}]}}
+````
+
+The following command prepares the project using the default ***system***
+profile. This installs 'dep1' and 'dep2' to the global sysroot.
+
+````
+$ jeep prep
+````
+
+The following command prepares the project using the ***system*** profile. This
+installs 'dep1' and 'dep2' to `./_system`, the local sysroot.
+
+````
+$ jeep -l prep system
+````
+
+The following command prepares the project using the ***vendor*** profile. This
+installs 'dep3' to the `./bundle` directory, installs 'dep4' to the `./deps`
+directory and copies 'foo.janet' and 'LICENSE' to the `./deps/dep5` directory.
+
+````
+$ jeep prep vendor
+````
+
+The following command prepares the project using the ***build*** profile. This
+copies the default build-time files to `./bundle`.
+
+````
+$ jeep prep build
+````
+
+BUGS
+====
+
+Report issues at <https://github.com/pyrmont/jeep>

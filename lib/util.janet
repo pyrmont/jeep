@@ -85,6 +85,12 @@
 
 # Dependent functions
 
+(defn abspath
+  [path]
+  (if (abspath? path)
+    path
+    (string (os/cwd) sep path)))
+
 (defn mkdir
   [path]
   (def parts (apart path))
@@ -98,16 +104,19 @@
 
 (defn parent
   [path]
-  (string/join (array/slice (apart path) 0 -2) sep))
+  (def parts (apart path))
+  (if (empty? parts)
+    parts
+    (do
+      (put parts 0 (string/replace sep "" (first parts)))
+      (string/join (array/slice parts 0 -2) sep))))
 
 (defn change-syspath
   [path]
-  (def abspath (if (abspath? path)
-                 path
-                 (string (os/cwd) sep path)))
-  (unless (= :directory (os/stat abspath :mode))
-    (mkdir abspath))
-  (setdyn *syspath* abspath))
+  (def ap (abspath path))
+  (unless (= :directory (os/stat ap :mode))
+    (mkdir ap))
+  (setdyn *syspath* ap))
 
 (defn copy
   [src dest]
@@ -121,6 +130,39 @@
                         " "
                         "/y /s /e /i > nul")))
     (os/execute ["cp" "-rf" src dest] :px)))
+
+(defn fetch-dep [parent-dir dep]
+  (def temp-dir "tmp")
+  (def {:url url
+        :tag tag
+        :prefix prefix
+        :files files} dep)
+  (unless url
+    (error "fetched bundles need a :url key"))
+  (default tag "HEAD")
+  (def sha? (= [] (peg/match '(between 7 40 :h) tag)))
+  (def devnull (devnull))
+  (def stdio {:out devnull :err devnull})
+  (def dest-dir (string parent-dir (when prefix (string sep prefix))))
+  (print "vendoring " url " to " dest-dir)
+  (defer (rmrf temp-dir)
+    (os/mkdir temp-dir)
+    (if (= "HEAD" tag)
+      (exec :git stdio "clone" "--depth" "1" url temp-dir)
+      (if (not sha?)
+        (exec :git stdio "clone" "--branch" tag "--depth" "1" url temp-dir)
+        (do
+          (exec :git stdio "clone" "--filter" "blob:none" "--no-checkout" url temp-dir)
+          (exec :git stdio "-C" temp-dir "fetch" "origin" tag)
+          (exec :git stdio "-C" temp-dir "checkout" tag))))
+    (each file files
+      (def from (string temp-dir sep file))
+      (def to (string dest-dir sep file))
+      (if (= :directory (os/stat from :mode))
+        (mkdir to)
+        (mkdir (parent to)))
+      (print "  copying " from " to " to)
+      (copy from to))))
 
 (defn load-info
   [&opt dir]
@@ -139,7 +181,7 @@
   [name & args]
   (def [ok module] (protect (require "/bundle")))
   (when-let [hookf (and ok (module/value module (symbol name)))]
-    (apply hookf @{} args)))
+    (apply hookf args)))
 
 (defn save-info
   [jdn &opt dir]
@@ -147,47 +189,3 @@
   (def info-path1 (string/join [dir "bundle" "info.jdn"] sep))
   (def info-path2 (string/join [dir "info.jdn"] sep))
   (or (spit-maybe info-path1 jdn) (spit-maybe info-path2 jdn)))
-
-(defn vendor-deps
-  []
-  (def temp-dir "tmp")
-  (defn vendor [vendor-dir dep]
-    (def {:url url
-          :tag tag
-          :prefix prefix
-          :include includes
-          :exclude excludes} dep)
-    (unless url
-      (error "vended dependencies need a :url key"))
-    (default tag "HEAD")
-    (def sha? (= [] (peg/match '(between 7 40 :h) tag)))
-    (def devnull (devnull))
-    (def stdio {:out devnull :err devnull})
-    (def dest-dir (string vendor-dir (when prefix (string sep prefix))))
-    (print "vendoring " url " to " dest-dir)
-    (defer (rmrf temp-dir)
-      (os/mkdir temp-dir)
-      (if (= "HEAD" tag)
-        (exec :git stdio "clone" "--depth" "1" url temp-dir)
-        (if (not sha?)
-          (exec :git stdio "clone" "--branch" tag "--depth" "1" url temp-dir)
-          (do
-            (exec :git stdio "clone" "--filter" "blob:none" "--no-checkout" url temp-dir)
-            (exec :git stdio "-C" temp-dir "fetch" "origin" tag)
-            (exec :git stdio "-C" temp-dir "checkout" tag))))
-      (when excludes
-        (each exclude excludes
-          (rmrf (string/join [temp-dir exclude] sep))))
-      (def files (if includes includes (os/dir temp-dir)))
-      (each file files
-        (def from (string temp-dir sep file))
-        (def to (string dest-dir sep file))
-        (if (= :directory (os/stat from :mode))
-          (mkdir to)
-          (mkdir (parent to)))
-        (print "  copying " from " to " to)
-        (copy from to))))
-  (def vendored (get (load-meta) :vendored))
-  (each [dir deps] (pairs vendored)
-    (each d deps
-      (vendor dir d))))

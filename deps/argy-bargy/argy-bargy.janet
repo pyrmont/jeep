@@ -459,10 +459,11 @@
   ```
   Consumes an option
   ```
-  [result orules args i &opt is-short?]
+  [result orules args i &opt short?]
   (def opts (result :opts))
+  (def shorts (result :shorts))
   (def arg (in args i))
-  (def name (string/slice arg (if is-short? 1 2)))
+  (def name (string/slice arg (if short? 1 2)))
   (if-let [rule (get-rule name orules)
            long-name (rule :name)
            kind (rule :kind)]
@@ -589,6 +590,8 @@
              (or (= "--help" arg) (= "-h" arg))
              (do
                (put-in result [:opts "help"] true)
+               (if (= "-h" arg)
+                 (put-in result [:opts :h?] true))
                (usage config))
 
              (= "--" arg)
@@ -623,12 +626,12 @@
                        (def subresult (if (nil? (subconfig :rules))
                                         @{:cmd subcommand :args (array/slice (dyn :args) 1)}
                                         (parse-args-impl (string command " " subcommand) subconfig)))
-                       (when (and (empty? err) (empty? help))
-                         (put subresult :cmd subcommand)
-                         (put result :sub subresult)
-                         (break)))
+                       (put subresult :cmd subcommand)
+                       (put result :sub subresult)
+                       (break))
                      (do
                        (put-in result [:opts "help"] true)
+                       (put result :sub @{:cmd subcommand})
                        (set command (string command " " subcommand))
                        (usage subconfig)))
                    (usage-error "unrecognized subcommand '" subcommand "'"))

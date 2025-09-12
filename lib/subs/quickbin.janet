@@ -1,15 +1,23 @@
-(import ../../deps/argy-bargy/argy-bargy :as argy)
 (import ../../deps/spork/spork/declare-cc :as dcc)
 
+(def- helps
+  {:script
+   `The Janet script with a main function.`
+   :exe
+   `The name of the executable to create.`
+   :about
+   `Creates a binary executable from a Janet script. The script must have a main
+   function.`
+   :help
+   `Create a binary executable from a Janet script.`})
 
-(def config {:rules [:script {:help "The Janet script with a main function."
+
+(def config {:rules [:script {:help (helps :script)
                               :req? true}
-                     :exe {:help "The name of the executable to create."
+                     :exe {:help (helps :exe)
                            :req? true}]
-             :info {:about `Creates a binary executable from a Janet script
-                           that runs without requiring Janet to be installed.
-                           The script must have a main function.`}
-             :help "Create an executable out of a Janet script."})
+             :info {:about (helps :about)}
+             :help (helps :help)})
 
 (defn run
   [args &opt jeep-config]

@@ -1,0 +1,64 @@
+---
+Title: JEEP-INSTALL(1)
+Date: 2025/09/12
+Authors: Michael Camilleri <mike@inqk.net>
+Project: Jeep
+Version: 0.1.0-dev
+---
+
+NAME
+====
+
+**jeep-install** - install a Janet bundle
+
+SYNOPSIS
+========
+
+**jeep-install** _bundle_ ...
+
+DESCRIPTION
+===========
+
+**jeep-install** installs a Janet bundle. If a URL or path to a bundle of Janet
+code is provided, Jeep will download the code (if necessary) and then install it
+using Janet's ``bundle/install`` function. If no argument is provided, Jeep will
+try to install the code in the current working directory.
+
+Options
+-------
+
+- _bundle_:
+  One or more bundles to install. The value must be either a URL or a local
+  path.
+
+Note that while it is not an option passed to **jeep-test**, if a user wants to
+install the dependency to a __sysroot__ other than the global sysroot, this can
+be accomplished by setting **--local** after the invocation of `jeep(1)`.
+
+For more information about the __sysroot__, see CONCEPTS in `jeep(1)`.
+
+EXAMPLES
+========
+
+To install a bundle from a URL:
+
+````
+$ jeep install https://example.org/foo
+````
+
+To install a bundle from a local path:
+
+````
+$ jeep install ~/bar
+````
+
+To install a bundle to a local sysroot:
+
+````
+$ jeep -l install https://example.org/foo
+````
+
+BUGS
+====
+
+Report issues at <https://github.com/pyrmont/jeep>

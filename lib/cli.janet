@@ -1,17 +1,17 @@
 (import ../deps/argy-bargy/argy-bargy :as argy)
 (import ./util)
 
-# Commands
+# Global Commands
+(import ./subs/install :as cmd/install)
+(import ./subs/quickbin :as cmd/quickbin)
+(import ./subs/uninstall :as cmd/uninstall)
+
+# Project Commands
 (import ./subs/build :as cmd/build)
 (import ./subs/clean :as cmd/clean)
 (import ./subs/dep :as cmd/dep)
-(import ./subs/hook :as cmd/hook)
-(import ./subs/install :as cmd/install)
 (import ./subs/prep :as cmd/prep)
-(import ./subs/quickbin :as cmd/quickbin)
 (import ./subs/test :as cmd/test)
-(import ./subs/uninstall :as cmd/uninstall)
-(import ./subs/vendor :as cmd/vendor)
 
 (def top-config
   ```
@@ -32,16 +32,14 @@
   Subcommands supported by jeep.
   ```
   ["install" cmd/install/config
-   "uninstall" cmd/uninstall/config
    "quickbin" cmd/quickbin/config
+   "uninstall" cmd/uninstall/config
    "---"
    "build" cmd/build/config
    "clean" cmd/clean/config
    "dep" cmd/dep/config
-   "hook" cmd/hook/config
    "prep" cmd/prep/config
-   "test" cmd/test/config
-   "vendor" cmd/vendor/config])
+   "test" cmd/test/config])
 
 (def- file-env (curenv))
 
@@ -53,8 +51,24 @@
   (cond
     (not (empty? help))
     (do
-      (prin help)
-      (os/exit (if (get-in parsed [:opts "help"]) 0 1)))
+      (def long? (or (get-in parsed [:opts "help"])
+                     (get-in parsed [:sub :opts "help"])))
+      (def short? (or (get-in parsed [:opts :h?])
+                      (get-in parsed [:sub :opts :h?])))
+      (if (or (nil? long?)
+              short?
+              (get {:windows true :mingw true :cygwin true} (os/which)))
+        (prin help)
+        (do
+          (def name (string (parsed :cmd) (when (parsed :sub) (string "-" (get-in parsed [:sub :cmd])))))
+          (def installed? (string/has-prefix? (dyn :syspath) (dyn :current-file)))
+          (def pwd
+            (if installed?
+              (dyn :syspath)
+              (string/slice (dyn :current-file) 0 -15)))
+          (def manpage (string pwd "/man/man1/" name ".1"))
+          (os/execute ["man" manpage] :p)))
+      (os/exit (if long? 0 1)))
     (not (empty? err))
     (do
       (eprin err)
@@ -63,7 +77,7 @@
       (def jeep-config-path (string/join ["." ".jeep" "config.jdn"] util/sep))
       (def jeep-config (when (util/fexists? jeep-config-path) (parse (slurp jeep-config-path))))
       (when (get-in parsed [:opts "local"])
-        (util/change-syspath (or (get jeep-config :syspath) "_modules")))
+        (util/change-syspath (or (get jeep-config :syspath) "_system")))
       (def name (symbol "cmd/" (get-in parsed [:sub :cmd]) "/run"))
       (def sub/run (module/value file-env name true))
       (try

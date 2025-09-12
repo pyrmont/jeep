@@ -30,7 +30,8 @@
   (manifest-pm-extract (bundle/manifest bundle-name)))
 
 (defn install
-  [id &named no-deps force-update no-install auto-remove]
+  # modified version of Spork's pm/pm-install function
+  [id &named force-update no-install auto-remove]
   (def bundle (pm/resolve-bundle id))
   (def inst-name (name-lookup bundle))
   (when (and inst-name (not force-update))
@@ -57,15 +58,27 @@
       (bundle/replace inst-name bdir :config config ;(kvs config))
       (bundle/install bdir :config config ;(kvs config)))))
 
-# (defn manifest
-#   [path]
-#   (def abspath (os/realpath path))
-#   (def bundle (pm/resolve-bundle (string "file::" abspath)))
-#   (def info (util/load-meta abspath))
-#   (def [ok module] (protect (require "/bundle")))
-#   {:name (get info :name)
-#    :dependencies (get info :dependencies)
-#    :files @[]
-#    :hooks (when ok (seq [[k v] :pairs module :when (symbol? k) :unless (get v :private)] (keyword k)))
-#    :info info
-#    :local-source abspath})
+(defn install-to
+  [dest id &named force-update no-install auto-remove]
+  (if (string? id)
+    (error "id must be struct/table"))
+  (util/mkdir dest)
+  (def temp-dir "tmp")
+  (def oldpath (dyn *syspath*))
+  (def syspath (util/change-syspath temp-dir))
+  (def binpath (string syspath util/sep "bin"))
+  (def manpath (string syspath util/sep "man"))
+  (defn copy-dep [name]
+    (def man (bundle/manifest name))
+    (each f (get man :files)
+      (unless (or (string/has-prefix? binpath f)
+                  (string/has-prefix? manpath f))
+        (def d (string dest util/sep (string/replace (dyn *syspath*) "" f)))
+        (util/copy f d)))
+    (each d (get man :dependencies)
+      (copy-dep (get man :name))))
+  (defer (do
+           (util/change-syspath oldpath)
+           (util/rmrf temp-dir))
+    (install id :force-update force-update :no-install no-install :auto-remove auto-remove)
+    (copy-dep (get id :name))))
