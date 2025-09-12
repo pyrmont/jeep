@@ -1,5 +1,5 @@
 {:name "jeep"
- :description "A tool for development Janet projects"
+ :description "A Janet bundle manager"
  :author "Michael Camilleri"
  :license "MIT"
  :url "https://github.com/pyrmont/jeep"
