@@ -48,21 +48,23 @@
      "pm-config.janet"
      "sh.janet"
      "stream.janet"])
-  (def spork-dir (string (util/parent (dyn :current-file)) util/sep  "../deps/spork/spork"))
   (def spork-dir
     (string
       (if (string/has-prefix? (dyn :syspath) (dyn :current-file))
-        (string (dyn :syspath) "/jeep")
+        (string (dyn :syspath) util/sep "jeep")
         (string/slice (dyn :current-file) 0 -15))
-      "/deps/spork/spork"))
+      util/sep "deps" util/sep "spork"))
   (os/mkdir bundle-dir)
+  (os/mkdir (string bundle-dir util/sep "spork"))
   (print "vendoring essential build files into " bundle-dir)
   (each f essentials
-    (def from (string spork-dir util/sep f))
-    (def to (string bundle-dir util/sep f))
+    (def from (string spork-dir util/sep "spork" util/sep f))
+    (def to (string bundle-dir util/sep "spork" util/sep f))
     (print "  copying " f " to " to)
-    (util/copy from to)
-    ))
+    (util/copy from to))
+  (def from-licence (string spork-dir util/sep "LICENSE"))
+  (def to-licence (string bundle-dir util/sep "spork" util/sep "LICENSE"))
+  (util/copy from-licence to-licence))
 
 (defn- install-system
   [info &named force-deps?]
