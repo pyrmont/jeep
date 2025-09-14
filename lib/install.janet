@@ -8,7 +8,7 @@
     (table/to-struct
       (merge-into @{:type :file :url (get m :local-source)} (get m :info {}))))) # just a path on disk, native janet support
 
-(defn- name-lookup
+(defn- installed-lookup
   [bundle]
   (def {:url url
         :tag tag
@@ -33,9 +33,9 @@
   # modified version of Spork's pm/pm-install function
   [id &named auto-remove force-update no-install replace?]
   (def bundle (pm/resolve-bundle id))
-  (def inst-name (name-lookup bundle))
-  (when (and inst-name (not force-update))
-    (eprintf "bundle %s is already installed, skipping" inst-name)
+  (def installed-name (installed-lookup bundle))
+  (when (and installed-name (not replace?) (not force-update))
+    (eprintf "bundle %s is already installed, skipping" installed-name)
     (break))
   (def {:url url :type bundle-type :tag tag} bundle)
   (def bdir (pm/download-bundle url bundle-type tag))
@@ -43,7 +43,8 @@
   (when (nil? info)
     (errorf "bundle at %s does not include info.jdn file" url))
   (def info-name (get info :name))
-  (when (and (not replace?) (not inst-name) (bundle/installed? info-name))
+  (def conflict? (bundle/installed? info-name))
+  (when (and (not replace?) (not installed-name) conflict?)
     (def existing (bundle-name-to-bundle info-name))
     (eprintf "a conflicting bundle %v is already installed, skipping" info-name)
     (eprintf "  existing bundle: %.99M" existing)
@@ -54,8 +55,8 @@
     (install d :replace? replace? :force-update force-update :auto-remove true))
   (def config @{:pm bundle :installed-with "jeep" :auto-remove auto-remove})
   (unless no-install
-    (if (and inst-name (bundle/installed? inst-name))
-      (bundle/replace inst-name bdir :config config ;(kvs config))
+    (if conflict?
+      (bundle/replace info-name bdir :config config ;(kvs config))
       (bundle/install bdir :config config ;(kvs config)))))
 
 (defn install-to
