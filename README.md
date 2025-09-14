@@ -1,5 +1,7 @@
 # Jeep
 
+[![Test Status](https://github.com/pyrmont/jeep/workflows/test/badge.svg)](https://github.com/pyrmont/jeep/actions?query=workflow%3Atest)
+
 Jeep is a project management utility for Janet bundles.
 
 > [!WARNING]
