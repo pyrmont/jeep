@@ -1,4 +1,5 @@
 {:name "jeep"
+ :version "DEVEL"
  :description "A Janet bundle manager"
  :author "Michael Camilleri"
  :license "MIT"

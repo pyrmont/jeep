@@ -32,6 +32,11 @@ The following commands work at the project level only:
 More information about each subcommand is available by running `jeep help
 <subcommand>`.
 
+## Versioning
+
+Jeep uses the label `DEVEL` during development. When a new version is released,
+a tag is created for that version in the repository.
+
 ## Bugs
 
 Found a bug? I'd love to know about it. The best way is to report your bug in
