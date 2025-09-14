@@ -55,7 +55,7 @@
     (install d :replace? replace? :force-update force-update :auto-remove true))
   (def config @{:pm bundle :installed-with "jeep" :auto-remove auto-remove})
   (unless no-install
-    (if conflict?
+    (if (and replace? conflict?)
       (bundle/replace info-name bdir :config config ;(kvs config))
       (bundle/install bdir :config config ;(kvs config)))))
 
