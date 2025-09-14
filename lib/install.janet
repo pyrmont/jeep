@@ -31,7 +31,7 @@
 
 (defn install
   # modified version of Spork's pm/pm-install function
-  [id &named force-update no-install auto-remove]
+  [id &named auto-remove force-update no-install replace?]
   (def bundle (pm/resolve-bundle id))
   (def inst-name (name-lookup bundle))
   (when (and inst-name (not force-update))
@@ -43,7 +43,7 @@
   (when (nil? info)
     (errorf "bundle at %s does not include info.jdn file" url))
   (def info-name (get info :name))
-  (when (and (not inst-name) (bundle/installed? info-name))
+  (when (and (not replace?) (not inst-name) (bundle/installed? info-name))
     (def existing (bundle-name-to-bundle info-name))
     (eprintf "a conflicting bundle %v is already installed, skipping" info-name)
     (eprintf "  existing bundle: %.99M" existing)
@@ -51,7 +51,7 @@
     (break))
   (def deps (get info :dependencies []))
   (each d deps
-    (install d :force-update force-update :auto-remove true))
+    (install d :replace? replace? :force-update force-update :auto-remove true))
   (def config @{:pm bundle :installed-with "jeep" :auto-remove auto-remove})
   (unless no-install
     (if (and inst-name (bundle/installed? inst-name))

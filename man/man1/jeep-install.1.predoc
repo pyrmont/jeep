@@ -14,7 +14,7 @@ NAME
 SYNOPSIS
 ========
 
-**jeep-install** _bundle_ ...
+**jeep-install** [**-r** | **--replace**] _bundle_ ...
 
 DESCRIPTION
 ===========
@@ -26,6 +26,9 @@ try to install the code in the current working directory.
 
 Options
 -------
+
+- **-r**, **--replace**:
+  Replace bundles with conflicting names.
 
 - _bundle_:
   One or more bundles to install. The value must be either a URL or a local
@@ -56,6 +59,12 @@ To install a bundle to a local sysroot:
 
 ````
 $ jeep -l install https://example.org/foo
+````
+
+To effectively reinstall a bundle from a local path:
+
+````
+$ jeep install -r ~/bar
 ````
 
 BUGS
