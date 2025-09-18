@@ -1,4 +1,6 @@
 #!/usr/bin/env janet
 (import jeep/lib/cli)
 
+(setdyn :jeep-cli true)
+
 (cli/run)

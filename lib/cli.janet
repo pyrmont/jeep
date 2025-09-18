@@ -61,13 +61,10 @@
         (prin help)
         (do
           (def name (string (parsed :cmd) (when (parsed :sub) (string "-" (get-in parsed [:sub :cmd])))))
-          (def installed? (string/has-prefix? (dyn :syspath) (dyn :current-file)))
-          (def pwd
-            (if installed?
-              (dyn :syspath)
-              (string/slice (dyn :current-file) 0 -15)))
-          (def manpage (string pwd "/man/man1/" name ".1"))
-          (os/execute ["man" manpage] :p)))
+          (def path (if (dyn :jeep-cli)
+                      name
+                      (string (string/slice (dyn :current-file) 0 -15) "/man/man1/" name ".1")))
+          (os/execute ["man" path] :p)))
       (os/exit (if long? 0 1)))
     (not (empty? err))
     (do
