@@ -13,7 +13,8 @@ metadata. It does not work with bundles that use `project.janet`.
 
 ## Installation
 
-Clone the repository and run `janet lib/cli.janet install`.
+Clone the repository and run `janet lib/cli.janet install`. If Jeep is already
+installed, you can reinstall with `janet lib/cli.janet install -r`.
 
 ## Usage
 
