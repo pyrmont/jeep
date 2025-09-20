@@ -13,6 +13,12 @@
       :prefix "argy-bargy"
       :files ["argy-bargy.janet"
               "LICENSE"]}
+     {:name "musty"
+      :url "https://github.com/pyrmont/musty"
+      :prefix "musty"
+      :files ["lib/musty.janet"
+              "init.janet"
+              "LICENSE"]}
      {:name "spork"
       :url "https://github.com/janet-lang/spork"
       :prefix "spork"

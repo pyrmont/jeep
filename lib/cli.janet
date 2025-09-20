@@ -6,7 +6,8 @@
 (import ./subs/quickbin :as cmd/quickbin)
 (import ./subs/uninstall :as cmd/uninstall)
 
-# Project Commands
+# Bundle Commands
+(import ./subs/api :as cmd/api)
 (import ./subs/build :as cmd/build)
 (import ./subs/clean :as cmd/clean)
 (import ./subs/dep :as cmd/dep)
@@ -19,11 +20,9 @@
   ```
   {:rules ["--local" {:kind  :flag
                       :short "l"
-                      :help  `Use a local directory for the system path. Jeep will
-                             use the ':syspath' value in '.jeep/config.jdn' if
-                             it exists, otherwise it uses '_modules'.`}
+                      :help  `Use the directory ./_system for the system path.`}
            "---------------------------------"]
-   :info  {:about "A tool for installing, building and managing Janet projects"
+   :info  {:about "A tool for installing, building and managing Janet bundles"
            :opts-header "The following global options are available:"
            :subs-header "The following subcommands are available:"}})
 
@@ -35,6 +34,7 @@
    "quickbin" cmd/quickbin/config
    "uninstall" cmd/uninstall/config
    "---"
+   "api" cmd/api/config
    "build" cmd/build/config
    "clean" cmd/clean/config
    "dep" cmd/dep/config
@@ -71,10 +71,8 @@
       (eprin err)
       (os/exit 1))
     (do
-      (def jeep-config-path (string/join ["." ".jeep" "config.jdn"] util/sep))
-      (def jeep-config (when (util/fexists? jeep-config-path) (parse (slurp jeep-config-path))))
       (when (get-in parsed [:opts "local"])
-        (util/change-syspath (or (get jeep-config :syspath) "_system")))
+        (util/change-syspath "_system"))
       (def name (symbol "cmd/" (get-in parsed [:sub :cmd]) "/run"))
       (def sub/run (module/value file-env name true))
       (try

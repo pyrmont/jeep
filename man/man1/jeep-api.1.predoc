@@ -1,0 +1,108 @@
+---
+Title: JEEP-API(1)
+Date: 2025/09/20
+Authors: Michael Camilleri <mike@inqk.net>
+Project: Jeep
+Version: DEVEL
+---
+
+NAME
+====
+
+**jeep-api** - generate an API document in a Janet bundle
+
+SYNOPSIS
+========
+
+**jeep-api** [**-d** _prefix_ | **--drop** _prefix_] [**-m** _path_ |
+             **--match** _path_] [**-M** _path_ | **--no-match** _path_] [**-o**
+             _path_ | **--output** _path_] [**-p** | **--private**] [**-t**
+             _path_ | **--template** _path_] [**-u** _url_ | **--url** _url_]
+
+DESCRIPTION
+===========
+
+**jeep-api** generates an API document based on information in a bundle's info
+file. The document is output as a Markdown-formatted text file that will display
+nicely in online hosting repository websites (e.g. GitHub).
+
+Options
+-------
+
+- **-d** _prefix_ | **--drop** _prefix_:
+  Drops the <prefix> from all module names.
+
+- **-m** _path_ | **--match** _path_:
+  Includes bindings from a file only if the file's path matches (or begins with)
+  _path_. Bindings from other files are not put in the API document. This option
+  can be invoked multiple times. More information on filtering bindings is set
+  out in `<Filtering>` below.
+
+- **-M** _path_ | **--no-match** _path_:
+  Excludes bindings from a file if the file's path matches (or begins with)
+  _path_. Bindings from other files are put in the API document. This option can
+  be invoked multiple times. More information on filtering bindings is set out
+  in `<Filtering>` below.
+
+- **-o** _path_ | **--output** _path_:
+  Writes the API document to _path_. If _path_ is ``-``, the output is written
+  to stdout.
+
+- **-p** | **--private**:
+  Includes private bindings in the API document.
+
+- **-t** _path_ | **--template** _path_:
+  The _path_ to a file containing the Mustache template used to produce the API
+  document. Jeep uses the Musty bundle for rendering the template into text.
+
+- **-u** _url_ | **--url** _url_:
+  Prepends the _url_ to all links. By default, Jeep produces links that are
+  relative. If desirable, a user can specify a URL that is prepended to the
+  beginning of these relative links.
+
+For more information about the info file, see CONCEPTS in `jeep(1)`.
+
+Filtering
+---------
+
+By default, Jeep looks for bindings in the files and directories referred to in
+the info file. It does this by getting the value under the `:source` and then
+`:files` key in the info file's data structure. If that value is not an array or
+tuple, Jeep will exit with an error.
+
+A user can filter these files and directories in two ways:
+
+1. If the user makes invocations of **--match** at the command line, only files
+   that match the _path_ (or begin with a matching path) are included. __All
+   other files are excluded.__
+
+2. If the user makes invocations of **--no-match** at the command line, files
+   that match the _path_ (or begin with a matching path) are excluded. __All other
+   files are included.__
+
+EXAMPLES
+========
+
+To create an API document that is written to `./api.md`:
+
+````
+$ jeep api
+````
+
+To create an API document that excludes all bindings from files in `./deps` and
+prepends a URL to all links:
+
+````
+$ jeep api -M deps -u "https://example.org/"
+````
+
+To output the result to stdout:
+
+````
+$ jeep api -o -
+````
+
+BUGS
+====
+
+Report issues at <https://github.com/pyrmont/jeep>
