@@ -395,4 +395,4 @@
                 :syspath syspath
                 :template template
                 :url url)
-  (print "File documented."))
+  (print "Document generated."))
