@@ -1,4 +1,4 @@
-(import ../lib/util)
+(import ../../lib/util)
 
 (defn main
   [& args]

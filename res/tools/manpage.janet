@@ -1,9 +1,10 @@
-(import ../lib/util)
+(import ../../lib/util)
 
 (defn main
   [& args]
-  (def parent (-> (dyn :current-file) util/abspath util/parent util/parent))
-  (def man-dir (string parent "/man/man1/"))
+  (def threeup (comp util/parent util/parent util/parent))
+  (def bundle-root (-> (dyn :current-file) util/abspath threeup))
+  (def man-dir (string bundle-root "/man/man1/"))
   (each entry (os/dir man-dir)
   (when (string/has-suffix? ".predoc" entry)
     (def src (string man-dir entry))

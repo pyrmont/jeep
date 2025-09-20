@@ -1,4 +1,4 @@
-(import ../lib/util)
+(import ../../lib/util)
 (import ./man)
 
 (def- paths
