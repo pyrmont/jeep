@@ -368,7 +368,7 @@
       (string "Usage: "
               command
               ;(map (fn [[name rule]]
-                      (unless (or (nil? rule) (rule :noex?))
+                      (unless (or (nil? rule) (rule :noex?) (rule :hide?))
                         (string " [--" name
                                 (when (or (= :single (rule :kind))
                                           (= :multi (rule :kind)))
@@ -376,15 +376,15 @@
                                 "]")))
                     orules)
               ;(map (fn [[name rule]]
-                      (def proxy (or (rule :proxy) name))
-                      (string " "
-                              (unless (rule :req?) "[")
-                              "<"
-                              proxy
-                              (when (rule :splat?) "...")
-                              ">"
-                              (unless (rule :req?) "]"))
-                      )
+                      (unless (rule :hide?)
+                        (def proxy (or (rule :proxy) name))
+                        (string " "
+                                (unless (rule :req?) "[")
+                                "<"
+                                proxy
+                                (when (rule :splat?) "...")
+                                ">"
+                                (unless (rule :req?) "]"))))
                     prules)
               (unless (empty? subconfigs)
                 " <subcommand> [<args>]"))
@@ -414,9 +414,12 @@
       (xprint help (indent-str (info :about) 0)))
 
     (unless (empty? prules)
-      (usage-parameters info prules))
+      (def shown-rules (filter (fn [[n r]] (not (has-key? r :hide?))) prules))
+      (usage-parameters info shown-rules))
 
-    (usage-options info orules)
+    (unless (empty? orules)
+      (def shown-rules (filter (fn [[n r]] (not (has-key? r :hide?))) orules))
+      (usage-options info shown-rules))
 
     (unless (empty? subconfigs)
       (usage-subcommands info subconfigs))
@@ -631,7 +634,7 @@
                        (break))
                      (do
                        (put-in result [:opts "help"] true)
-                       (put result :sub @{:cmd subcommand})
+                       (put result :sub {:cmd subcommand})
                        (set command (string command " " subcommand))
                        (usage subconfig)))
                    (usage-error "unrecognized subcommand '" subcommand "'"))
@@ -679,6 +682,7 @@
   * `:short` - A single letter that is used with `-` rather than `--` and can
     be combined with other short options (e.g. `-lah`).
   * `:help` - The help text for the option, displayed in the usage message.
+  * `:hide?` - Hide the option from the usage message.
   * `:default` - A default value that is used if the option occurs.
   * `:noex?` - Whether to hide the option from the generated usage example.
   * `:value` - A one-argument function that converts the text that is parsed to
@@ -700,6 +704,7 @@
 
   * `:help` - Help text for the parameter, displayed in the usage message.
   * `:default` - Default value that is used if the parameter is not present.
+  * `:hide?` - Hide the parameter from the usage message.
   * `:req?` - Whether the parameter is required to be present.
   * `:value` - One-argument function that converts the textual value that is
     parsed to a value that will be returned in the return struct. This function
