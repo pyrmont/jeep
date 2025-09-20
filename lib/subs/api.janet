@@ -108,12 +108,11 @@
 
 (defn- link
   [{:file file :line line} bundle-root url]
+  (default url "")
   (if (nil? file)
     nil
-    (if (and bundle-root url)
-      (-> (string/replace bundle-root url file)
-          (string "#L" line))
-      (string file "#L" line))))
+    (-> (string/replace (string bundle-root util/sep) url file)
+        (string "#L" line))))
 
 (defn- internal-link
   [name headings]
