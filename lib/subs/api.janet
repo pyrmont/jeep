@@ -163,7 +163,7 @@
     (if (= curr-ns ns)
       (set first? false)
       (do
-        (set curr-ns ns)
+        (set curr-ns (if (= "init" ns) (opts :name) ns))
         (set items @[])
         (set module @{:ns curr-ns :items items})
         (set first? true)
