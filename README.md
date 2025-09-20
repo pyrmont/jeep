@@ -26,6 +26,7 @@ Jeep offers the following commands for use at both the global and project level:
 
 The following commands work at the project level only:
 
+- `jeep api`
 - `jeep build`
 - `jeep clean`
 - `jeep dep`
