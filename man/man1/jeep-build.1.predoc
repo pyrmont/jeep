@@ -9,7 +9,7 @@ Version: DEVEL
 NAME
 ====
 
-**jeep-build** - build native targets in a Janet project
+**jeep-build** - build native targets in a Janet bundle
 
 SYNOPSIS
 ========
@@ -19,10 +19,10 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-**jeep-build** builds native targets in a Janet project. Native targets are
+**jeep-build** builds native targets in a Janet bundle. Native targets are
 built by calling the build function in the bundle script.
 
-A project author will almost always want to call helper functions from the build
+A bundle author will almost always want to call helper functions from the build
 function. The Spork library comes with a number of these functions and Jeep can
 vendor the most common ones into the `./bundle` directory:
 
@@ -31,7 +31,7 @@ $ jeep prep build
 ````
 
 This avoids an author needing to require a dependency be installed by the
-end-user to build the project. If additional modules from other bundles are
+end-user to build the bundle. If additional modules from other bundles are
 required, `jeep-prep(1)` supports vendoring additional dependencies. For more
 information, see the manpage for `jeep-prep(1)`.
 
@@ -50,13 +50,13 @@ hooks__, see CONCEPTS in `jeep(1)`.
 EXAMPLES
 ========
 
-To build the native targets for a project with no additional arguments:
+To build the native targets for a bundle with no additional arguments:
 
 ````
 $ jeep build
 ````
 
-To build the native targets for a project with additional arguments:
+To build the native targets for a bundle with additional arguments:
 
 ````
 $ jeep build -Dfoo -Dbar

@@ -26,9 +26,9 @@ Options
 -------
 
 - **-l**, **--local**:
-  Sets the __sysroot__ to `./_system`. By default, **jeep** performs operations in
-  respect of the global sysroot. By using **--local**, a user sets the
-  __sysroot__ to the `./_system` directory.
+  Sets the __syspath__ to `./_system`. By default, **jeep** performs operations in
+  respect of the global syspath. By using **--local**, a user sets the
+  __syspath__ to the `./_system` directory.
 
 Individual commands may support additional options. These are written *after*
 the command.
@@ -39,20 +39,21 @@ Commands
 The **jeep** utility comes with multiple commands. More information about each
 command can be obtained by running ``jeep help <command>``.
 
-Global commands are commands that a user can run inside or outside of a project
+Global commands are commands that a user can run inside or outside of a bundle
 directory.
 
 - **install** - installs a Janet bundle
 - **quickbin** - creates a binary executable
 - **uninstall** - uninstalls a Janet bundle
 
-Project commands are commands that a user must run inside a project directory.
+Bundle commands are commands that a user must run inside a bundle directory.
 
-- **build** - builds the native targets of a project
-- **clean** - cleans directories in a project
-- **dep** - adds or removes dependencies from a project
-- **prep** - prepares dependencies for a project
-- **test** - runs tests for a project
+- **api** - generates an API document for a bundle
+- **build** - builds the native targets of a bundle
+- **clean** - cleans directories in a bundle
+- **dep** - adds or removes dependencies from a bundle
+- **prep** - prepares dependencies for a bundle
+- **test** - runs tests for a bundle
 
 CONCEPTS
 ========
@@ -60,7 +61,7 @@ CONCEPTS
 Bundles are the distributable units of code in Janet. They are akin to packages
 in other languages.
 
-A bundle in Janet is a collection of files. A valid bundle contains an __info
+A bundle in Janet is a directory of files. A valid bundle contains an __info
 file__ and a __bundle script__. A bundle author can write functions that are
 registered to a __bundle hook__ that is called during the bundle life cycle.
 
@@ -109,22 +110,22 @@ __bundle hook__, the user would write this in the __bundle script__:
 
 Every __bundle hook__ receives the bundle manifest as its first argument. The
 bundle manifest is a table that contains information related to the bundle. For
-project authors, the most relevant piece of information is under the ``:info``
+bundle authors, the most relevant piece of information is under the ``:info``
 key. The value is a table that contains the information in the __info file__.
 
-sysroot
+syspath
 -------
 
-The __sysroot__ is a directory on the system that Janet uses for loading and
+The __syspath__ is a directory on the system that Janet uses for loading and
 installing. In the Jeep documentation, a distinction is made between the global
-sysroot and the local sysroot relative to a project.
+syspath and the local syspath relative to a bundle.
 
-The global sysroot is normally set to the value of `JANET_PATH`. If
-`JANET_PATH` is not set, the global sysroot may be set to a value baked in at
+The global syspath is normally set to the value of `JANET_PATH`. If
+`JANET_PATH` is not set, the global syspath may be set to a value baked in at
 compile-time (on POSIX) or nothing (on Windows).
 
-The local sysroot relative to a project is the `./_system` directory in the root
-of a project.
+The local syspath relative to a bundle is the `./_system` directory in the root
+of a bundle.
 
 EXAMPLES
 ========
@@ -135,7 +136,7 @@ To install a bundle from a remote URL:
 $ jeep install https://example.org/foo
 ````
 
-To install a bundle from a remote URL to the local sysroot directory:
+To install a bundle from a remote URL to the local syspath:
 
 ````
 $ jeep -l install https://example.org/foo

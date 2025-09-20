@@ -16,9 +16,9 @@
    :no-result
    `Skips printing pass/fail result.`
    :about
-   `Runs tests in the ./test directory of the project.`
+   `Runs tests in the ./test directory of the bundle.`
    :help
-   `Run tests for the current project.`})
+   `Run tests for the current bundle.`})
 
 (def config {:rules [:args {:splat? true
                             :help   (helps :args)}

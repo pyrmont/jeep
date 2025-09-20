@@ -7,13 +7,13 @@
    `Deps to add or remove. Dependencies can be provided as short names, URLs or
    JDN structs/tables.`
    :remove
-   `Remove the deps from the project.`
+   `Remove the deps from the bundle.`
    :vendor
    `Update the deps under <dir> associated with the ':vendored' key.`
    :about
-   `Adds or removes dependency information in the project's info file.`
+   `Adds or removes dependency information in the bundle's info file.`
    :help
-   `Add or remove dependency information in the current project.`})
+   `Add or remove dependency information in the current bundle.`})
 
 (def config {:rules [:deps {:splat? true
                             :req?   true

@@ -9,10 +9,10 @@
    :no-deps
    `Skip installation of dependencies.`
    :about
-   `Prepares the project by installing dependencies and running the optional
+   `Prepares the bundle by installing dependencies and running the optional
    prep hook. For more information, see jeep-prep(1).`
    :help
-   `Install dependencies and run prep hook for the current project.`})
+   `Install dependencies and run prep hook for the current bundle.`})
 
 (def config
   {:rules [:profile       {:default "system"

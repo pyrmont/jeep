@@ -4,10 +4,10 @@
   {:args
    `Arguments to pass to the build function.`
    :about
-   `Builds any native targets using the build function provided in the project's
+   `Builds any native targets using the build function provided in the bundle's
    bundle script.`
    :help
-   `Build native targets of the current project.`})
+   `Build native targets of the current bundle.`})
 
 (def config {:rules [:args {:splat? true
                             :proxy  "build-args"

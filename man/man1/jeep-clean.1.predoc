@@ -9,7 +9,7 @@ Version: DEVEL
 NAME
 ====
 
-**jeep-clean** - clean directories in a Janet project
+**jeep-clean** - clean directories in a Janet bundle
 
 SYNOPSIS
 ========
@@ -20,7 +20,7 @@ DESCRIPTION
 ===========
 
 **jeep-clean** cleans certain directories using the clean hook defined in the
-project's bundle script. The user can also delete the `./_build` and `./_system`
+bundle's bundle script. The user can also delete the `./_build` and `./_system`
 directories.
 
 Options

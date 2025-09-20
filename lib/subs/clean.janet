@@ -7,9 +7,9 @@
    `Delete the ./_system directory.`
    :about
    `Cleans certain directories using the clean function provided in the
-   project's bundle script.`
+   bundle's bundle script.`
    :help
-   `Clean directories of the current project.`})
+   `Clean directories of the current bundle.`})
 
 (def config {:rules ["--build" {:kind  :flag
                                 :short "b"

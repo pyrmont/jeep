@@ -9,7 +9,7 @@ Version: DEVEL
 NAME
 ====
 
-**jeep-dep** - add or remove dependency information in a Janet project
+**jeep-dep** - add or remove dependency information in a Janet bundle
 
 SYNOPSIS
 ========
@@ -19,7 +19,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-**jeep-dep** adds or removes dependency information in a project's __info
+**jeep-dep** adds or removes dependency information in a bundle's __info
 file__. This command does not install dependencies; that is the responsibility
 of `jeep-prep(1)`.
 
@@ -27,7 +27,7 @@ Options
 -------
 
 - **-r**, **--remove**:
-  Removes the dependency information from the project's __info file__.
+  Removes the dependency information from the bundle's __info file__.
 
 - **-v** _dir_, **--vendor** _dir_:
   Updates the dependencies that will be vendored into _dir_. Vendoring is
@@ -40,7 +40,7 @@ Options
 Vendoring
 ---------
 
-A project's __info file__ can contain dependency information in an array/tuple
+A bundle's __info file__ can contain dependency information in an array/tuple
 mapped to the ``:dependencies`` key. By default, dependencies that are added or
 removed using **jeep-dep** are added to or removed from this data structure.
 Dependencies that are listed in this data structure are installed into the
@@ -52,7 +52,7 @@ avoid version conflicts, a user may prefer to vendor dependencies. **jeep-dep**
 supports this with the **--vendor** option. Vendored dependencies are listed
 under the ``:vendored`` keyword and then further listed under a string that
 represents the directory into which the dependency will be vendored. This allows
-a project author to vendor dependency for certain purposes (such as building or
+a bundle author to vendor dependency for certain purposes (such as building or
 testing) by vendoring dependencies into different directories.
 
 For more information about the __info file__, the __bundle script__ and the
