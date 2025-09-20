@@ -26,6 +26,12 @@ DESCRIPTION
 file. The document is output as a Markdown-formatted text file that will display
 nicely in online hosting repository websites (e.g. GitHub).
 
+Note that, in order to generate a document, the info file __must__ describe the
+files in a particular way. Namely, the struct/table must include a ``:source``
+key which must be associated with a struct/table that includes a ``:files`` key
+that must be associated with an array/tuple listing the files. If this is not
+present, Jeep will exit with an error.
+
 Options
 -------
 
@@ -66,9 +72,7 @@ Filtering
 ---------
 
 By default, Jeep looks for bindings in the files and directories referred to in
-the info file. It does this by getting the value under the `:source` and then
-`:files` key in the info file's data structure. If that value is not an array or
-tuple, Jeep will exit with an error.
+the info file.
 
 A user can filter these files and directories in two ways:
 
@@ -83,7 +87,8 @@ A user can filter these files and directories in two ways:
 EXAMPLES
 ========
 
-To create an API document that is written to `./api.md`:
+To create an API document using the default settings (it will be written to
+`./api.md`):
 
 ````
 $ jeep api
