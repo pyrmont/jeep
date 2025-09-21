@@ -159,11 +159,19 @@
   (var first? false)
   (loop [i :range [0 (length bindings)]
            :let [binding (get bindings i)]]
-    (def ns (if (= "" (binding :ns)) false (binding :ns)))
+    (def ns (cond
+              # no namespace
+              (= "" (binding :ns))
+              false
+              # top-level init
+              (= "init" (binding :ns))
+              false
+              # default
+              (binding :ns)))
     (if (= curr-ns ns)
       (set first? false)
       (do
-        (set curr-ns (if (= "init" ns) (opts :name) ns))
+        (set curr-ns ns)
         (set items @[])
         (set module @{:ns curr-ns :items items})
         (set first? true)
