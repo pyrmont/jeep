@@ -64,13 +64,19 @@
     (print (util/colour c m))))
 
 (defn- run-janet
-  [path &opt args]
+  [path & args]
   (prin "running " (relpath path) "... ")
   (flush)
+  (if no-result?
+    (print))
   (def setup
-    (if (nil? args)
+    (if (empty? args)
       ""
-      (string/format "(setdyn %s @['%s])" (first args) (string/join (last args) " '"))))
+      (do
+        (def b @"")
+        (each [k v] (partition 2 args)
+          (buffer/push b (string "(setdyn :" k " " v ") ")))
+        (string b))))
   (if (zero? (os/execute ["janet" "-m" (dyn *syspath*) "-e" setup path] :p))
     (result :green "pass")
     (do
@@ -84,7 +90,11 @@
     (def fpath (string path util/sep f))
     (case (os/stat fpath :mode)
       :file
-      (when (use? fpath) (run-janet fpath (cond test [":tests" test] skip [":skips" skip])))
+      (when (use? fpath)
+        (run-janet fpath
+                   :test/tests (if (nil? test) "nil" (string "[" (map (partial string "'") test) "]"))
+                   :test/skips (if (nil? skip) "nil" (string "[" (map (partial string "'") skip) "]"))
+                   :test/color? true))
       :directory
       (run-tests fpath :use? use? :test test :skip skip))))
 
