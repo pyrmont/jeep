@@ -2,14 +2,15 @@
 
 [![Test Status](https://github.com/pyrmont/jeep/workflows/test/badge.svg)](https://github.com/pyrmont/jeep/actions?query=workflow%3Atest)
 
-Jeep is a project management utility for Janet bundles.
+Jeep is a bundle management utility for Janet bundles.
 
 > [!WARNING]
 > Jeep is in a beta stage of development. There are likely to be bugs and gaps
 > in its implementation.
 
-Jeep only supports projects that use the `info.jdn` format for describing
-metadata. It does not work with bundles that use `project.janet`.
+Jeep only supports modern bundles. That is bundles that use the `info.jdn`
+format for describing metadata. It does not work with legacy bundles, bundles
+that use `project.janet`.
 
 ## Installation
 
@@ -18,13 +19,14 @@ installed, you can reinstall with `janet lib/cli.janet install -r`.
 
 ## Usage
 
-Jeep offers the following commands for use at both the global and project level:
+Jeep offers the following commands for use at both the global and bundle level:
 
 - `jeep install`
+- `jeep list`
 - `jeep quickbin`
 - `jeep uninstall`
 
-The following commands work at the project level only:
+The following commands work at the bundle level only:
 
 - `jeep api`
 - `jeep build`

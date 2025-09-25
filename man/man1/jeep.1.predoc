@@ -1,6 +1,6 @@
 ---
 Title: JEEP(1)
-Date: 2025/09/12
+Date: 2025/09/25
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -42,18 +42,19 @@ command can be obtained by running ``jeep help <command>``.
 Global commands are commands that a user can run inside or outside of a bundle
 directory.
 
-- **install** - installs a Janet bundle
-- **quickbin** - creates a binary executable
-- **uninstall** - uninstalls a Janet bundle
+- ***install*** - installs a Janet bundle
+- ***list*** - lists installed Janet bundles
+- ***quickbin*** - creates a binary executable
+- ***uninstall*** - uninstalls a Janet bundle
 
 Bundle commands are commands that a user must run inside a bundle directory.
 
-- **api** - generates an API document for a bundle
-- **build** - builds the native targets of a bundle
-- **clean** - cleans directories in a bundle
-- **dep** - adds or removes dependencies from a bundle
-- **prep** - prepares dependencies for a bundle
-- **test** - runs tests for a bundle
+- ***api*** - generates an API document for a bundle
+- ***build*** - builds the native targets of a bundle
+- ***clean*** - cleans directories in a bundle
+- ***dep*** - adds or removes dependencies from a bundle
+- ***prep*** - prepares dependencies for a bundle
+- ***test*** - runs tests for a bundle
 
 CONCEPTS
 ========

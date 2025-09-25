@@ -3,6 +3,7 @@
 
 # Global Commands
 (import ./subs/install :as cmd/install)
+(import ./subs/list :as cmd/list)
 (import ./subs/quickbin :as cmd/quickbin)
 (import ./subs/uninstall :as cmd/uninstall)
 
@@ -31,6 +32,7 @@
   Subcommands supported by jeep.
   ```
   ["install" cmd/install/config
+   "list" cmd/list/config
    "quickbin" cmd/quickbin/config
    "uninstall" cmd/uninstall/config
    "---"

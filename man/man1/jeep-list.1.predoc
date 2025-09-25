@@ -1,0 +1,53 @@
+---
+Title: JEEP-LIST(1)
+Date: 2025/09/25
+Authors: Michael Camilleri <mike@inqk.net>
+Project: Jeep
+Version: DEVEL
+---
+
+NAME
+====
+
+**jeep-list** - list installed Janet bundles
+
+SYNOPSIS
+========
+
+**jeep-list** [**-L** | **--no-legacy**]
+
+DESCRIPTION
+===========
+
+**jeep-list** lists the Janet bundles that are installed in the current
+__sysroot__. By default, **jeep-list** will list both modern bundles and legacy
+bundles. The **--no-legacy** option can be used to exclude legacy bundles from
+the results.
+
+Options
+-------
+
+- **-L** | **--no-legacy**:
+  Exclude legacy bundles from the list.
+
+For more information about the __sysroot__, see CONCEPTS in `jeep(1)`.
+
+EXAMPLES
+========
+
+To list all installed Janet bundles:
+
+````
+$ jeep list
+````
+
+To list installed Janet modern bundles only:
+
+````
+$ jeep list -L
+````
+
+BUGS
+====
+
+Report issues at <https://github.com/pyrmont/jeep>
