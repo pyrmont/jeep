@@ -42,19 +42,22 @@
     (def breaks (sorted (keys breakage)))
     (errorf "cannot uninstall %s, breaks dependent bundles %n" name breaks))
   # remove all paths created during installation
-  (def man (legacy-manifest name))
-  (each p (get man :paths)
-    (print "remove " p)
-    (util/rmrf p)
-    # hack to remove prefix directory
-    (when (string/has-prefix? (dyn :syspath) p)
-      (def parent (util/parent p))
-      (def [ok? err] (protect (os/rmdir parent)))
-      (if ok? (print "remove " parent))))
-  # remove manifest file
-  (def mpath (legacy-mpath name))
-  (print "remove " mpath)
-  (util/rmrf mpath))
+  (when (def man (legacy-manifest name))
+    (each p (get man :paths)
+      (print "remove " p)
+      (def [ok? res] (protect (util/rmrf p)))
+      (unless ok?
+        (eprint "cannot remove " p " (" res ")"))
+      # hack to remove prefix directory
+      (when (string/has-prefix? (dyn :syspath) p)
+        (def parent (util/parent p))
+        (def [ok? _] (protect (os/rmdir parent)))
+        (if ok? (print "remove " parent))))
+    # remove manifest file
+    (def mpath (legacy-mpath name))
+    (def [ok? res] (protect (util/rmrf mpath)))
+    (unless ok?
+      (eprint "cannot remove " mpath " (" res ")"))))
 
 (defn run
   [args &opt jeep-config]
@@ -64,6 +67,15 @@
       (uninstall (get meta :name)))
     (do
       (def lbundles (util/legacy-bundles))
+      (def mbundles (bundle/list))
       (each rep repo
-        (uninstall rep (index-of rep lbundles)))))
+        (def legacy? (index-of rep lbundles))
+        (def modern? (index-of rep mbundles))
+        (unless (or legacy? modern?)
+          (errorf "no bundle %s installed" rep))
+        (if (and legacy? modern?)
+          (do
+            (uninstall rep)
+            (uninstall rep true))
+          (uninstall rep legacy?)))))
   (print "Uninstallation completed."))

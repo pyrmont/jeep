@@ -28,8 +28,8 @@
       (print "Installed bundles"
              (if (or no-legacy? (empty? lbundles)) "" " (legacy bundles marked with *)")
              ":")
-      (each b (sort bundles)
-        (if (index-of b lbundles)
+      (each b (sort (distinct bundles))
+        (if (not (index-of b mbundles))
           (print pad "* " b)
           (print pad "  " b)))
       (print "Listing completed."))))
