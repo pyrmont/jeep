@@ -22,11 +22,14 @@
   (def mbundles (bundle/list))
   (def lbundles (if no-legacy? [] (util/legacy-bundles)))
   (def bundles (array/concat @[] mbundles lbundles))
-  (print "Installed bundles"
-         (if (or no-legacy? (empty? lbundles)) "" " (legacy bundles marked with *)")
-         ":")
-  (each b (sort bundles)
-    (if (index-of b lbundles)
-      (print pad "* " b)
-      (print pad "  " b)))
-  (print "Listing completed."))
+  (if (empty? bundles)
+    (print "No bundles installed.")
+    (do
+      (print "Installed bundles"
+             (if (or no-legacy? (empty? lbundles)) "" " (legacy bundles marked with *)")
+             ":")
+      (each b (sort bundles)
+        (if (index-of b lbundles)
+          (print pad "* " b)
+          (print pad "  " b)))
+      (print "Listing completed."))))

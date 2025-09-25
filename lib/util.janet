@@ -55,7 +55,8 @@
   []
   (var res @[])
   (def mpath (string (dyn :syspath) sep ".manifests"))
-  (assert :directory (os/stat mpath :mode))
+  (unless (= :directory (os/stat mpath :mode))
+    (break res))
   (each entry (os/dir mpath)
     (when (string/has-suffix? ".jdn" entry)
       (array/push res (string/slice entry 0 -5))))
