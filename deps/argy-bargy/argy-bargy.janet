@@ -634,7 +634,7 @@
                        (break))
                      (do
                        (put-in result [:opts "help"] true)
-                       (put result :sub {:cmd subcommand})
+                       (put result :sub @{:cmd subcommand})
                        (set command (string command " " subcommand))
                        (usage subconfig)))
                    (usage-error "unrecognized subcommand '" subcommand "'"))
