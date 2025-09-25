@@ -19,8 +19,8 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-**jeep-prep** prepares a Janet project. A project is prepared by installing
-dependencies and running the prep __bundle hook__.
+**jeep-prep** prepares a Janet project. A project is prepared for a given
+profile by installing dependencies and running the prep __bundle hook__.
 
 Options
 -------
