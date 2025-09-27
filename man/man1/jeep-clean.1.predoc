@@ -20,8 +20,8 @@ DESCRIPTION
 ===========
 
 **jeep-clean** cleans certain directories using the clean hook defined in the
-bundle's bundle script. The user can also delete the `./_build` and `./_system`
-directories.
+bundle's bundle script. It deletes all files in the `./_build` directory. The
+user can also delete the `./_build` and `./_system` directories themselves.
 
 Options
 -------
@@ -32,8 +32,8 @@ Options
 - **-s**, **--system**:
   Deletes the `./system` directory.
 
-For more information about the info file, the bundle script and bundle hooks,
-see CONCEPTS in `jeep(1)`.
+For more information about the __info file__, the __bundle script__ and __bundle
+hooks__, see CONCEPTS in `jeep(1)`.
 
 EXAMPLES
 ========

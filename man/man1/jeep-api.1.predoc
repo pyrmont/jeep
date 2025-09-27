@@ -66,7 +66,7 @@ Options
   relative. If desirable, a user can specify a URL that is prepended to the
   beginning of these relative links.
 
-For more information about the info file, see CONCEPTS in `jeep(1)`.
+For more information about the __info file__, see CONCEPTS in `jeep(1)`.
 
 Filtering
 ---------
