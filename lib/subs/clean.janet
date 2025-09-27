@@ -27,6 +27,6 @@
   (util/local-hook :clean)
   (if (get opts "build")
     (util/rmrf "_build"))
-  (if (get opts "syspath")
+  (if (get opts "system")
     (util/rmrf "_system"))
   (print "Cleaning completed."))
