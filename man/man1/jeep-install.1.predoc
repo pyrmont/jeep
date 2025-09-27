@@ -35,10 +35,10 @@ Options
   path.
 
 Note that while it is not an option passed to **jeep-test**, if a user wants to
-install the dependency to a __sysroot__ other than the global sysroot, this can
-be accomplished by setting **--local** after the invocation of `jeep(1)`.
+install the dependency to `./_system`, the local __syspath__ , this can be
+accomplished by setting **--local** after the invocation of `jeep(1)`.
 
-For more information about the __sysroot__, see CONCEPTS in `jeep(1)`.
+For more information about the __syspath__, see CONCEPTS in `jeep(1)`.
 
 EXAMPLES
 ========
@@ -55,7 +55,7 @@ To install a bundle from a local path:
 $ jeep install ~/bar
 ````
 
-To install a bundle to a local sysroot:
+To install a bundle to the local syspath:
 
 ````
 $ jeep -l install https://example.org/foo

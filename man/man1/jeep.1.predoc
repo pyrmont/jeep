@@ -1,6 +1,6 @@
 ---
 Title: JEEP(1)
-Date: 2025/09/25
+Date: 2025/09/27
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -28,7 +28,7 @@ Options
 - **-l**, **--local**:
   Sets the __syspath__ to `./_system`. By default, **jeep** performs operations in
   respect of the global syspath. By using **--local**, a user sets the
-  __syspath__ to the `./_system` directory.
+  syspath to `./_system`, the local syspath.
 
 Individual commands may support additional options. These are written *after*
 the command.
@@ -66,13 +66,9 @@ A bundle in Janet is a directory of files. A valid bundle contains an __info
 file__ and a __bundle script__. A bundle author can write functions that are
 registered to a __bundle hook__ that is called during the bundle life cycle.
 
-Info File
----------
-
-The __info file__ may be located at:
-
-- `./bundle/info.jdn`
-- `./info.jdn`
+For historical reasons, Janet's community includes __modern bundles__ and
+__legacy bundles__. Jeep fully supports modern bundles. It only supports the
+listing and uninstallation of legacy bundles.
 
 Bundle Script
 -------------
@@ -85,8 +81,9 @@ The __bundle script__ may be located at:
 Bundle Hooks
 ------------
 
-The bundle life cycle consists of an install phase and an uninstall phase. In
-the install phase, the following hooks are called:
+Janet's __bundle hooks__ are functions called during the bundle life cycle. The
+bundle life cycle consists of an install phase and an uninstall phase. In the
+install phase, the following hooks are called:
 
 - dependencies
 - clean
@@ -98,9 +95,9 @@ In the uninstall phase:
 
 - uninstall
 
-A user binds a function to a __bundle hook__ by providing a function with the
+A user binds a function to a bundle hook by providing a function with the
 same name in the __bundle script__. In other words, to bind to the check
-__bundle hook__, the user would write this in the __bundle script__:
+bundle hook, the user would write this in the bundle script:
 
 ````
 (defn check [manifest]
@@ -109,10 +106,39 @@ __bundle hook__, the user would write this in the __bundle script__:
   (print "all files checked"))
 ````
 
-Every __bundle hook__ receives the bundle manifest as its first argument. The
+Every bundle hook receives the bundle manifest as its first argument. The
 bundle manifest is a table that contains information related to the bundle. For
 bundle authors, the most relevant piece of information is under the ``:info``
 key. The value is a table that contains the information in the __info file__.
+
+Info File
+---------
+
+The __info file__ may be located at:
+
+- `./bundle/info.jdn`
+- `./info.jdn`
+
+Legacy Bundles
+--------------
+
+A __legacy bundle__ is a directory that contains a __project file__. It is
+possible for a bundle to be both a legacy bundle and a __modern bundle__.
+
+Modern Bundles
+--------------
+
+A __modern bundle__ is a directory that contains an __info file__ and a __bundle
+script__. It is possible for a bundle to be both a __legacy bundle__ and a
+modern bundle.
+
+Project File
+------------
+
+The __project file__ is a file located at `./project.janet`. It was introduced
+by JPM, the Janet Project Manager. It is supported by Janet-PM, the
+next-generation project manager that is part of the Spork library. It is not
+supported by Jeep.
 
 syspath
 -------
@@ -125,8 +151,8 @@ The global syspath is normally set to the value of `JANET_PATH`. If
 `JANET_PATH` is not set, the global syspath may be set to a value baked in at
 compile-time (on POSIX) or nothing (on Windows).
 
-The local syspath relative to a bundle is the `./_system` directory in the root
-of a bundle.
+The local syspath relative to the root of the bundle is the `./_system`
+directory.
 
 EXAMPLES
 ========

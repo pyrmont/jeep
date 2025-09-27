@@ -34,6 +34,9 @@ Options
   One or more bundles to install. Each value must be the name of an installed
   bundle.
 
+For more information about __legacy bundles__ and __modern bundles__, see
+CONCEPTS in `jeep(1)`.
+
 EXAMPLES
 ========
 

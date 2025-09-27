@@ -44,8 +44,8 @@ A bundle's __info file__ can contain dependency information in an array/tuple
 mapped to the ``:dependencies`` key. By default, dependencies that are added or
 removed using **jeep-dep** are added to or removed from this data structure.
 Dependencies that are listed in this data structure are installed into the
-__sysroot__. This will either be the global sysroot or `./_system`, the local
-sysroot, if the user is using the **--local** flag as described in `jeep(1)`.
+__syspath__. This will either be the global syspath or `./_system`, the local
+syspath, if the user is using the **--local** flag as described in `jeep(1)`.
 
 Janet does not support the installation of multiple versions of a dependency. To
 avoid version conflicts, a user may prefer to vendor dependencies. **jeep-dep**
@@ -56,7 +56,7 @@ a bundle author to vendor dependency for certain purposes (such as building or
 testing) by vendoring dependencies into different directories.
 
 For more information about the __info file__, the __bundle script__ and the
-__sysroot__, see CONCEPTS in `jeep(1)`.
+__syspath__, see CONCEPTS in `jeep(1)`.
 
 EXAMPLES
 ========

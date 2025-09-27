@@ -39,7 +39,7 @@ Options
   - ***system***:
     By default, **jeep-prep** will use the ***system*** profile. This installs
     the dependencies listed under ``:dependencies`` key in the __info
-    file__. The dependencies are installed to the __sysroot__.
+    file__. The dependencies are installed to the __syspath__.
 
   - ***build***:
     If the user specifies the ***build*** profile, this copies into the
@@ -60,7 +60,7 @@ Options
     dependencies listed under the ``:vendored`` key in the __info file__.
 
 For more information about the __info file__, the __bundle script__,  __bundle
-hooks__ and the __sysroot__, see CONCEPTS in `jeep(1)`. For more information
+hooks__ and the __syspath__, see CONCEPTS in `jeep(1)`. For more information
 about vendoring, see Vendoring in `jeep-dep(1)`.
 
 OPERATION
@@ -109,14 +109,14 @@ The following examples assume an __info file__ as follows:
 ````
 
 The following command prepares the project using the default ***system***
-profile. This installs 'dep1' and 'dep2' to the global sysroot.
+profile. This installs 'dep1' and 'dep2' to the global syspath.
 
 ````
 $ jeep prep
 ````
 
 The following command prepares the project using the ***system*** profile. This
-installs 'dep1' and 'dep2' to `./_system`, the local sysroot.
+installs 'dep1' and 'dep2' to `./_system`, the local syspath.
 
 ````
 $ jeep -l prep system

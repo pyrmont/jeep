@@ -20,7 +20,7 @@ DESCRIPTION
 ===========
 
 **jeep-list** lists the Janet bundles that are installed in the current
-__sysroot__. By default, **jeep-list** will list both modern bundles and legacy
+__syspath__. By default, **jeep-list** will list both modern bundles and legacy
 bundles. The **--no-legacy** option can be used to exclude legacy bundles from
 the results.
 
@@ -30,7 +30,8 @@ Options
 - **-L** | **--no-legacy**:
   Exclude legacy bundles from the list.
 
-For more information about the __sysroot__, see CONCEPTS in `jeep(1)`.
+For more information about __legacy bundles__, __modern bundles__ and the
+__syspath__, see CONCEPTS in `jeep(1)`.
 
 EXAMPLES
 ========
