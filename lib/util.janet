@@ -190,9 +190,10 @@
 
 (defn local-hook
   [name & args]
-  (def [ok module] (protect (require "/bundle")))
-  (when-let [hookf (and ok (module/value module (symbol name)))]
-    (apply hookf args)))
+  (def [ok? module] (protect (require "/bundle")))
+  (when-let [hookf (and ok? (module/value module (symbol name)))]
+    (apply hookf args)
+    true))
 
 (defn save-info
   [jdn &opt dir]
