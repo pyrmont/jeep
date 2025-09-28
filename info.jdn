@@ -45,6 +45,7 @@
            "man/man1/jeep-clean.1"
            "man/man1/jeep-dep.1"
            "man/man1/jeep-install.1"
+           "man/man1/jeep-list.1"
            "man/man1/jeep-prep.1"
            "man/man1/jeep-quickbin.1"
            "man/man1/jeep-test.1"
