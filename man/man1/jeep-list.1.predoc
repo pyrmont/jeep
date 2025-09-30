@@ -9,7 +9,7 @@ Version: DEVEL
 NAME
 ====
 
-**jeep-list** - list installed Janet bundles
+**jeep-list** - list system information
 
 SYNOPSIS
 ========
@@ -19,16 +19,16 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-**jeep-list** lists the Janet bundles that are installed in the current
-__syspath__. By default, **jeep-list** will list both modern bundles and legacy
-bundles. The **--no-legacy** option can be used to exclude legacy bundles from
-the results.
+**jeep-list** lists system information, including the Janet bundles that are
+installed in the current __syspath__. By default, **jeep-list** will list both
+modern bundles and legacy bundles. The **--no-legacy** option can be used to
+exclude legacy bundles from the results.
 
 Options
 -------
 
 - **-L** | **--no-legacy**:
-  Exclude legacy bundles from the list.
+  Exclude legacy bundles from the listing.
 
 For more information about __legacy bundles__, __modern bundles__ and the
 __syspath__, see CONCEPTS in `jeep(1)`.
@@ -36,13 +36,13 @@ __syspath__, see CONCEPTS in `jeep(1)`.
 EXAMPLES
 ========
 
-To list all installed Janet bundles:
+To list system information, including all installed Janet bundles:
 
 ````
 $ jeep list
 ````
 
-To list installed Janet modern bundles only:
+To list system information, showing installed Janet modern bundles only:
 
 ````
 $ jeep list -L

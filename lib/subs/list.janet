@@ -4,9 +4,9 @@
   {:no-legacy
    `Exclude legacy bundles from the list.`
    :about
-   `Lists the installed Janet bundles.`
+   `Lists system information, including the installed Janet bundles.`
    :help
-   `List the installed Janet bundles.`})
+   `List system information, including installed Janet bundles.`})
 
 (def config {:rules ["--no-legacy" {:help  (helps :no-legacy)
                                     :kind  :flag
@@ -21,13 +21,13 @@
   (def mbundles (bundle/list))
   (def lbundles (if no-legacy? [] (util/legacy-bundles)))
   (def bundles (array/concat @[] mbundles lbundles))
+  (def pad (if no-legacy? "" " "))
+  (print "Installed bundles"
+         (if (or no-legacy? (empty? lbundles)) "" " (legacy bundles marked with *)")
+         ":")
   (if (empty? bundles)
-    (print "No bundles installed.")
+    (print pad "  No bundles installed")
     (do
-      (def pad (if no-legacy? "" " "))
-      (print "Installed bundles"
-             (if (or no-legacy? (empty? lbundles)) "" " (legacy bundles marked with *)")
-             ":")
       (each b (sort (distinct bundles))
         (if (index-of b mbundles)
           (do
@@ -39,5 +39,12 @@
                          slurp
                          parse))
             (def ver (get man :version))
-            (print pad "* " b (when ver (string " (" ver ")"))))))
-      (print "Listing completed."))))
+            (print pad "* " b (when ver (string " (" ver ")"))))))))
+  (print "\nSystem:")
+  (print pad "  version: " janet/version "-" janet/build)
+  (print pad "  platform: " (os/which) "/" (os/arch) "/" (os/compiler))
+  (print pad "  syspath: " (dyn :syspath))
+  (def environ (os/environ))
+  (print "\nEnvironment:")
+  (print pad "  JANET_PATH: " (get (os/environ) "JANET_PATH" "<undefined>"))
+  (print "\nListing completed."))
