@@ -1,6 +1,11 @@
 #!/usr/bin/env janet
+(def parent-dir (string/slice (dyn :current-file) 0 -9))
+(def old-syspath (dyn :syspath))
+(setdyn :syspath parent-dir)
 (import jeep/lib/cli)
+(setdyn :syspath old-syspath)
 
 (setdyn :jeep-cli true)
 
 (cli/run)
+
