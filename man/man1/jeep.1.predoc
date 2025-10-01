@@ -14,7 +14,7 @@ NAME
 SYNOPSIS
 ========
 
-**jeep** [**-l** | **--local**] _command_ _arguments_
+**jeep** [**-l** | **--local**] [**-v** | **--version**] _command_ _arguments_
 
 DESCRIPTION
 ===========
@@ -29,6 +29,9 @@ Options
   Sets the __syspath__ to `./_system`. By default, **jeep** performs operations in
   respect of the global syspath. By using **--local**, a user sets the
   syspath to `./_system`, the local syspath.
+
+- **-v**, **--version**:
+  Prints the version of **jeep**.
 
 Individual commands may support additional options. These are written *after*
 the command.

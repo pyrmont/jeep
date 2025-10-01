@@ -44,8 +44,11 @@
 
 (defn exec
   [cmd stdio & args]
-  (default stdio {})
-  (os/execute [(dyn (keyword cmd "path") (string cmd)) ;args] :px stdio))
+  (def {:out out :err err} stdio)
+  (def dn (if (or (nil? out) (nil? err)) (devnull)))
+  (default out dn)
+  (default err dn)
+  (os/execute [(dyn (keyword cmd "path") (string cmd)) ;args] :px {:out out :err err}))
 
 (defn fexists?
   [p]
@@ -201,3 +204,19 @@
   (def info-path1 (string/join [dir "bundle" "info.jdn"] sep))
   (def info-path2 (string/join [dir "info.jdn"] sep))
   (or (spit-maybe info-path1 jdn) (spit-maybe info-path2 jdn)))
+
+(defn version
+  []
+  (if (string/has-prefix? (os/realpath (dyn :syspath)) (dyn :current-file))
+    (get (bundle/manifest "jeep") :version)
+    (do
+      (def [r w] (os/pipe))
+      (def devnull (devnull))
+      (def bundle-root (-> (dyn :current-file) os/realpath parent parent))
+      (def ver "local")
+      (os/cd bundle-root)
+      (def [ok? res] (protect (exec :git {:out w} "describe" "--always" "--dirty")))
+      (:close w)
+      (if ok?
+        (string ver "-" (string/trim (ev/read r :all)))
+        ver))))

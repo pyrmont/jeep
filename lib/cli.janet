@@ -15,15 +15,26 @@
 (import ./subs/prep :as cmd/prep)
 (import ./subs/test :as cmd/test)
 
+(def- helps
+  {:about
+   `A tool for installing, building and managing Janet bundles.`
+   :local
+   `Use the directory ./_system for the syspath.`
+   :version
+   `Print the version of Jeep.`})
+
 (def top-config
   ```
   Top-level information about the jeep tool.
   ```
-  {:rules ["--local" {:kind  :flag
-                      :short "l"
-                      :help  `Use the directory ./_system for the system path.`}
+  {:rules ["--local" {:help (helps :local)
+                      :kind :flag
+                      :short "l"}
+           "--version" {:help (helps :version)
+                        :kind :flag
+                        :short "v"}
            "---------------------------------"]
-   :info  {:about "A tool for installing, building and managing Janet bundles"
+   :info  {:about (helps :about)
            :opts-header "The following global options are available:"
            :subs-header "The following subcommands are available:"}})
 
@@ -43,14 +54,19 @@
    "prep" cmd/prep/config
    "test" cmd/test/config])
 
-(def- file-env (curenv))
+(def file-env (curenv))
 
 (defn run []
   (def config (merge top-config {:subs top-subcommands}))
   (def parsed (argy/parse-args "jeep" config))
   (def err (parsed :err))
   (def help (parsed :help))
+  (def ver (get (parsed :opts) "version"))
   (cond
+    # --version
+    ver
+    (print (util/version))
+    # --help
     (not (empty? help))
     (do
       (def long? (or (get-in parsed [:opts "help"])
@@ -68,10 +84,12 @@
                       (string (string/slice (dyn :current-file) 0 -15) "/man/man1/" name ".1")))
           (os/execute ["man" path] :p)))
       (os/exit (if long? 0 1)))
+    # error
     (not (empty? err))
     (do
       (eprin err)
       (os/exit 1))
+    # default
     (do
       (when (get-in parsed [:opts "local"])
         (util/change-syspath "_system"))

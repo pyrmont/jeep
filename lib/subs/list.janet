@@ -32,7 +32,8 @@
         (if (index-of b mbundles)
           (do
             (def man (bundle/manifest b))
-            (def ver (get-in man [:info :version]))
+            (def ver (or (get man :version)
+                         (get-in man [:info :version])))
             (print pad "  " b (when ver (string " (" ver ")"))))
           (do
             (def man (-> (string (dyn :syspath) util/sep ".manifests" util/sep b ".jdn")
