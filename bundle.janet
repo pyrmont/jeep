@@ -13,7 +13,8 @@
     (bundle/add manifest src (string prefix s src)))
   (def bins (get-in manifest [:info :executable] []))
   (each bin bins
-    (bundle/add-bin manifest bin))
+    (def bin-name (last (string/split "/" bin)))
+    (bundle/add-bin manifest bin bin-name))
   (def bundle-ver (get-in manifest [:info :version]))
   (if (not= "DEVEL" bundle-ver)
     (put manifest :version bundle-ver)
