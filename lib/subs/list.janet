@@ -48,4 +48,5 @@
   (def environ (os/environ))
   (print "\nEnvironment:")
   (print pad "  JANET_PATH: " (get (os/environ) "JANET_PATH" "<undefined>"))
+  (print pad "  jeep: " (util/version))
   (print "\nListing completed."))
