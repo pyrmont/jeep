@@ -118,6 +118,10 @@
 (defn mkdir
   [path]
   (def parts (apart path))
+  (when (and (index-of (os/which) [:mingw :windows])
+             (string/has-suffix? ":\\" (first parts)))
+    (put parts 1 (string (get parts 0) (get parts 1)))
+    (array/remove parts 0))
   (var res false)
   (def pwd (os/cwd))
   (each part parts
