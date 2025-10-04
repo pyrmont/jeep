@@ -5,6 +5,12 @@
 (def colours {:green "\e[32m" :red "\e[31m"})
 
 (def sep (get {:windows "\\" :cygwin "\\" :mingw "\\"} (os/which) "/"))
+(def esc (cond (os/getenv "PSModulePath")
+               "`"
+               (index-of (os/which) [:mingw :windows])
+               "^"
+               # default
+               "\\"))
 
 (def pathg ~{:main (* (+ :abspath :relpath) -1)
              :abspath (* :root (any :relpath))
@@ -12,9 +18,13 @@
              :root '(+ "/" (* (? (* :a ":")) `\`))
              :sep  ,sep
              :part (* (+ :quoted :unquoted) (> (+ :sep -1)))
-             :quoted (* `"` '(some (+ `\\` `\"` (* (! `"`) 1))) `"`)
-             :unquoted '(some (+ :escaped (* (! (set `"\/ `)) 1)))
-             :escaped (* `\` 1)})
+             :quoted (* `"`
+                        (% (some (+ (* ,esc ,esc)
+                                 (* ,esc `"`)
+                                 (* (! `"`) '1))))
+                        `"`)
+             :unquoted (% (some (+ :escaped (* (! (set `"\/ `)) '1))))
+             :escaped (* ,esc '1)})
 
 # Independent functions
 
