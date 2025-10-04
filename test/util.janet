@@ -40,6 +40,7 @@
   (is (== ["relative" "path"] (util/apart "relative/path")))
   (is (== ["relative" "path with spaces"] (util/apart `relative/"path with spaces"`)))
   (is (== ["relative" "path with escapes"] (util/apart `relative/path\ with\ escapes`)))
+  (is (== ["relative"] (util/apart "relative/")))
   (assert-thrown-message "invalid path" (util/apart "invalid path")))
 
 (deftest apart-powershell
@@ -56,6 +57,7 @@
   (is (== ["relative" "path"] (util/apart `relative\path`)))
   (is (== ["relative" "path with spaces"] (util/apart `relative\"path with spaces"`)))
   (is (== ["relative" "path with escapes"] (util/apart "relative\\path` with` escapes")))
+  (is (== ["relative"] (util/apart `relative\`)))
   (assert-thrown-message "invalid path" (util/apart "invalid path")))
 
 (deftest apart-cmd
@@ -72,6 +74,7 @@
   (is (== ["relative" "path"] (util/apart `relative\path`)))
   (is (== ["relative" "path with spaces"] (util/apart `relative\"path with spaces"`)))
   (is (== ["relative" "path with escapes"] (util/apart "relative\\path^ with^ escapes")))
+  (is (== ["relative"] (util/apart `relative\`)))
   (assert-thrown-message "invalid path" (util/apart "invalid path")))
 
 (deftest colour

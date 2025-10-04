@@ -12,11 +12,11 @@
                # default
                "\\"))
 
-(def pathg ~{:main (* (+ :abspath :relpath) -1)
+(def pathg ~{:main (* (+ :abspath :relpath) (? :sep) -1)
              :abspath (* :root (any :relpath))
              :relpath (* :part (any (* :sep :part)))
              :root '(+ "/" (* (? (* :a ":")) `\`))
-             :sep  ,sep
+             :sep ,sep
              :part (* (+ :quoted :unquoted) (> (+ :sep -1)))
              :quoted (* `"`
                         (% (some (+ (* ,esc ,esc)
