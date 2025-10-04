@@ -15,7 +15,7 @@
                    "goto #_undefined_# 2>NUL || title %COMSPEC% & janet \""
                    bin-dest
                    "\" %*"))
-  (spit bat dest)
+  (spit dest bat)
   (def absdest (os/realpath dest))
   (array/push files absdest)
   (when chmod-mode
