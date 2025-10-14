@@ -77,8 +77,8 @@
   {{#modules}}
   {{#ns}}
   ## {{ns}}
-  {{/ns}}
 
+  {{/ns}}
   {{#items}}{{^first}}, {{/first}}[{{name}}](#{{in-link}}){{/items}}
 
   {{#doc}}
