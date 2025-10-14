@@ -407,7 +407,8 @@
               (if (or dynamic-syspath hardcode-syspath) second-line)
               (if hardcode-syspath third-line)
               (if hardcode-syspath fourth-line)
-              rest)))
+              rest
+              (if dynamic-syspath last-line))))
   (install-buffer contents dest 8r755 (mkbin))
   (when (is-win-or-mingw)
     (def absdest (path/join (dyn *syspath*) dest))
