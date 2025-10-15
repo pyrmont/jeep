@@ -26,6 +26,9 @@
 
 (defn- uninstall
   [name &opt legacy?]
+  (when (= "jeep" name)
+    (eprint "cannot remove jeep with jeep, instead run 'janet -u jeep'")
+    (break))
   # so easy if a modern bundle
   (unless legacy?
     (bundle/uninstall name)
