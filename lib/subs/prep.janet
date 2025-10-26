@@ -28,6 +28,7 @@
    :help (get helps :help)})
 
 (def- bundle-dir "bundle")
+(def- this-file (dyn :current-file))
 
 (defn- vendor-deps
   [all-deps &named force-deps?]
@@ -50,9 +51,9 @@
      "stream.janet"])
   (def spork-dir
     (string
-      (if (string/has-prefix? (dyn :syspath) (dyn :current-file))
+      (if (string/has-prefix? (dyn :syspath) this-file)
         (string (dyn :syspath) util/sep "jeep")
-        (string/slice (dyn :current-file) 0 -15))
+        (string/slice this-file 0 -21))
       util/sep "deps" util/sep "spork"))
   (os/mkdir bundle-dir)
   (os/mkdir (string bundle-dir util/sep "spork"))

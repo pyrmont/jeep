@@ -8,10 +8,10 @@
    `Drop the <prefix> from all module names.`
    :match
    `Include bindings from a file only if its path matches (or begins with)
-   _path_. Bindings from other files are not put in the API document. This
+   <path>. Bindings from other files are not put in the API document. This
    option can be invoked multiple times.`
    :no-match
-   `Exclude bindings from a file if its path matches (or begins with) _path_.
+   `Exclude bindings from a file if its path matches (or begins with) <path>.
    Bindings from other files are put in the API document. This option can be
    invoked multiple times.`
    :output
@@ -286,8 +286,10 @@
   (sort-by (fn [b] (string (b :ns) (b :name))) bindings))
 
 (defn- extract-env
-  [path env]
-  (def env (dofile path :env env))
+  [path syspath]
+  (def env (make-env))
+  (put env :syspath syspath)
+  (dofile path :env env)
   (unless (nil? env)
     (put env :current-file nil)
     (put env :source nil))
@@ -347,7 +349,8 @@
   ```
   Generates an API document for a bundle
   ```
-  [&named drop-prefix include-private? input-path output-path matches no-matches syspath template url]
+  [&named drop-prefix include-private? input-path output-path matches no-matches
+   syspath template url]
   (def info (parse-info input-path))
   (def bundle-root (parent input-path))
   # make opts
@@ -370,9 +373,7 @@
   # determine paths to scan
   (def paths (filter-paths (get-in info [:source :files]) bundle-root matches no-matches))
   # get environments
-  (def bundle-env (make-env))
-  (put bundle-env :syspath syspath)
-  (def envs (tabseq [p :in paths] p (extract-env p bundle-env)))
+  (def envs (tabseq [p :in paths] p (extract-env p syspath)))
   # get bindings
   (def bindings (extract-bindings envs opts))
   # generate markdown

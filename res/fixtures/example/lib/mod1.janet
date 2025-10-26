@@ -17,3 +17,12 @@
   ```
   []
   (print "bar"))
+
+(defn- quux
+  ```
+  Does quux
+  
+  This function does quux. But it does it privately.
+  ```
+  []
+  (print "quux"))

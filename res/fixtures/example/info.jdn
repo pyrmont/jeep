@@ -1,0 +1,3 @@
+{:name "example"
+ :source {:files ["lib/mod1.janet"
+                  "lib/mod2.janet"]}}

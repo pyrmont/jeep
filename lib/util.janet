@@ -159,6 +159,23 @@
                         "/y /s /e /i > nul")))
     (os/execute ["cp" "-rf" src dest] :px)))
 
+(defn fetch-git [&named url tag dir]
+  (assert url "function requires :url argument")
+  (assert dir "function requires :dir argument")
+  (default tag "HEAD")
+  (def sha? (= [] (peg/match '(between 7 40 :h) tag)))
+  (def devnull (devnull))
+  (def stdio {:out devnull :err devnull})
+  (if (= "HEAD" tag)
+    (exec :git stdio "clone" "--depth" "1" url dir)
+    (if (not sha?)
+      (exec :git stdio "clone" "--branch" tag "--depth" "1" url dir)
+      (do
+        (exec :git stdio "clone" "--filter" "blob:none" "--no-checkout" url dir)
+        (exec :git stdio "-C" dir "fetch" "origin" tag)
+        (exec :git stdio "-C" dir "checkout" tag))))
+  dir)
+
 (defn fetch-dep [parent-dir dep]
   (def temp-dir "tmp")
   (def {:url url
@@ -167,28 +184,19 @@
         :files files} dep)
   (unless url
     (error "fetched bundles need a :url key"))
-  (default tag "HEAD")
-  (def sha? (= [] (peg/match '(between 7 40 :h) tag)))
-  (def devnull (devnull))
-  (def stdio {:out devnull :err devnull})
-  (def dest-dir (string parent-dir (when prefix (string sep prefix))))
-  (print "vendoring " url " to " dest-dir)
   (defer (rmrf temp-dir)
     (os/mkdir temp-dir)
-    (if (= "HEAD" tag)
-      (exec :git stdio "clone" "--depth" "1" url temp-dir)
-      (if (not sha?)
-        (exec :git stdio "clone" "--branch" tag "--depth" "1" url temp-dir)
-        (do
-          (exec :git stdio "clone" "--filter" "blob:none" "--no-checkout" url temp-dir)
-          (exec :git stdio "-C" temp-dir "fetch" "origin" tag)
-          (exec :git stdio "-C" temp-dir "checkout" tag))))
+    (def dest-dir (string parent-dir (when prefix (string sep prefix))))
+    (print "vendoring " url " to " dest-dir)
+    (def src-dir (if (string/has-prefix? "file::" url)
+                   (slice url 6)
+                   (fetch-git :url url :tag tag :dir temp-dir)))
     (each file files
-      (def from (string temp-dir sep file))
+      (def from (string src-dir sep file))
       (def to (string dest-dir sep file))
       (if (= :directory (os/stat from :mode))
-        (mkdir to)
-        (mkdir (parent to)))
+        (mkdir (parent to))
+        (mkdir to))
       (print "  copying " from " to " to)
       (copy from to))))
 
@@ -207,7 +215,7 @@
 
 (defn local-hook
   [name & args]
-  (def [ok? module] (protect (require "/bundle")))
+  (def [ok? module] (protect (require "/bundle" :fresh true)))
   (when-let [hookf (and ok? (module/value module (symbol name)))]
     (apply hookf args)
     true))
