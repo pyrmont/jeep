@@ -78,7 +78,7 @@
           (buffer/push b (string "(setdyn :" k " " v ") ")))
         (string b))))
   (def janet-exe (dyn :executable))
-  (if (zero? (os/execute [janet-exe "-m" (dyn *syspath*) "-e" setup path]))
+  (if (zero? (os/execute [janet-exe "-m" (dyn *syspath*) "-e" setup path] :p))
     (result :green "pass")
     (do
       (result :red "fail")
