@@ -28,7 +28,7 @@
    :help (get helps :help)})
 
 (def- bundle-dir "bundle")
-(def- this-file (dyn :current-file))
+(def- this-file (os/realpath (dyn :current-file)))
 
 (defn- vendor-deps
   [all-deps &named force-deps?]

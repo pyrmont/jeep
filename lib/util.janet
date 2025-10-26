@@ -28,7 +28,7 @@
 
 # Path
 
-(def- this-file (dyn :current-file))
+(def- this-file (os/realpath (dyn :current-file)))
 
 # Independent functions
 
@@ -239,7 +239,7 @@
     (do
       (def [r w] (os/pipe))
       (def devnull (devnull))
-      (def bundle-root (-> this-file os/realpath parent parent))
+      (def bundle-root (-> this-file parent parent))
       (def ver "local")
       (os/cd bundle-root)
       (def [ok? res] (protect (exec :git {:out w} "describe" "--always" "--dirty")))
