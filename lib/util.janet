@@ -26,6 +26,10 @@
              :unquoted (% (some (+ :escaped (* (! (set `"\/ `)) '1))))
              :escaped (* ,esc '1)})
 
+# Path
+
+(def- this-file (dyn :current-file))
+
 # Independent functions
 
 (defn abspath?
@@ -230,12 +234,12 @@
 
 (defn version
   []
-  (if (string/has-prefix? (os/realpath (dyn :syspath)) (dyn :current-file))
+  (if (string/has-prefix? (os/realpath (dyn :syspath)) this-file)
     (get (bundle/manifest "jeep") :version)
     (do
       (def [r w] (os/pipe))
       (def devnull (devnull))
-      (def bundle-root (-> (dyn :current-file) os/realpath parent parent))
+      (def bundle-root (-> this-file os/realpath parent parent))
       (def ver "local")
       (os/cd bundle-root)
       (def [ok? res] (protect (exec :git {:out w} "describe" "--always" "--dirty")))
