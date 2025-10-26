@@ -184,7 +184,10 @@
         :files files} dep)
   (unless url
     (error "fetched bundles need a :url key"))
-  (defer (rmrf temp-dir)
+  (def pwd (os/cwd))
+  (defer (do
+           (os/cd pwd)
+           (rmrf temp-dir))
     (os/mkdir temp-dir)
     (def dest-dir (string parent-dir (when prefix (string sep prefix))))
     (print "vendoring " url " to " dest-dir)
@@ -194,9 +197,7 @@
     (each file files
       (def from (string src-dir sep file))
       (def to (string dest-dir sep file))
-      (if (= :directory (os/stat from :mode))
-        (mkdir (parent to))
-        (mkdir to))
+      (mkdir (parent to))
       (print "  copying " from " to " to)
       (copy from to))))
 
