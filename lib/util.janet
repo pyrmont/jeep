@@ -167,7 +167,7 @@
   (assert url "function requires :url argument")
   (assert dir "function requires :dir argument")
   (default tag "HEAD")
-  (def sha? (= [] (peg/match '(between 7 40 :h) tag)))
+  (def sha? (peg/match '(between 7 40 :h) tag))
   (def devnull (devnull))
   (def stdio {:out devnull :err devnull})
   (if (= "HEAD" tag)
