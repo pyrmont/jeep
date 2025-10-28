@@ -27,5 +27,7 @@
   (def replace? (get-in args [:sub :opts "replace"]))
   (if (nil? repo)
     (install/install "file::." :replace? replace? :force-update true :no-deps true)
-    (each rep repo (install/install rep :replace? replace? :force-update true)))
+    (each rep repo
+      (def [ok? res] (protect (parse rep)))
+      (install/install (if ok? res rep) :replace? replace? :force-update true)))
   (print "Installation completed."))
