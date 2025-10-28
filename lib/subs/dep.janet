@@ -44,13 +44,20 @@
 (defn- add-deps
   [jdn meta group deps]
   (def to-add @[])
-  (each d deps
+  (each d-str deps
+    (def [ok? res] (protect (parse d-str)))
+    (def d (if (and ok? (dictionary? res)) res d-str))
     (cond
+      (dictionary? d)
+      (do
+        (assertf (get d :name) "dependency %v requires :name" d)
+        (assertf (get d :url) "dependency %v requires :url" d)
+        (array/push to-add d))
       (util/url? d)
       (do
         (def url (if (peg/match peg d) d (string "https://" d)))
         (def name (remote-name url))
-        (assert name (string "dependency at " url " is missing info.jdn file with :name key"))
+        (assertf name "dependency at %s is missing info.jdn file with :name key" url)
         (array/push to-add {:name name :url url}))
       (string? d)
       (array/push to-add d))

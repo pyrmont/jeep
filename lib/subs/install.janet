@@ -29,5 +29,7 @@
     (install/install "file::." :replace? replace? :force-update true :no-deps true)
     (each rep repo
       (def [ok? res] (protect (parse rep)))
-      (install/install (if ok? res rep) :replace? replace? :force-update true)))
+      (install/install (if (and ok? (dictionary? res)) res rep)
+                       :replace? replace?
+                       :force-update true)))
   (print "Installation completed."))
