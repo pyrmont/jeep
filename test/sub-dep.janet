@@ -20,11 +20,11 @@
         @{:name "test1"
           :dependencies ["testament"]}
         ```)
-      (is (== (h/add-nl expect) actual))
+      (is (== expect actual))
       (def expect-out
         ```
         adding testament...
-        Dependencies updated.
+        Dependencies changed.
         ```)
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
@@ -47,12 +47,12 @@
           :dependencies ["testament"
                          "spork"]}
         ```)
-      (is (== (h/add-nl expect) actual))
+      (is (== expect actual))
       (def expect-out
         ```
         adding testament...
         adding spork...
-        Dependencies updated.
+        Dependencies changed.
         ```)
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
@@ -76,11 +76,41 @@
         @{:name "test1"
           :dependencies ["spork"]}
         ```)
-      (is (== (h/add-nl expect) actual))
+      (is (== expect actual))
       (def expect-out
         ```
         removing testament...
-        Dependencies updated.
+        Dependencies changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
+(deftest update-dependency
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir d
+      (def path (h/make-bundle "."
+                               :name "test1"
+                               :dependencies ["testament" "spork"]))
+      (os/cd path)
+      (def args {:sub {:params {:deps [`{:name "testament" :url "https://github.com/pyrmont/testament"}`]}
+                       :opts {"update" true}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :dependencies [{:name "testament"
+                          :url "https://github.com/pyrmont/testament"}
+                         "spork"]}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        updating testament...
+        Dependencies changed.
         ```)
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
@@ -102,11 +132,42 @@
         @{:name "test1"
           :vendored {"vendor-dir" ["testament"]}}
         ```)
-      (is (== (h/add-nl expect) actual))
+      (is (== expect actual))
       (def expect-out
         ```
         adding testament...
-        Dependencies updated.
+        Dependencies changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
+(deftest update-vendored-dependency
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir d
+      (def path (h/make-bundle "."
+                               :name "test1"
+                               :vendored {"vendor-dir" ["testament" "spork"]}))
+      (os/cd path)
+      (def args {:sub {:params {:deps [`{:name "testament" :url "https://github.com/pyrmont/testament"}`]}
+                       :opts {"update" true
+                              "vendor" "vendor-dir"}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :vendored {"vendor-dir" [{:name "testament"
+                                    :url "https://github.com/pyrmont/testament"}
+                                   "spork"]}}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        updating testament...
+        Dependencies changed.
         ```)
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))

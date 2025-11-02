@@ -72,7 +72,7 @@
     (if (or (indexed? k) (dictionary? k))
       (buffer/push b nl padding (format v inner-indent))
       (buffer/push b " " (format v (+ (length (describe k)) 1 inner-indent)))))
-  (buffer/push b dcl nl)
+  (buffer/push b dcl)
   (string b))
 
 (defn- format-list [l indent]

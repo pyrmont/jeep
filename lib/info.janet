@@ -17,32 +17,32 @@
                 :close (cmt (* (not (> -1 "`")) (backref :n) (<- (backmatch :n))) ,=)}
     :non-string (some (if-not (+ :s :open :close) 1))})
 
-(def eol "\n")
+(def- eol "\n")
 
 # Independent functions
 
-(defn comment?
+(defn- comment?
   [s]
-  (assert (string? s) "expected string")
-  (= 35 (first s)))
+  (if (string? s)
+    (= 35 (first s))))
 
-(defn dict?
+(defn- dict?
   [v]
   (and (array? v)
        (or (= "{" (first v))
            (= "@{" (first v)))))
 
-(defn eol?
+(defn- eol?
   [s]
-  (or (= "\n" s) (= "\r\n" s)))
+  (or (= eol s) (= "\r\n" s)))
 
-(defn ind?
+(defn- ind?
   [v]
   (and (array? v)
        (or (= "[" (first v))
            (= "@[" (first v)))))
 
-(defn janet->string
+(defn- janet->string
   [j indent]
   (def t (type j))
   (assert (not (or (= :function t)
@@ -53,20 +53,30 @@
     (var first? true)
     (def k-indent (string indent (string/repeat " " (length open))))
     (buffer/push b open)
-    (each [k v] (pairs dict)
-      (if first?
-        (set first? false)
-        (buffer/push b eol k-indent))
-      (buffer/push b (janet->string k k-indent))
-      (if (bytes? k)
-        (buffer/push b " ")
-        (buffer/push b eol k-indent))
-      (def extra (string/repeat " " (cond (keyword? k) (+ 2 (length k))
-                                          (string? k) (+ 2 (length k))
-                                          (symbol? k) (inc (length k))
-                                          0)))
-      (def v-indent (string k-indent extra))
-      (buffer/push b (janet->string v v-indent)))
+    (each [k v] (sort (pairs dict))
+      (if (and (= :name k) (string? v))
+        (if first?
+          (do
+            (set first? false)
+            (buffer/push b ":name \"" v "\""))
+          (do
+            (def rest (buffer/slice b 1))
+            (buffer/popn b (dec (length b)))
+            (buffer/push b ":name \"" v "\"" eol k-indent rest)))
+        (do
+          (if first?
+            (set first? false)
+            (buffer/push b eol k-indent))
+          (buffer/push b (janet->string k k-indent))
+          (if (bytes? k)
+            (buffer/push b " ")
+            (buffer/push b eol k-indent))
+          (def extra (string/repeat " " (cond (keyword? k) (+ 2 (length k))
+                                              (string? k) (+ 2 (length k))
+                                              (symbol? k) (inc (length k))
+                                              0)))
+          (def v-indent (string k-indent extra))
+          (buffer/push b (janet->string v v-indent)))))
     (buffer/push b close))
   (defn ind->string [ind open close]
     (var first? true)
@@ -91,8 +101,178 @@
     (buffer/push b (describe j)))
   (string b))
 
+(defn- whitespace?
+  [s]
+  (if (string? s)
+    (string/check-set " \t\n\r" s)))
+
+# Dependent functions
+
+(var- last-line (fn :last-line [b el]))
+
+(defn- add-space
+  [b el]
+  (cond
+    (comment? el)
+    (buffer/clear b)
+    (= eol el)
+    (buffer/clear b)
+    (whitespace? el)
+    (buffer/push b el)
+    (array? el)
+    (last-line b el)
+    # default
+    (buffer/push b (string/repeat " " (length el)))))
+
+(defn- squish-space
+  [coll]
+  (var i 1)
+  (while (def el (get coll i))
+    (unless (whitespace? el)
+      (break))
+    (array/remove coll i)))
+
+(set last-line (fn :last-line
+  [b arr]
+  (each el arr (add-space b el))))
+
+(defn- val?
+  [v]
+  (or (array? v)
+      (and (not (comment? v))
+           (not (whitespace? v))
+           (not (string/check-set "{}[]" v)))))
+
+(defn- find-in
+  [ds kl &opt expect]
+  # 'kl' means keylist
+  (var res @[])
+  (var linenum 1)
+  (var kl-i 0)
+  (var coll ds)
+  (var coll-i 0)
+  (var coll-type nil)
+  (var el-key? false)
+  (var el-val? false)
+  (var el-i nil)
+  (var next-coll expect)
+  (while (def el (get coll coll-i))
+    (cond
+      (comment? el)
+      (++ linenum)
+      (whitespace? el)
+      (++ linenum)
+      next-coll
+      (cond
+        (= :dict next-coll)
+        (if (dict? el)
+          (do
+            (set next-coll nil)
+            (array/push res coll-i)
+            (if (zero? (length kl))
+              (break))
+            (set coll el)
+            (set coll-i 0)
+            (set coll-type :dict)
+            (set el-key? true)
+            (set el-val? false)
+            (set el-i nil))
+          (if (= 0 kl-i)
+            (errorf "parse error on info.jdn, line %d: expected struct/table at top level" linenum)
+            (errorf "parse error on info.jdn, line %d: expected struct/table to be mapped to keys %n" linenum (array/slice kl 0 kl-i))))
+        (= :ind next-coll)
+        (if (ind? el)
+          (do
+            (set next-coll nil)
+            (array/push res coll-i)
+            (if (zero? (length kl))
+              (break))
+            (set coll el)
+            (set coll-i 0)
+            (set coll-type :ind)
+            (set el-key? false)
+            (set el-val? false)
+            (set el-i 0))
+          (if (= 0 kl-i)
+            (errorf "parse error on info.jdn, line %d: expected struct/table at top level of info.jdn file")
+            (errorf "parse error on info.jdn, line %d: expected struct/table to be mapped to keys %n" (array/slice kl 0 kl-i))))
+        # default
+        (errorf "parse error on info.jdn, line %d: error parsing info.jdn"))
+      el-val?
+      (if (val? el)
+        (if (= (length kl) kl-i)
+          (do
+            (array/push res coll-i)
+            (break))
+          (if (array? el)
+            (do
+              (array/push res coll-i)
+              (set coll el)
+              (set coll-i 0) # this will become 1 at iteration end
+              (if (dict? el)
+                (do
+                  (set el-key? true)
+                  (set el-val? false)
+                  (set el-i nil))
+                (do
+                  (set el-key? false)
+                  (set el-val? false)
+                  (set el-i 0))))
+            (break)))
+        (errorf "parse error on info.jdn, line %d: struct/table must have even number of key-value pairs"))
+      (= "}" el)
+      (break)
+      (= "]" el)
+      (break)
+      el-key?
+      (if (val? el)
+        (if (= el (describe (get kl kl-i)))
+          (do
+            (set el-key? false)
+            (set el-val? true)
+            (++ kl-i))
+          (do
+            (set el-key? false)
+            (set el-val? false)))
+        (error "parse error on info.jdn, line %d: expected key"))
+      el-i
+      (if (= el-i (get kl kl-i))
+        (if (= (length kl) (++ kl-i))
+          (do
+            (array/push res coll-i)
+            (break))
+          (if (array? el)
+            (do
+              (array/push res coll-i)
+              (set coll el)
+              (set coll-i 0)
+              (set el-i nil))
+            (break)))
+        (++ el-i))
+      # default
+      (set el-key? true))
+    (++ coll-i))
+  (set linenum 0)
+  res)
+
+(defn- find-nl
+  [coll begin end]
+  (var i begin)
+  (var f (if (< end begin) dec inc))
+  (while (not= i end)
+    (if (= eol (get coll i))
+      (break))
+    (set i (f i)))
+  (if (= i end)
+    begin
+    i))
+
+# Public API
+
 (defn jdn-arr->jdn-str
   [jdn]
+  (if (string? jdn)
+    (break jdn))
   (def b @"")
   (each el jdn
     (if (string? el)
@@ -104,211 +284,147 @@
   [s]
   (peg/match peg s))
 
-(defn whitespace?
-  [s]
-  (assert (string? s) "expected string")
-  (array? (peg/match :s s)))
-
-# Dependent functions
-
-(defn- val?
-  [v]
-  (or (array? v)
-      (and (not (comment? v))
-           (not (whitespace? v))
-           (not (= "}" v)))))
-
 (defn add-to
   [ds kl v]
+  (def trail (find-in ds kl :dict))
   (def indent @"")
-  (var prev-indent nil)
-  (def ks (map describe kl))
-  (var ks-i 0)
-  (var arr ds)
-  (var arr-i 0)
-  (var need-dict? true)
-  (var need-key? false)
-  # helpers
-  (defn first-indent [ds s-indent]
-    (def res @"")
-    (each el (array/slice ds 1 -2)
-      (if (val? el)
-        (break))
-      (if (eol? el)
-        (buffer/clear res)
-        (buffer/push res el)))
-    (if (empty? res) (string s-indent) (string res)))
-  (defn has-vals? [ds]
-    (var res false)
-    (each el (array/slice ds 1 -2)
-      (when (val? el)
-        (set res true)
-        (break)))
-    res)
-  # main loop
-  (while (def el (get arr arr-i))
-    (when (and need-dict? (val? el) (not (dict? el)))
-      (def k (get ks (dec ks-i)))
-      (error (string "expected dictionary collection to be mapped to key " k)))
-    (when (and (= (length ks) ks-i) (val? el) (not (ind? el)))
-      (def k (get ks (dec ks-i)))
-      (error (string "expected indexed collection to be mapped to key " k)))
-    (if (string? el)
-      (cond
-        # --
-        (comment? el)
-        nil # ignore comments
-        # --
-        (whitespace? el)
-        (if (eol? el)
-          (buffer/clear indent)
-          (buffer/push indent el))
-        # --
-        (= "}" el)
-        (do
-          (def curr-k (get ks ks-i))
-          (def j
-            (if (< (++ ks-i) (length ks))
-              (table/to-struct (put-in @{} (array/slice kl ks-i) [v]))
-              [v]))
-          (def k-indent (first-indent arr prev-indent))
-          (def v-indent (string k-indent (string/repeat " " (inc (length curr-k)))))
-          (def curr-v (jdn-str->jdn-arr (janet->string j v-indent)))
-          (if (has-vals? arr)
-            (array/insert arr -2 eol k-indent curr-k " " ;curr-v)
-            (array/insert arr -2 curr-k " " ;curr-v))
-          (break))
-        # --
-        need-key?
-        (do
-          (set need-key? false)
-          (when (= (get ks ks-i) el)
-            (def curr-k (get ks ks-i))
-            (buffer/push indent (string/repeat " " (length curr-k)))
-            (++ ks-i)
-            (set need-dict? (not= (length ks) ks-i))))
-        # --
-        (set need-key? true))
-      (cond
-        # --
-        (and need-dict? (dict? el))
-        (do
-          (def delim-len (length (first el)))
-          (buffer/push indent (string/repeat " " delim-len))
-          (set prev-indent (string indent))
-          (set arr el)
-          (set arr-i 0)
-          (set need-key? true)
-          (set need-dict? false))
-        # --
-        (and (= (length ks) ks-i) (ind? el))
-        (do
-          (buffer/push indent " ")
-          (def v-indent (first-indent el indent))
-          (if (has-vals? el)
-            (array/insert el -2 eol v-indent (janet->string v v-indent))
-            (array/insert el -2 (janet->string v v-indent)))
-          (break))))
-    (++ arr-i))
-  # (print (jdn-arr->jdn-str ds))
+  (var coll ds)
+  (each i trail
+    (var j 0)
+    (while (< j i)
+      (add-space indent (get coll j))
+      (++ j))
+    (set coll (get coll i)))
+  (var i (dec (length trail)))
+  (if (= (length kl) i)
+    (cond
+      (dict? coll)
+      (do
+        (assertf (dictionary? v) "key path '%n' resolves to '%n' but expected struct/table" kl coll)
+        (buffer/push indent (string/repeat " " (length (first coll))))
+        (eachp [el-k el-v] v
+          (array/pop coll)
+          (def k-str (describe el-k))
+          (def v-arr
+            (-> (janet->string el-v (string indent (string/repeat " " (length k-str)) " "))
+                (jdn-str->jdn-arr)
+                (array/pop)))
+          (if (not (one? (length coll)))
+            (array/push coll eol (string indent)))
+          (array/push coll k-str " " v-arr "}")))
+      (ind? coll)
+      (do
+        (assertf (indexed? v) "key path '%n' resolves to '%n' but expected array/tuple" kl coll)
+        (buffer/push indent (string/repeat " " (length (first coll))))
+        (each el v
+          (array/pop coll)
+          (def el-arr
+            (-> (janet->string el (string indent))
+                (jdn-str->jdn-arr)
+                (array/pop)))
+          (if (not (one? (length coll)))
+            (array/push coll eol (string indent)))
+          (array/push coll el-arr "]")))
+      # default
+      (errorf "key path '%n' resolves to '%n' but expected collection" kl coll))
+    (while (< i (length kl))
+      (def k (get kl i))
+      (assertf (array? coll) "key path '%n' resolves to '%n' but expected collection" kl coll)
+      (buffer/push indent (string/repeat " " (length (first coll))))
+      (array/pop coll)
+      (assertf (bytes? k) "invalid key '%n', must be keyword/string" k)
+      (def k-str (describe k))
+      (def v-arr
+        (if (= (length kl) (inc i))
+          (-> (janet->string v (string indent (length k-str) " "))
+              (jdn-str->jdn-arr)
+              (array/pop))
+          @["{" "}"]))
+      (if (not (one? (length coll)))
+        (array/push coll eol (string indent)))
+      (array/push coll k-str " " v-arr "}")
+      (set coll v-arr)
+      (buffer/push indent (string/repeat " " (length k-str)))
+      (++ i)))
   ds)
 
 (defn rem-from
-  [ds kl v]
-  (def ks (map describe kl))
-  (var ks-i 0)
-  (var arr ds)
-  (var arr-i 0)
-  (var need-dict? true)
-  (var need-key? false)
-  # helpers
-  (defn find-val [ind v]
-    (var res nil)
-    (var i 1)
-    (while (def x (get ind i))
-      (if (= x (describe v))
-        (set res i)
-        (when (dict? x)
-          (var need-key? true)
-          (var need-val? false)
-          (each y (array/slice x 1 -2)
-            (when (val? y)
-              (when need-val?
-                (if (= y (describe v))
-                  (set res i))
-                (break))
-              (if (and need-key? (= ":name" y))
-                (set need-val? true))
-              (set need-key? (not need-key?))))))
-      (if res
-        (break))
+  [ds kl &named where]
+  (def trail (find-in ds kl :dict))
+  (assertf (= (length kl) (dec (length trail))) "no match for key path '%n' in metadata" kl)
+  (def parent-trail (array/slice trail 0 (if where -1 -2)))
+  (def coll (get-in ds parent-trail))
+  (assertf (array? coll) "key path '%n' resolves to '%n' but expected collection" kl coll)
+  (if where
+    (do
+      (def pred (if (function? where) where (partial deep= where)))
+      (var i 0)
+      (if (ind? coll)
+        (while (def el (get coll i))
+          (if (and (val? el)
+                   (pred (parse (jdn-arr->jdn-str el))))
+            (do
+              (array/remove coll i)
+              (if (whitespace? (get coll (- i 1) "0"))
+                (array/remove coll (- i 1)))
+              (if (whitespace? (get coll (- i 2) "0"))
+                (array/remove coll (- i 1))))
+            (++ i)))
+        (error ":where not implemented for structs/tables")))
+    (do
+      (var val-i (last trail))
+      (if (dict? coll)
+        (do
+          (var key-i (dec val-i))
+          (while (> key-i 0)
+            (unless (whitespace? (get coll key-i))
+              (break))
+            (-- key-i))
+          (assert (not= key-i 0) "impossible")
+          (array/remove coll key-i (inc (- val-i key-i)))
+          (if (whitespace? (get coll (- key-i 1) "0"))
+            (array/remove coll (- key-i 1)))
+          (if (whitespace? (get coll (- key-i 2) "0"))
+            (array/remove coll (- key-i 1))))
+        (error "not implemented for arrays/tuples"))))
+  (squish-space coll)
+  ds)
+
+(defn upd-in
+  [ds kl &named where to]
+  (assert where ":where argument missing")
+  (def trail (find-in ds kl :dict))
+  (assertf (= (length kl) (dec (length trail))) "no match for key path '%n' in metadata" kl)
+  (def indent @"")
+  (var coll ds)
+  (each i trail
+    (var j 0)
+    (while (< j i)
+      (add-space indent (get coll j))
+      (++ j))
+    (set coll (get coll i)))
+  (assertf (array? coll) "key path '%n' resolves to '%n' but expected collection" kl coll)
+  (def pred (if (function? where) where (partial deep= where)))
+  (def xf (if (function? to) to (fn [x] to)))
+  (var i 0)
+  (if (ind? coll)
+    (while (def el (get coll i))
+      (when (val? el)
+        (def v (parse (jdn-arr->jdn-str el)))
+        (when (pred v)
+          (def new-v (xf v))
+          (case (type new-v)
+            :array
+            (buffer/push indent "  ")
+            :struct
+            (buffer/push indent " ")
+            :table
+            (buffer/push indent "  ")
+            :tuple
+            (buffer/push indent " "))
+          (put coll i (-> (janet->string (xf v) indent)
+                          (jdn-str->jdn-arr)
+                          (array/pop)))))
       (++ i))
-    res)
-  # main loop
-  (while (def el (get arr arr-i))
-    (when (and need-dict? (val? el) (not (dict? el)))
-      (def k (get ks (dec ks-i)))
-      (error (string "expected dictionary collection to be mapped to key " k)))
-    (when (and (= (length ks) ks-i) (val? el) (not (ind? el)))
-      (def k (get ks (dec ks-i)))
-      (error (string "expected indexed collection to be mapped to key " k)))
-    (if (string? el)
-      (cond
-        # --
-        (comment? el)
-        nil # ignore comments
-        # --
-        (whitespace? el)
-        nil # ignore whitespace
-        # --
-        (= "}" el)
-        (error (string "key " (get ks ks-i)  " missing from dictionary collection"))
-        # --
-        need-key?
-        (do
-          (set need-key? false)
-          (when (= (get ks ks-i) el)
-            (++ ks-i)
-            (set need-dict? (not= (length ks) ks-i))))
-        # --
-        (set need-key? true))
-      (cond
-        # --
-        (and need-dict? (dict? el))
-        (do
-          (set arr el)
-          (set arr-i 0)
-          (set need-key? true)
-          (set need-dict? false))
-        # --
-        (and (= (length ks) ks-i) (ind? el))
-        (do
-          (def pos (find-val el v))
-          (if (nil? pos)
-            (error (string (describe v) " not in indexed collection")))
-          (var begin pos)
-          (var end pos)
-          (var i nil)
-          # work out begin
-          (set i (dec begin))
-          (while (> i 1)
-            (def x (get el i))
-            (when (val? x)
-              (set begin i)
-              (break))
-            (-- i))
-          # work out end
-          (set i (inc end))
-          (while (< i (dec (length el)))
-            (def x (get el i))
-            (when (val? x)
-              (set end i)
-              (break))
-            (++ i))
-          (if (= begin end)
-            (array/remove el begin 1)
-            (array/remove el begin (- end begin)))
-          (break))))
-    (++ arr-i))
-  # (print (jdn-arr->jdn-str ds))
+    (error "not implemented for structs/tables"))
   ds)

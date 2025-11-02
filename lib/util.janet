@@ -58,7 +58,7 @@
 
 (defn exec
   [cmd stdio & args]
-  (def {:out out :err err} stdio)
+  (def {:out out :err err} (if (nil? stdio) {:out nil :err nil} stdio))
   (def dn (if (or (nil? out) (nil? err)) (devnull)))
   (default out dn)
   (default err dn)
@@ -82,11 +82,16 @@
 (defn rmrf
   [path]
   (case (os/lstat path :mode)
-    :directory (do
-                 (each subpath (os/dir path)
-                   (rmrf (string path sep subpath)))
-                 (os/rmdir path))
-    nil nil # do nothing if file does not exist
+    # recursive delete directories
+    :directory
+    (do
+      (each subpath (os/dir path)
+        (rmrf (string path sep subpath)))
+      (os/rmdir path))
+     # do nothing if file does not exist
+    nil
+    nil
+    # default
     (os/rm path)))
 
 (defn slurp-maybe
@@ -98,6 +103,23 @@
   [path s]
   (when-with [f (file/open path :w)]
     (file/write f s)))
+
+(defn tmp-dir
+  []
+  (unless (nil? (dyn :jeep-tmpdir))
+    (break (dyn :jeep-tmpdir)))
+  (def rng (math/rng))
+  (loop [:repeat 5]
+    (def total 8)
+    (def b (buffer/new total))
+    (loop [:repeat total]
+      (buffer/push b (+ 65 (math/rng-int rng 25))))
+    (def d (string "tmp_" b))
+    (when (os/mkdir d)
+      (setdyn :jeep-tmpdir (os/realpath d))
+      (break)))
+  (assert (dyn :jeep-tmpdir) "cannot create temporary directory")
+  (dyn :jeep-tmpdir))
 
 (defn url?
   [s]
@@ -111,7 +133,7 @@
              s))
   (not (nil? res)))
 
-# Dependent functions
+# Directory functions
 
 (defn abspath
   [path]
@@ -143,12 +165,20 @@
       (put parts 0 (string/replace sep "" (first parts)))
       (string/join (array/slice parts 0 -2) sep))))
 
+# Other functions
+
 (defn change-syspath
   [path]
   (def ap (abspath path))
   (unless (= :directory (os/stat ap :mode))
     (mkdir ap))
   (setdyn *syspath* ap))
+
+(defn cleanup
+  [cwd]
+  (os/cd cwd)
+  (if (def d (dyn :jeep-tmpdir))
+    (rmrf d)))
 
 (defn copy
   [src dest]
@@ -168,16 +198,14 @@
   (assert dir "function requires :dir argument")
   (default tag "HEAD")
   (def sha? (peg/match '(between 7 40 :h) tag))
-  (def devnull (devnull))
-  (def stdio {:out devnull :err devnull})
   (if (= "HEAD" tag)
-    (exec :git stdio "clone" "--depth" "1" url dir)
+    (exec :git nil "clone" "--depth" "1" url dir)
     (if (not sha?)
-      (exec :git stdio "clone" "--branch" tag "--depth" "1" url dir)
+      (exec :git nil "clone" "--branch" tag "--depth" "1" url dir)
       (do
-        (exec :git stdio "clone" "--filter" "blob:none" "--no-checkout" url dir)
-        (exec :git stdio "-C" dir "fetch" "origin" tag)
-        (exec :git stdio "-C" dir "checkout" tag))))
+        (exec :git nil "clone" "--filter" "blob:none" "--no-checkout" url dir)
+        (exec :git nil "-C" dir "fetch" "origin" tag)
+        (exec :git nil "-C" dir "checkout" tag))))
   dir)
 
 (defn fetch-dep [parent-dir dep]
@@ -238,7 +266,6 @@
     (get (bundle/manifest "jeep") :version)
     (do
       (def [r w] (os/pipe))
-      (def devnull (devnull))
       (def bundle-root (-> this-file parent parent))
       (def ver "local")
       (os/cd bundle-root)
