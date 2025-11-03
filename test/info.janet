@@ -121,22 +121,32 @@
   (is (== exp-one-val (info/upd-in (copy arr-simple) [:foo] :where :bar :to {:baz :bar :qux :quux})))
   (def arr-complex @["# a comment" "\n"
                    @["{" ":foo" " " @["{" ":bar" " " ":baz" "\n"
-                                          ":qux" @["@{" ":quux" " " @["[" `"corge"` "]"] "}"] "\n"
-                                          ":grault" " " ":garply" "}"] "}"]])
+                             "       "    ":qux" " " @["@{" ":quux" " " @["[" @["{" ":corge" " " ":grault" "}"] "]"] "}"] "\n"
+                             "       "    ":garply" " " ":waldo" "}"] "}"]])
   (def exp-nested1 @["# a comment" "\n"
                    @["{" ":foo" " " @["{" ":bar" " " ":baz" "\n"
-                                          ":qux" @["@{" ":quux" " " @["[" `false` "]"] "}"] "\n"
-                                          ":grault" " " ":garply" "}"] "}"]])
-  (is (== exp-nested1 (info/upd-in (copy arr-complex) [:foo :qux :quux] :where "corge" :to false)))
+                             "       "    ":qux" " " @["@{" ":quux" " " @["[" `false` "]"] "}"] "\n"
+                             "       "    ":garply" " " ":waldo" "}"] "}"]])
+  (defn pred-nested1 [x] (= :grault (get x :corge)))
+  (is (== exp-nested1 (info/upd-in (copy arr-complex) [:foo :qux :quux] :where pred-nested1 :to false)))
   (def exp-nested2 @["# a comment" "\n"
                    @["{" ":foo" " " @["{" ":bar" " " ":baz" "\n"
-                                          ":qux" @["@{" ":quux" " " @["[" @[ "{" ":corge" " " `"corge"` "}"] "]"] "}"] "\n"
-                                          ":grault" " " ":garply" "}"] "}"]])
-  (defn xf-nested2 [x] {:corge x})
-  (is (== exp-nested2 (info/upd-in (copy arr-complex) [:foo :qux :quux] :where "corge" :to xf-nested2)))
-  (def msg-no-key "not implemented for structs/tables")
-  (assert-thrown-message msg-no-key (info/upd-in (copy arr-complex) [:foo] :where :baz :to :qux))
+                             "       "    ":qux" " " @["@{" ":quux" " " @["[" @["{" ":corge" " " ":foobar" "}"] "]"] "}"] "\n"
+                             "       "    ":garply" " " ":waldo" "}"] "}"]])
+  (defn pred-nested2 [x] (= :grault (get x :corge)))
+  (is (== exp-nested2 (info/upd-in (copy arr-complex) [:foo :qux :quux] :where pred-nested2 :add [:corge :foobar])))
+  (def exp-nested3 @["# a comment" "\n"
+                   @["{" ":foo" " " @["{" ":bar" " " ":baz" "\n"
+                             "       "    ":qux" " " @["@{" ":quux" " " @["[" @["{" ":corge" " " ":grault" "\n"
+                                                             "                      " ":foo" " " ":bar"  "}"] "]"] "}"] "\n"
+                             "       "    ":garply" " " ":waldo" "}"] "}"]])
+  (defn pred-nested3 [x] (= :grault (get x :corge)))
+  (def act-nested3 (info/upd-in (copy arr-complex) [:foo :qux :quux] :where pred-nested3 :add [:foo :bar]))
+  (is (== exp-nested3 act-nested3))
   (def msg-no-key "no match for key path '(:bar)' in metadata")
-  (assert-thrown-message msg-no-key (info/upd-in (copy arr-simple) [:bar] :where :baz :to :qux)))
+  (assert-thrown-message msg-no-key (info/upd-in (copy arr-simple) [:bar] :where :baz :to :qux))
+  (def coll-no-key (get-in arr-complex [2 3]))
+  (def msg-no-key (string/format ":where argument requires array/tuple, found %n" coll-no-key))
+  (assert-thrown-message msg-no-key (info/upd-in (copy arr-complex) [:foo] :where :baz :to :qux)))
 
 (run-tests!)

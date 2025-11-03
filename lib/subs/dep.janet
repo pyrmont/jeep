@@ -158,62 +158,59 @@
   (def to-upd @[])
   (each d-str deps
     (def [ok? res] (protect (parse d-str)))
-    (def d (if (and ok? (dictionary? res)) res d-str))
+    (def d
+      (cond
+        (and ok? (dictionary? res))
+        (do
+          (assertf (get res :name) "dependency %n requires :name" res)
+          (if (struct? res) (struct/to-table res) res))
+        (util/url? d-str)
+        (do
+          (def url (if (peg/match peg d-str) d-str (string "https://" d-str)))
+          (def name (fetch-name url))
+          (assertf name "dependency %s is missing info.jdn file with :name key" url)
+          @{:name name :url url})
+        # default
+        @{:name d-str}))
+    (def name (get d :name))
+    (def curr (find
+                (fn [x]
+                  (if (dictionary? x)
+                    (= name (get x :name))
+                    (= name x)))
+                listed))
     (cond
-      (dictionary? d)
-      (do
-        (assertf (get d :name) "dependency %n requires :name" d)
-        (array/push to-upd d))
-      (util/url? d)
-      (do
-        (def url (if (peg/match peg d) d (string "https://" d)))
-        (def name (fetch-name url))
-        (assertf name "dependency %s is missing info.jdn file with :name key" url)
-        (array/push to-upd {:name name :url url}))
+      # dependency not listed
+      (nil? curr)
+      (print "skipping " name ", add as dependency first")
+      # listed dependency is struct/table
+      (dictionary? curr)
+      (array/push to-upd [d :assoc (or (get d :url) (get curr :url))])
+      # both are shortnames
+      (nil? (get d :url))
+      (print "skipping " name ", cannot update shortname dependency")
       # default
-      (array/push to-upd d))
-    (def new (array/peek to-upd))
-    (def new-name (if (dictionary? new) (get new :name) new))
-    (def pos (find-index
-               (fn :finder [curr]
-                 (cond
-                   (and (dictionary? new)
-                        (dictionary? curr))
-                   (= new-name (get curr :name))
-                   (dictionary? new)
-                   (= new-name curr)
-                   (dictionary? curr)
-                   (= new-name (get curr :name))))
-               listed))
-    (unless pos
-      (if (get listed new-name)
-        (print "skipping " new-name ", cannot update shortnames")
-        (print "skipping " new-name ", add as dependency first"))
-      (array/pop to-upd)))
-  (each d to-upd
+      (array/push to-upd [d :swap (get d :url)])))
+  (each [d action url] to-upd
+    (assertf url "cannot update dependency %s without :url set" (get d :name))
     (set changed? true)
-    (def d-name (if (dictionary? d) (get d :name) d))
-    (def d-url (if (dictionary? d) (get d :url)))
-    (def d-tag (if (and autotag?
-                        (dictionary? d))
-                 (fetch-tag (get d :url))))
-    (print "updating " d-name "...")
+    (def name (get d :name))
+    (print "updating " name "...")
+    (when autotag?
+      (put d :tag (fetch-tag url)))
     (defn pred [x]
       (if (dictionary? x)
-        (or (= d (get x :name))
-            (and (dictionary? d)
-                 (= d-name (get x :name))))
-        (and (dictionary? d)
-             (= d-name x))))
-    (defn xf [x]
-      (cond
-        (and (dictionary? x) (dictionary? d))
-        (table/to-struct (merge x d {:tag (or d-tag (get x :tag))}))
-        (dictionary? x)
-        (table/to-struct (merge x {:tag (or d-tag (get x :tag))}))
-        (dictionary? d)
-        (table/to-struct (merge {:name x} d {:tag d-tag}))))
-    (info/upd-in jdn group :where pred :to xf))
+        (= name (get x :name))
+        (= name x)))
+    (case action
+      :assoc
+      (do
+        (def keyvals @[])
+        (eachp [k v] d
+          (array/push keyvals k v))
+        (info/upd-in jdn group :where pred :add keyvals))
+      :swap
+      (info/upd-in jdn group :where pred :to (table/to-struct d))))
   jdn)
 
 (defn run
@@ -243,7 +240,7 @@
     update?
     (defer
      (util/cleanup cwd)
-     (upd-deps jdn meta group deps))
+     (upd-deps jdn meta group deps autotag?))
     # default
     (defer
       (util/cleanup cwd)

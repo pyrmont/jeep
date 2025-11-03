@@ -390,9 +390,44 @@
   (squish-space coll)
   ds)
 
+(defn- assoc
+  [coll add indent]
+  (assert add "must provide :add argument")
+  (buffer/push indent )
+  (each [k v] (partition 2 add)
+    (def trail (find-in coll [k]))
+    (assert (< (length trail) 2) "unexpected length")
+    (if (def i (first trail))
+      (put coll i (-> (janet->string v indent)
+                      (jdn-str->jdn-arr)
+                      (array/pop)))
+      (do
+        (def dcl (array/pop coll))
+        (unless (one? (length coll))
+          (array/push coll eol)
+          (array/push coll (string indent)))
+        (array/push coll (describe k))
+        (array/push coll " ")
+        (array/push coll (-> (janet->string v indent)
+                             (jdn-str->jdn-arr)
+                             (array/pop)))
+        (array/push coll dcl)))))
+
+(defn- swap
+  [coll i to indent]
+  (cond
+    (or (array? to) (table? to))
+    (buffer/push indent "  ")
+    (or (struct? to) (tuple? to))
+    (buffer/push indent " "))
+  (put coll i (-> (janet->string to indent)
+                  (jdn-str->jdn-arr)
+                  (array/pop))))
+
 (defn upd-in
-  [ds kl &named where to]
-  (assert where ":where argument missing")
+  [ds kl &named where add to]
+  (assert (not (and (nil? add) (nil? to))) "must provide :add or :to argument")
+  (assert (or (nil? add) (nil? to)) "cannot provide both :add and :to arguments")
   (def trail (find-in ds kl :dict))
   (assertf (= (length kl) (dec (length trail))) "no match for key path '%n' in metadata" kl)
   (def indent @"")
@@ -403,28 +438,24 @@
       (add-space indent (get coll j))
       (++ j))
     (set coll (get coll i)))
-  (assertf (array? coll) "key path '%n' resolves to '%n' but expected collection" kl coll)
-  (def pred (if (function? where) where (partial deep= where)))
-  (def xf (if (function? to) to (fn [x] to)))
-  (var i 0)
-  (if (ind? coll)
-    (while (def el (get coll i))
-      (when (val? el)
-        (def v (parse (jdn-arr->jdn-str el)))
-        (when (pred v)
-          (def new-v (xf v))
-          (case (type new-v)
-            :array
-            (buffer/push indent "  ")
-            :struct
-            (buffer/push indent " ")
-            :table
-            (buffer/push indent "  ")
-            :tuple
-            (buffer/push indent " "))
-          (put coll i (-> (janet->string (xf v) indent)
-                          (jdn-str->jdn-arr)
-                          (array/pop)))))
-      (++ i))
+  (def pred (unless (nil? where)
+              (if (function? where)
+                where
+                (partial deep= where))))
+  (if pred
+    (do
+      (assertf (ind? coll) ":where argument requires array/tuple, found %n" coll)
+      (var i 0)
+      (while (def el (get coll i))
+        (when (val? el)
+          (def v (parse (jdn-arr->jdn-str el)))
+          (when (pred v)
+            (if (nil? to)
+              (do
+                (assertf (dict? el) "expected struct/table, found %n" el)
+                (assoc el add (buffer indent (string/repeat " " (+ (length (get coll 0))
+                                                                   (length (get el 0)))))))
+              (swap coll i to indent))))
+        (++ i)))
     (error "not implemented for structs/tables"))
   ds)
