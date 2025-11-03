@@ -206,7 +206,7 @@
       :assoc
       (do
         (def keyvals @[])
-        (eachp [k v] d
+        (each [k v] (sort (pairs d))
           (array/push keyvals k v))
         (info/upd-in jdn group :where pred :add keyvals))
       :swap
