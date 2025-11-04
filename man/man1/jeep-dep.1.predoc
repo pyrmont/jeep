@@ -9,28 +9,36 @@ Version: DEVEL
 NAME
 ====
 
-**jeep-dep** - add or remove dependency information in a Janet bundle
+**jeep-dep** - add, update or remove dependency information in a Janet bundle
 
 SYNOPSIS
 ========
 
-**jeep-dep** [**-r** | **--remove**] [**-v** _dir_ | **--vendor** _dir_] _deps_ ...
+**jeep-dep** [**-a** | **--autotag**] [**-r** | **--remove**] [**-u** |
+**--update**] [**-v** _dir_ | **--vendor** _dir_] _deps_ ...
 
 DESCRIPTION
 ===========
 
-**jeep-dep** adds or removes dependency information in a bundle's __info
+**jeep-dep** adds, updates or removes dependency information in a bundle's __info
 file__. This command does not install dependencies; that is the responsibility
 of `jeep-prep(1)`.
 
 Options
 -------
 
+- **-a**, **--autotag**:
+  Adds a ``:tag`` key to the dependency information that is added or updated
+  with the SHA of the current commit as the associated value.
+
 - **-r**, **--remove**:
   Removes the dependency information from the bundle's __info file__.
 
+- **-u**, **--update**:
+  Updates the dependency information in the bundle's __info file__.
+
 - **-v** _dir_, **--vendor** _dir_:
-  Updates the dependencies that will be vendored into _dir_. Vendoring is
+  Changes the dependencies that will be vendored into _dir_. Vendoring is
   discussed below in `<Vendoring>`.
 
 - _deps_ ...:
@@ -41,11 +49,12 @@ Vendoring
 ---------
 
 A bundle's __info file__ can contain dependency information in an array/tuple
-mapped to the ``:dependencies`` key. By default, dependencies that are added or
-removed using **jeep-dep** are added to or removed from this data structure.
-Dependencies that are listed in this data structure are installed into the
-__syspath__. This will either be the global syspath or `./_system`, the local
-syspath, if the user is using the **--local** flag as described in `jeep(1)`.
+mapped to the ``:dependencies`` key. By default, dependencies that are added,
+updated or removed using **jeep-dep** are added to, updated in or removed from
+this data structure. Dependencies that are listed in this data structure are
+installed into the __syspath__. This will either be the global syspath or
+`./_system`, the local syspath, if the user is using the **--local** flag as
+described in `jeep(1)`.
 
 Janet does not support the installation of multiple versions of a dependency. To
 avoid version conflicts, a user may prefer to vendor dependencies. **jeep-dep**
@@ -65,6 +74,12 @@ To add a dependency to the __info file__:
 
 ````
 $ jeep dep https://example.org/foo.git
+````
+
+To update a dependency in the __info file__ with the SHA of the current commit:
+
+````
+$ jeep dep -a -u foo
 ````
 
 To remove a dependency from the __info file__:

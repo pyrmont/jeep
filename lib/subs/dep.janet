@@ -15,9 +15,9 @@
    :vendor
    `The deps to change are those listed under <dir> under the ':vendored' key.`
    :about
-   `Adds or removes dependency information in the bundle's info file.`
+   `Adds, updates or removes dependency information in the bundle's info file.`
    :help
-   `Add or remove dependency information in the current bundle.`})
+   `Add, update or remove dependency information in the current bundle.`})
 
 (def config {:rules [:deps {:splat? true
                             :req?   true
