@@ -64,9 +64,9 @@
   (if (string? id)
     (error "id must be struct/table"))
   (util/mkdir dest)
-  (def temp-dir "tmp")
+  (def tmp (util/tmp-dir))
   (def oldpath (dyn *syspath*))
-  (def syspath (util/change-syspath temp-dir))
+  (def syspath (util/change-syspath tmp))
   (def binpath (string syspath util/sep "bin"))
   (def manpath (string syspath util/sep "man"))
   (defn copy-dep [name]
@@ -80,6 +80,6 @@
       (copy-dep (get man :name))))
   (defer (do
            (util/change-syspath oldpath)
-           (util/rmrf temp-dir))
+           (util/rmrf tmp))
     (install id :force-update force-update :no-install no-install :auto-remove auto-remove)
     (copy-dep (get id :name))))

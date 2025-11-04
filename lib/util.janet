@@ -80,13 +80,15 @@
   res)
 
 (defn rmrf
-  [path]
+  [path &opt ignore-check?]
   (case (os/lstat path :mode)
     # recursive delete directories
     :directory
     (do
+      (def msg "cannot delete directory while current working directory is inside it")
+      (assert (or ignore-check? (not (string/has-prefix? path (os/cwd)))) msg)
       (each subpath (os/dir path)
-        (rmrf (string path sep subpath)))
+        (rmrf (string path sep subpath) true))
       (os/rmdir path))
      # do nothing if file does not exist
     nil
@@ -149,11 +151,11 @@
     (put parts 1 (string (get parts 0) (get parts 1)))
     (array/remove parts 0))
   (var res false)
-  (def pwd (os/cwd))
+  (def cwd (os/cwd))
   (each part parts
     (set res (os/mkdir part))
     (os/cd part))
-  (os/cd pwd)
+  (os/cd cwd)
   res)
 
 (defn parent
@@ -177,8 +179,9 @@
 (defn cleanup
   [cwd]
   (os/cd cwd)
-  (if (def d (dyn :jeep-tmpdir))
-    (rmrf d)))
+  (when (def d (dyn :jeep-tmpdir))
+    (rmrf d)
+    (setdyn :jeep-tmpdir nil)))
 
 (defn copy
   [src dest]
@@ -193,7 +196,8 @@
                         "/y /s /e /i > nul")))
     (os/execute ["cp" "-rf" src dest] :px)))
 
-(defn fetch-git [&named url tag dir]
+(defn fetch-git
+  [&named url tag dir]
   (assert url "function requires :url argument")
   (assert dir "function requires :dir argument")
   (default tag "HEAD")
@@ -208,24 +212,25 @@
         (exec :git nil "-C" dir "checkout" tag))))
   dir)
 
-(defn fetch-dep [parent-dir dep]
-  (def temp-dir "tmp")
+(defn fetch-dep
+  [parent-dir dep]
+  (def tmp (tmp-dir))
   (def {:url url
         :tag tag
         :prefix prefix
         :files files} dep)
   (unless url
     (error "fetched bundles need a :url key"))
-  (def pwd (os/cwd))
+  (def cwd (os/cwd))
   (defer (do
-           (os/cd pwd)
-           (rmrf temp-dir))
-    (os/mkdir temp-dir)
+           (os/cd cwd)
+           (rmrf tmp))
+    (os/mkdir tmp)
     (def dest-dir (string parent-dir (when prefix (string sep prefix))))
     (print "vendoring " url " to " dest-dir)
     (def src-dir (if (string/has-prefix? "file::" url)
                    (slice url 6)
-                   (fetch-git :url url :tag tag :dir temp-dir)))
+                   (fetch-git :url url :tag tag :dir tmp)))
     (each file files
       (def from (string src-dir sep file))
       (def to (string dest-dir sep file))
