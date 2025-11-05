@@ -55,7 +55,8 @@ Bundle commands are commands that a user must run inside a bundle directory.
 - ***api*** - generates an API document for a bundle
 - ***build*** - builds the native targets of a bundle
 - ***clean*** - cleans directories in a bundle
-- ***dep*** - adds or removes dependencies from a bundle
+- ***dep*** - adds, updates or removes dependencies from a bundle
+- ***meta*** - adds, updates or remove metadata from a bundle
 - ***prep*** - prepares dependencies for a bundle
 - ***test*** - runs tests for a bundle
 

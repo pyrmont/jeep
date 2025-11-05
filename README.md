@@ -32,6 +32,7 @@ The following commands work at the bundle level only:
 - `jeep build`
 - `jeep clean`
 - `jeep dep`
+- `jeep meta`
 - `jeep prep`
 - `jeep test`
 
