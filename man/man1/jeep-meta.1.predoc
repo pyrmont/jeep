@@ -1,0 +1,69 @@
+---
+Title: JEEP-META(1)
+Date: 2025/11/05
+Authors: Michael Camilleri <mike@inqk.net>
+Project: Jeep
+Version: DEVEL
+---
+
+NAME
+====
+
+**jeep-meta** - add, update or remove top-level metadata in a Janet bundle
+
+SYNOPSIS
+========
+
+**jeep-meta** [**-r** | **--remove**] [**-u** | **--update**] _key_ [_val_] ...
+
+DESCRIPTION
+===========
+
+**jeep-meta** adds, updates or removes top-level key-value pairs in a bundle's
+__info file__.
+
+Options
+-------
+
+- **-r**, **--remove**:
+  Removes the specified keys from the __info file__.
+
+- **-u**, **--update**:
+  Updates the specified keys in the __info file__ with the specified values.
+
+- _key_ ...:
+  One or more keys to add, update or remove. Typically, keys will be keywords
+  (e.g. ``:author``) but **jeep-meta** also supports strings as keys. Note that
+  when combined with **--remove**, only keys should be specified.
+
+- _val_ ...:
+  One or more values to add or update. Typically, values at the top level will
+  be strings but it is possible to provide other types of values.
+
+For more information about the __info file__, see CONCEPTS in `jeep(1)`.
+
+EXAMPLES
+========
+
+To add metadata to the __info file__:
+
+````
+$ jeep meta :author "A Programmer" :license "MIT"
+````
+
+To update existing metadata:
+
+````
+$ jeep meta -u :author "A Programmer <a.programmer@example.org>"
+````
+
+To remove metadata from the __info file__:
+
+````
+$ jeep meta -r :author
+````
+
+BUGS
+====
+
+Report issues at <https://github.com/pyrmont/jeep>
