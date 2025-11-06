@@ -124,13 +124,13 @@
       (def path (h/make-bundle "." :name "test1"))
       (os/cd path)
       (def args {:sub {:params {:deps ["testament"]}
-                       :opts {"vendor" "vendor-dir"}}})
+                       :opts {"vendor" true}}})
       (subcmd/run args)
       (def actual (h/info-file path))
       (def expect
         ```
         @{:name "test1"
-          :vendored {"vendor-dir" ["testament"]}}
+          :vendored ["testament"]}
         ```)
       (is (== expect actual))
       (def expect-out
@@ -149,19 +149,22 @@
     (h/in-dir d
       (def path (h/make-bundle "."
                                :name "test1"
-                               :vendored {"vendor-dir" ["testament" "spork"]}))
+                               :vendored ["testament" "spork"]))
       (os/cd path)
-      (def args {:sub {:params {:deps [`{:name "testament" :url "https://github.com/pyrmont/testament"}`]}
+      (def args {:sub {:params {:deps [(string `{:name "testament"`
+                                               ` :url "https://github.com/pyrmont/testament"`
+                                               ` :prefix "vendor-dir"}`)]}
                        :opts {"update" true
-                              "vendor" "vendor-dir"}}})
+                              "vendor" true}}})
       (subcmd/run args)
       (def actual (h/info-file path))
       (def expect
         ```
         @{:name "test1"
-          :vendored {"vendor-dir" [{:name "testament"
-                                    :url "https://github.com/pyrmont/testament"}
-                                   "spork"]}}
+          :vendored [{:name "testament"
+                      :prefix "vendor-dir"
+                      :url "https://github.com/pyrmont/testament"}
+                     "spork"]}
         ```)
       (is (== expect actual))
       (def expect-out

@@ -13,7 +13,7 @@
    :update
    `Update the deps in the bundle.`
    :vendor
-   `The deps to change are those listed under <dir> under the ':vendored' key.`
+   `Change dependencies under the :vendored keyword.`
    :about
    `Adds, updates or removes dependency information in the bundle's info file.`
    :help
@@ -31,9 +31,8 @@
                      "--update" {:kind  :flag
                                  :short "u"
                                  :help  (helps :update)}
-                     "--vendor" {:kind  :single
+                     "--vendor" {:kind  :flag
                                  :short "v"
-                                 :proxy "dir"
                                  :help  (helps :vendor)}
                      "----"]
              :info {:about (helps :about)}
@@ -218,9 +217,7 @@
   (set changed? false)
   (def opts (get-in args [:sub :opts] {}))
   (def deps (get-in args [:sub :params :deps] []))
-  (def group (if-let [dir (get opts "vendor")]
-               [:vendored dir]
-               [:dependencies]))
+  (def group (if (get opts "vendor") [:vendored] [:dependencies]))
   (def autotag? (get opts "autotag"))
   (def remove? (get opts "remove"))
   (def update? (get opts "update"))
