@@ -185,16 +185,16 @@
 
 (defn copy
   [src dest]
+  (def dir? (= (os/stat src :mode) :directory))
   (if (= :windows (os/which))
-    (let [dir? (= (os/stat src :mode) :directory)]
-      (os/shell (string "C:\\Windows\\System32\\xcopy.exe" " "
-                        src
-                        " "
-                        dest
-                        (when dir? (string sep (last (apart src))))
-                        " "
-                        "/y /s /e /i > nul")))
-    (os/execute ["cp" "-rf" src dest] :px)))
+    (os/shell (string "C:\\Windows\\System32\\xcopy.exe" " "
+                      src
+                      " "
+                      dest
+                      (when dir? (string sep (last (apart src))))
+                      " "
+                      "/y /s /e /i > nul"))
+    (os/execute ["cp" "-a" src dest] :px)))
 
 (defn fetch-git
   [&named url tag dir]
@@ -213,28 +213,32 @@
   dir)
 
 (defn fetch-dep
-  [parent-dir dep]
-  (def tmp (tmp-dir))
+  [dep &opt parent-dir]
   (def {:url url
         :tag tag
         :prefix prefix
         :files files} dep)
-  (unless url
-    (error "fetched bundles need a :url key"))
+  (assert url (error "fetched bundles need a :url key"))
+  (def tmp (tmp-dir))
   (def cwd (os/cwd))
   (defer (do
            (os/cd cwd)
            (rmrf tmp))
-    (os/mkdir tmp)
-    (def dest-dir (string parent-dir (when prefix (string sep prefix))))
-    (print "vendoring " url " to " dest-dir)
-    (def src-dir (if (string/has-prefix? "file::" url)
-                   (slice url 6)
-                   (fetch-git :url url :tag tag :dir tmp)))
-    (each file files
-      (def from (string src-dir sep file))
-      (def to (string dest-dir sep file))
-      (mkdir (parent to))
+    (def local? (string/has-prefix? "file::" url))
+    (def origin (if local? (string/slice url 6) url))
+    (def src-dir (if local? origin (fetch-git :url url :tag tag :dir tmp)))
+    (def dest-dir (if parent-dir
+                    (string parent-dir (when prefix (string sep prefix)))
+                    (or prefix ".")))
+    (print "vendoring " origin (when parent-dir (string " to " dest-dir)))
+    (mkdir dest-dir)
+    (each f files
+      (def [src dest] (if (indexed? f) f [f f]))
+      (def from (string src-dir sep src))
+      (def to (string dest-dir sep dest))
+      (if (string/has-suffix? "/" to)
+        (mkdir to)
+        (mkdir (parent to)))
       (print "  copying " from " to " to)
       (copy from to))))
 

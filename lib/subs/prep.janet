@@ -30,13 +30,25 @@
 (def- bundle-dir "bundle")
 (def- this-file (os/realpath (dyn :current-file)))
 
-(defn- vendor-deps
-  [all-deps &named force-deps?]
-  (each [dir deps] all-deps
+(defn- vendor-deps-legacy
+  [dirs-deps &named force-deps?]
+  (def msg (string "use of %s with :vendored is deprecated, "
+                   "refer to the man page for more information"))
+  (printf msg (string (type dirs-deps)))
+  (each [dir deps] (pairs dirs-deps)
     (each d deps
       (if (has-key? d :files)
-        (util/fetch-dep dir d)
-        (install/install-to dir d :force-update force-deps?)))))
+        (util/fetch-dep d dir)
+        (install/install-to d dir :force-update force-deps?)))))
+
+(defn- vendor-deps
+  [deps &named force-deps?]
+  (each d deps
+    (if (has-key? d :files)
+      (util/fetch-dep d)
+      (do
+        (def dir (get d :prefix "."))
+        (install/install-to d dir :force-deps? force-deps?)))))
 
 (defn- install-build
   [info &named force-deps?]
@@ -58,14 +70,15 @@
   (os/mkdir bundle-dir)
   (os/mkdir (string bundle-dir util/sep "spork"))
   (print "vendoring essential build files into " bundle-dir)
+  (def from-licence (string spork-dir util/sep "LICENSE"))
+  (def to-licence (string bundle-dir util/sep "spork" util/sep "LICENSE"))
+  (print "  copying LICENSE to " bundle-dir util/sep "spork" util/sep "LICENSE")
+  (util/copy from-licence to-licence)
   (each f essentials
     (def from (string spork-dir util/sep "spork" util/sep f))
     (def to (string bundle-dir util/sep "spork" util/sep f))
     (print "  copying " f " to " to)
-    (util/copy from to))
-  (def from-licence (string spork-dir util/sep "LICENSE"))
-  (def to-licence (string bundle-dir util/sep "spork" util/sep "LICENSE"))
-  (util/copy from-licence to-licence))
+    (util/copy from to)))
 
 (defn- install-system
   [info &named force-deps?]
@@ -75,10 +88,11 @@
 
 (defn- install-vendor
   [info &named force-deps?]
-  (def all-deps (->> (get info :vendored {}) (pairs)))
-  (if (empty? all-deps)
-    (error "no vendored dependencies in info.jdn"))
-  (vendor-deps all-deps :force-deps? force-deps?))
+  (def vendored (get info :vendored))
+  (assert (and vendored (not (empty? vendored)))
+          "no vendored dependencies in info.jdn")
+  (def vendor-f (if (dictionary? vendored) vendor-deps-legacy vendor-deps))
+  (vendor-f vendored :force-deps? force-deps?))
 
 (defn run
   [args &opt jeep-config]

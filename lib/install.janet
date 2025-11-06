@@ -60,7 +60,7 @@
       (bundle/install bdir :config config ;(kvs config)))))
 
 (defn install-to
-  [dest id &named force-update no-install auto-remove]
+  [id dest &named force-update no-install auto-remove]
   (if (string? id)
     (error "id must be struct/table"))
   (util/mkdir dest)
