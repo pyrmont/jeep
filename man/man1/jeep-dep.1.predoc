@@ -1,6 +1,6 @@
 ---
 Title: JEEP-DEP(1)
-Date: 2025/09/11
+Date: 2025/11/06
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -15,7 +15,7 @@ SYNOPSIS
 ========
 
 **jeep-dep** [**-a** | **--autotag**] [**-r** | **--remove**] [**-u** |
-**--update**] [**-v** _dir_ | **--vendor** _dir_] _deps_ ...
+**--update**] [**-v** | **--vendor**] _deps_ ...
 
 DESCRIPTION
 ===========
@@ -37,9 +37,9 @@ Options
 - **-u**, **--update**:
   Updates the dependency information in the bundle's __info file__.
 
-- **-v** _dir_, **--vendor** _dir_:
-  Changes the dependencies that will be vendored into _dir_. Vendoring is
-  discussed below in `<Vendoring>`.
+- **-v**, **--vendor**:
+  Changes the dependencies that will be vendored. Vendoring is discussed below
+  in `<Vendoring>`.
 
 - _deps_ ...:
   One or more dependencies to add or remove. Dependencies can either be
@@ -56,13 +56,20 @@ installed into the __syspath__. This will either be the global syspath or
 `./_system`, the local syspath, if the user is using the **--local** flag as
 described in `jeep(1)`.
 
-Janet does not support the installation of multiple versions of a dependency. To
-avoid version conflicts, a user may prefer to vendor dependencies. **jeep-dep**
-supports this with the **--vendor** option. Vendored dependencies are listed
-under the ``:vendored`` keyword and then further listed under a string that
-represents the directory into which the dependency will be vendored. This allows
-a bundle author to vendor dependency for certain purposes (such as building or
-testing) by vendoring dependencies into different directories.
+Janet does not support the installation of multiple versions of a dependency.
+To avoid version conflicts, a user may prefer to vendor dependencies.
+**jeep-dep** supports this with the **--vendor** option. Vendored dependencies
+are listed in an array/tuple under the ``:vendored`` keyword.
+
+A vendored dependency is similar to an ordinary dependency. That is, it can be
+a shortname (e.g. "example") or a struct/table. If it is a struct/table, it
+must contain the ``:name`` and ``:url`` keys. It can also include the ``:tag``,
+``:prefix``, and ``:files`` keys. If the ``:files`` key is present, a vendored
+dependency will be fetched from the specified URL and the values used to copy
+files into the bundle. If the values are strings, the relative path of the
+source file matches the relative path of the destination file. However, if the
+value is a two-element array/tuple, the file located at the path in the first
+value will be copied to the path in the second value. See `<EXAMPLES>` below.
 
 For more information about the __info file__, the __bundle script__ and the
 __syspath__, see CONCEPTS in `jeep(1)`.
@@ -88,11 +95,20 @@ To remove a dependency from the __info file__:
 $ jeep dep -r foo
 ````
 
-To add two dependencies that will be vendored into the `./bundle` directory:
+To add two dependencies that will be vendored:
 
 ````
-$ jeep dep --vendor bundle https://example.org/foo.git
-https://example.org/bar.git
+$ jeep dep --vendor https://example.org/foo.git https://example.org/bar.git
+````
+
+To add a vendored dependency that will selectively copy files:
+
+````
+$ jeep dep --vendor '{:name "foo" \
+                      :url "https://example.org/foo" \
+                      :prefix "deps" \
+                      :files [["a.janet" "b.janet"] \
+                              ["c.janet" "c/init.janet"]]}'
 ````
 
 BUGS

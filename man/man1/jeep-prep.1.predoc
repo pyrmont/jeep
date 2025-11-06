@@ -1,6 +1,6 @@
 ---
 Title: JEEP-PREP(1)
-Date: 2025/09/09
+Date: 2025/11/06
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -73,9 +73,12 @@ The project author specifies each dependency using a struct. The struct should,
 at a minimum, include the ``:name`` and ``:url`` keys. If the struct includes a
 ``:files`` key, the dependency is not installed using the Janet's
 ``bundle/install`` function. Instead **jeep-prep** downloads the dependency and
-then copies the files listed. If the ``:prefix`` key exists, the files are
-copied to a directory with a name that matches the associated value.
-Dependencies can be added to the __info file__ using `jeep-dep(1)`.
+then copies the files listed. Files can be specified as strings or as two-
+element array/tuples containing a source and destination path. The source path
+is relative to the root of the dependency. The destination path is relative to
+the directory specified in the ``:prefix`` (if no directory is specified, the
+bundle root). Dependencies can be added to the __info file__ using
+`jeep-dep(1)`.
 
 The project author optionally binds a function to the prep __bundle hook__ by
 defining a function called ``prep`` in the __bundle script__. When invoked, the
@@ -94,18 +97,23 @@ The following examples assume an __info file__ as follows:
  :repo "git+https://example.org/example"
 
  :dependencies [
-   {:name "dep1" :url "https://example.org/dep1"}
-   {:name "dep2" :url "https://example.org/dep2"}]
+   {:name "dep1"
+    :url "https://example.org/dep1"}
+   {:name "dep2"
+    :url "https://example.org/dep2"}]
 
- :vendored {
-   "bundle" [
-     {:name "dep3" :url "https://example.org/dep3"}]
-   "deps" [
-     {:name "dep4" :url "https://example.org/dep4"}
-     {:name "dep5"
-      :url "https://example.org/dep5"
-      :prefix "dep5"
-      :files ["foo.janet" "LICENSE"]}]}}
+ :vendored [
+   {:name "dep3"
+    :url "https://example.org/dep3"
+    :prefix "bundle"}
+   {:name "dep4"
+    :url "https://example.org/dep4"
+    :prefix "deps"}
+   {:name "dep5"
+    :url "https://example.org/dep5"
+    :prefix "deps/dep5"
+    :files ["foo.janet"
+            "LICENSE"]}]}
 ````
 
 The following command prepares the project using the default ***system***
