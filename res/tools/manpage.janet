@@ -19,8 +19,7 @@
 (defn main
   [& args]
   (def [force? pages] (parse-args args))
-  (def threeup (comp util/parent util/parent util/parent))
-  (def bundle-root (-> (dyn :current-file) util/abspath threeup))
+  (def bundle-root (-> (dyn :current-file) (util/abspath) (util/parent 3)))
   (def entries (map (partial string bundle-root s) paths))
   (each entry entries
     (if (= :directory (os/stat entry :mode))

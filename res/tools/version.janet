@@ -31,7 +31,7 @@
 
 (defn main
   [command version & args]
-  (def parent (-> (dyn :current-file) util/abspath util/parent util/parent))
+  (def parent (-> (dyn :current-file) (util/abspath) (util/parent 2)))
   (def to-update (array/concat @[] paths))
   (each path to-update
     (unless (or (= "." path) (= ".." path))

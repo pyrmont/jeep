@@ -3,9 +3,8 @@
 (defn main
   [& args]
   (def project-root (-> (dyn :current-file)
-                        util/abspath
-                        util/parent
-                        util/parent))
+                        (util/abspath)
+                        (util/parent 2)))
   (def info (util/load-meta project-root))
   (each [dir deps] (pairs (get info :vendored))
     (each d deps

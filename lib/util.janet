@@ -159,13 +159,14 @@
   res)
 
 (defn parent
-  [path]
+  [path &opt level]
+  (default level 1)
   (def parts (apart path))
   (if (empty? parts)
     parts
     (do
       (put parts 0 (string/replace sep "" (first parts)))
-      (string/join (array/slice parts 0 -2) sep))))
+      (string/join (array/slice parts 0 (- -1 level)) sep))))
 
 # Other functions
 
