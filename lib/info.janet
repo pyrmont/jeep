@@ -302,7 +302,7 @@
       (do
         (assertf (dictionary? v) "key path '%n' resolves to '%n' but expected struct/table" kl coll)
         (buffer/push indent (string/repeat " " (length (first coll))))
-        (eachp [el-k el-v] v
+        (each [el-k el-v] (sort (pairs v))
           (array/pop coll)
           (def k-str (describe el-k))
           (def v-arr
