@@ -1,0 +1,148 @@
+---
+Title: JEEP-NEW(1)
+Date: 2025/11/10
+Authors: Michael Camilleri <mike@inqk.net>
+Project: Jeep
+Version: DEVEL
+---
+
+NAME
+====
+
+**jeep-new** - create a Janet bundle
+
+SYNOPSIS
+========
+
+**jeep-new** [**-a** _name_ | **--author** _name_] [**-d** _text_ | **--desc**
+             _text_] [**-i** _type_ | **--license** _type_] [**-g** _username_ |
+             **--github** _username_] [**-u** _url_ | **--url** _url_] [**-r**
+             _url_ | **--repo** _url_] [**-e** | **--exe**] [**-l** | **--lib**]
+             [**-m** | **--man**] [**-n** | **--nat**] [**-s** | **--scr**]
+             [**-b** | **--bare**] [**-A** | **--no-ask**] [**-t** _dir_ |
+             **--templates** _dir_] _name_
+
+DESCRIPTION
+===========
+
+**jeep-new** creates a Janet bundle in the current directory. At minimum, a
+directory called _name_ that contains an __info file__ will be created.
+
+By default, **jeep-new** will prompt the user for certain information that was
+not included in the command-line invocation. See **--no-ask** below for more
+details.
+
+Options
+-------
+
+- **-A** | **--no-ask**:
+  Sets whether to prompt the user to provide information not specified in
+  certain options. The information **jeep-new** will ask about are values
+  specified in the **--author**, **--desc**, **--license**, **--repo** and
+  **--url** options.
+
+- **-a** _name_ | **--author** _name_:
+  Sets the name of the author of the bundle. If not provided, **jeep-new**
+  will try to find the information in the user's Git configuration file.
+
+- **-b** | **--bare**:
+  Sets whether **jeep-new** will create a bare bundle. A bare bundle contains
+  an __info file__ but does not generate any other files or directories.
+
+- **-d** _text_ | **--desc** _text_:
+  Sets the description of the bundle.
+
+- **-e** | **--exe**:
+  Sets whether the bundle produces a compiled executable artifact.
+
+- **-g** _username_ | **--github** _username_:
+  Sets the GitHub username. This information is not saved in the __info file__
+  but it enables **jeep-new** to infer values to associate with the ``url``
+  and ``repo`` keys.
+
+- **-i** _type_ | **--license** _type_:
+  Sets the license of the bundle. **jeep-new** is able to generate license
+  files for 'Apache-2.0', 'BSD-3-Clause', 'GPL-3.0', 'ISC' and 'MIT'. If a
+  user uses one of those specific names, the file 'LICENSE' will be generated.
+
+- **-l** | **--lib**:
+  Sets whether the bundle produces a pure Janet library artifact.
+
+- **-m** | **--man**:
+  Sets whether the bundle produces a man page artifact.
+
+- **-n** | **--nat**:
+  Sets whether the bundle produces a native library artifact.
+
+- **-r** _url_ | **--repo** _url_:
+  Sets the repository URL of the bundle. If the GitHub username is set with
+  **--github**, the inferred URL will be of the form
+  ``git+https://github.com/<username>/<bundle>``. Otherwise, the placeholder
+  ``https://example.org/<bundle>`` will be the inference.
+
+- **-s** | **--scr**:
+  Sets whether the bundle produces an executable script artifact.
+
+- **-t** _dir_ | **--templates** _dir_:
+  Sets a directory to look for templates. **jeep-new** includes the following
+  templates:
+
+  - \.gitignore
+  - README.me
+  - bundle.janet
+  - info.jdn
+  - project.janet
+
+  **jeep-new** also includes a number of licenses in a ``license/`` directory
+  (described above  in under **--license**). If a user specifies a templates
+  directory, that directory will be searched for each file first before
+  **jeep-new** falls back on the included templates. This allows a user to
+  specify only some of the templates.
+
+  The templates are processed through Musty, a Janet implementation of the
+  Mustache templating language. More information is available at
+  <https://github.com/pyrmont/musty>.
+
+- **-u** _url_ | **--url** _url_:
+  Sets the URL of the bundle. If the GitHub username is set with **--github**,
+  the inferred URL will be of the form ``https://github.com/<username>/<bundle>``.
+  Otherwise, the placeholder ``https://example.org/<bundle>`` will be the
+  inference.
+
+- _name_:
+  The name of the bundle.
+
+For more information about the __info file__, see CONCEPTS in `jeep(1)`.
+
+EXAMPLES
+========
+
+To create a new bundle ``foo``:
+
+````
+$ jeep new foo
+````
+
+To create a new bundle ``foo`` that consists of only a directory ``foo`` and an
+__info file__:
+
+````
+$ jeep new --bare foo
+````
+
+To create a new bundle ``foo`` and not be prompted for additional information:
+
+````
+$ jeep new --no-ask foo
+````
+
+To create a new bundle ``foo`` with custom templates:
+
+````
+$ jeep new --templates my/templates/dir foo:
+````
+
+BUGS
+====
+
+Report issues at <https://github.com/pyrmont/jeep>
