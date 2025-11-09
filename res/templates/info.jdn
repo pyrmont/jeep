@@ -1,0 +1,14 @@
+{:name "{{name}}"
+ :version "DEVEL"
+ :description "{{desc}}"
+ :author "{{author}}"
+ :license "{{license}}"
+ :url "{{url}}"
+ :repo "{{repo}}"
+ :dependencies []
+ :vendored []
+ :artifacts {:executables []
+             :libraries []
+             :manpages []
+             :natives []
+             :scripts []}}

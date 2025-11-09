@@ -4,6 +4,7 @@
 # Global Commands
 (import ./subs/install :as cmd/install)
 (import ./subs/list :as cmd/list)
+(import ./subs/new :as cmd/new)
 (import ./subs/quickbin :as cmd/quickbin)
 (import ./subs/uninstall :as cmd/uninstall)
 
@@ -45,6 +46,7 @@
   ```
   ["install" cmd/install/config
    "list" cmd/list/config
+   "new" cmd/new/config
    "quickbin" cmd/quickbin/config
    "uninstall" cmd/uninstall/config
    "---"
