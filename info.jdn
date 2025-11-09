@@ -39,16 +39,18 @@
               "init.janet"
               "LICENSE"]}]}
 
- :executable ["bin/jeep"]
- :manpage ["man/man1/jeep.1"
-           "man/man1/jeep-build.1"
-           "man/man1/jeep-clean.1"
-           "man/man1/jeep-dep.1"
-           "man/man1/jeep-install.1"
-           "man/man1/jeep-list.1"
-           "man/man1/jeep-prep.1"
-           "man/man1/jeep-quickbin.1"
-           "man/man1/jeep-test.1"
-           "man/man1/jeep-uninstall.1"]
- :source {:prefix "jeep"
-          :files ["deps" "lib"]}}
+ :artifacts {:libraries [{:prefix "jeep"
+                          :paths ["deps"
+                                  "lib"
+                                  "res/templates"]}]
+             :manpages ["man/man1/jeep.1"
+                        "man/man1/jeep-build.1"
+                        "man/man1/jeep-clean.1"
+                        "man/man1/jeep-dep.1"
+                        "man/man1/jeep-install.1"
+                        "man/man1/jeep-list.1"
+                        "man/man1/jeep-prep.1"
+                        "man/man1/jeep-quickbin.1"
+                        "man/man1/jeep-test.1"
+                        "man/man1/jeep-uninstall.1"]
+             :scripts [{:path "bin/jeep"}]}}

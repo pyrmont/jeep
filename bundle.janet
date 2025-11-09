@@ -1,5 +1,22 @@
 (def- seps {:windows "\\" :mingw "\\" :cygwin "\\"})
 (def- s (get seps (os/which) "/"))
+(def- esc (cond (os/getenv "PSModulePath")
+                "`"
+                (index-of (os/which) [:mingw :windows])
+                "^"
+                # default
+                "\\"))
+(def- pathg ~{:main     (* :relpath (? :sep) -1)
+              :relpath  (* :part (any (* :sep :part)))
+              :sep      ,s
+              :part     (* (+ :quoted :unquoted) (> (+ :sep -1)))
+              :quoted   (* `"`
+                           (% (some (+ (* ,esc ,esc)
+                                       (* ,esc `"`)
+                                       (* (! `"`) '1))))
+                           `"`)
+              :unquoted (% (some (+ :escaped (* (! (set `"\/ `)) '1))))
+              :escaped  (* ,esc '1)})
 
 # based on code from spork/declare-cc.janet
 (defn- add-bat-shim [manifest bin-name &opt chmod-mode]
@@ -22,23 +39,59 @@
     (os/chmod absdest chmod-mode))
   (print "add " absdest))
 
-(defn install [manifest &]
-  (def manpages (get-in manifest [:info :manpage] []))
-  (os/mkdir (string (dyn :syspath) s "man"))
-  (os/mkdir (string (dyn :syspath) s "man" s "man1"))
-  (each mp manpages
-    (bundle/add-file manifest mp))
-  (def prefix (get-in manifest [:info :source :prefix]))
-  (def srcs (get-in manifest [:info :source :files] []))
-  (bundle/add-directory manifest prefix)
-  (each src srcs
-    (bundle/add manifest src (string prefix s src)))
-  (def bins (get-in manifest [:info :executable] []))
-  (each bin bins
-    (def bin-name (last (string/split "/" bin)))
-    (bundle/add-bin manifest bin bin-name)
+(defn- add-path [paths dest &opt src]
+  (def bits (peg/match pathg dest))
+  (assert bits "invalid path")
+  (def ks @[])
+  (each b bits
+    (array/push ks b)
+    (unless (get-in paths ks)
+      (put-in paths ks @{})))
+  (when src
+    (put-in paths ks src)))
+
+(defn- install-libs [manifest &]
+  (def to-make @{})
+  (def libs (get-in manifest [:info :artifacts :libraries] []))
+  (each lib libs
+    (def ks @[])
+    (def prefix (get lib :prefix))
+    (add-path to-make prefix)
+    (def paths (get lib :paths))
+    (each p paths
+      (add-path to-make (string prefix s p) p)))
+  (defn add-tree [tree path]
+    (eachp [k v] tree
+      (if (table? v)
+        (do
+          (def new-path (if (empty? path) k (string path s k)))
+          (bundle/add-directory manifest new-path)
+          (add-tree v new-path))
+        (bundle/add manifest v (string path s k)))))
+  (add-tree to-make ""))
+
+(defn- install-mans [manifest &]
+  (def mans (get-in manifest [:info :artifacts :manpages] []))
+  (each m mans
+    (def bits (peg/match pathg m))
+    (var dir nil)
+    (each b bits
+      (if (nil? dir)
+        (set dir b)
+        (set dir (string dir s b)))
+      (os/mkdir dir))
+    (bundle/add-file manifest m)))
+
+(defn- install-scrs [manifest &]
+  (def scrs (get-in manifest [:info :artifacts :scripts] []))
+  (each scr scrs
+    (def path (get scr :path))
+    (bundle/add-bin manifest path)
+    (def bin-name (last (string/split "/" path)))
     (if (index-of (os/which) [:mingw :windows])
-      (add-bat-shim manifest bin-name)))
+      (add-bat-shim manifest bin-name))))
+
+(defn- set-version [manifest]
   (def bundle-ver (get-in manifest [:info :version]))
   (if (not= "DEVEL" bundle-ver)
     (put manifest :version bundle-ver)
@@ -52,3 +105,9 @@
            (if ok?
              (string bundle-ver "-" (string/trim (ev/read r :all)))
              bundle-ver)))))
+
+(defn install [manifest &]
+  (install-libs manifest)
+  (install-mans manifest)
+  (install-scrs manifest)
+  (set-version manifest))

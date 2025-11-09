@@ -108,9 +108,7 @@
 (var- warned? false)
 (def- this-file (os/realpath (dyn :current-file)))
 (def- template-dir
-  (if (string/has-prefix? (os/realpath (dyn :syspath)) this-file)
-    (string (util/parent this-file 3) util/sep "templates")
-    (string (util/parent this-file 3) util/sep "res" util/sep "templates")))
+  (string (util/parent this-file 3) util/sep "res" util/sep "templates"))
 
 (defn- enqueue
   [path-bits &opt contents mode]
