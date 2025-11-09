@@ -28,16 +28,16 @@
    `Your GitHub username (will be used to infer the bundle's URL if not
    provided).`
    :license
-   `The license type for the bundle. Jeep can create licenses for MIT, ISC,
-   Apache-2.0, GPL-3.0, BSD-3-Clause. See 'man jeep-new' for a complete list.`
+   `The license type for the bundle. Jeep can generate license files for
+   certain licenses. See 'man jeep-new' for a complete list.`
    :no-ask
    `Do not ask for missing options.`
    :repo
    `The repository URL of the bundle.`
    :templates
    `A directory containing the templates to use. When generating files, Jeep
-   will check it first for '.gitignore', 'README.md', 'info.jdn' and
-   'bundle.janet'.`
+   will check it first for '.gitignore', 'README.md', 'bundle.janet, 'info.jdn'
+   and 'project.janet'.`
    :url
    `The URL of the bundle.`
    :about
@@ -242,6 +242,10 @@
   (if (= :directory (os/stat ld-path :mode))
     (put res :licenses ld-path)
     (put res :licenses (string template-dir util/sep "licenses")))
+  (def pf-path (string dir util/sep "project.janet"))
+  (if (= :file (os/stat pf-path :mode))
+    (put res :project-file pf-path)
+    (put res :project-file (string template-dir util/sep "project.janet")))
   (def rm-path (string dir util/sep "README.md"))
   (if (= :file (os/stat rm-path :mode))
     (put res :readme rm-path)
