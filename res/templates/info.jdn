@@ -1,5 +1,5 @@
 {:name "{{name}}"
- :version "DEVEL"
+ :version "{{version}}"
  :description "{{desc}}"
  :author "{{author}}"
  :license "{{license}}"

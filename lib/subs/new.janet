@@ -105,7 +105,6 @@
    :help (helps :help)})
 
 (var- to-make @[])
-(var- warned? false)
 (def- this-file (os/realpath (dyn :current-file)))
 (def- template-dir
   (string (util/parent this-file 3) util/sep "res" util/sep "templates"))
@@ -118,11 +117,6 @@
   [name dict k &opt dflt]
   (if (has-key? dict k)
     (break (get dict k)))
-  (unless warned?
-    (def warn "NOTE: All values are captured as strings. It is not necessary to add quotation marks.")
-    (def hr (string/repeat "-" (length warn)))
-    (print hr "\n" warn "\n" hr)
-    (set warned? true))
   (def dflt-desc (cond (= "" dflt) "<empty>" (nil? dflt) "nil" dflt))
   (def k-desc
     (case k
@@ -141,7 +135,18 @@
       (error "unrecognised key")))
   (def p (string/format "Enter %s of '%s' (default: %s): " k-desc name dflt-desc))
   (def resp (-> (getline p) (string/trim)))
-  (def res (if (empty? resp) dflt resp))
+  (def res
+    (if (empty? resp)
+      dflt
+      (cond
+        (and (= (chr `"`) (first resp))
+             (= (chr `"`) (last resp)))
+        (string/slice resp 1 -2)
+        (and (= (chr `'`) (first resp))
+             (= (chr `'`) (last resp)))
+        (string/slice resp 1 -2)
+        # default
+        resp)))
   (print (util/colour :green (string "Set " k-desc " to '" res "'")))
   res)
 
@@ -282,7 +287,6 @@
   (def params (get-in args [:sub :params] {}))
   # reset global state
   (array/clear to-make)
-  (set warned? false)
   # setup name
   (def name (get params :name))
   # setup target directory
