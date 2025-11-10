@@ -24,9 +24,9 @@
    `Create a bundle directory and info file only.`
    :desc
    `A short description of the bundle's purpose.`
-   :github
-   `Your GitHub username (will be used to infer the bundle's URL if not
-   provided).`
+   :forge
+   `The URL of the forge where the bundle will be hosted (will be used to infer
+    the bundle's URL and repository if not overridden).`
    :license
    `The license type for the bundle. Jeep can generate license files for
    certain licenses. See 'man jeep-new' for a complete list.`
@@ -62,10 +62,10 @@
                         :proxy "type"
                         :help (helps :license)}
            "----"
-           "--github" {:kind :single
-                       :short "g"
-                       :proxy "username"
-                       :help (helps :github)}
+           "--forge" {:kind :single
+                      :short "f"
+                      :proxy "url"
+                      :help (helps :forge)}
            "--url" {:kind :single
                     :short "u"
                     :help (helps :url)}
@@ -223,6 +223,25 @@
   (def contents (musty/render t meta))
   (enqueue [dir "README.md"] contents))
 
+(defn- setup-forge
+  [opts]
+  (def forge (get opts "forge"))
+  (cond
+    (nil? forge)
+    "https://example.org/"
+    (string/has-prefix? "https://" forge)
+    (if (string/has-suffix? "/" forge)
+      forge
+      (string forge "/"))
+    (string/has-prefix? "http://" forge)
+    (if (string/has-suffix? "/" forge)
+      forge
+      (string forge "/"))
+    # default
+    (if (string/has-suffix? "/" forge)
+      (string "https://" forge)
+      (string "https://" forge "/"))))
+
 (defn- setup-paths
   [user-dir]
   (def dir (or user-dir template-dir))
@@ -287,9 +306,7 @@
   (put meta :author (answer "author" (get-author)))
   (put meta :year (os/strftime "%Y" (os/time) true))
   (put meta :license (answer "license" "MIT"))
-  (def forge (if (def user (get opts "github"))
-               (string "https://github.com/" user "/")
-               "https://example.org/"))
+  (def forge (setup-forge opts))
   (put meta :url (answer "url" (string forge name)))
   (put meta :repo (answer "repo" (string "git+" forge name)))
   (put meta :exe? (get opts "exe"))

@@ -243,7 +243,7 @@
                        :opts {"author" "Test Author"
                               "desc" "A test bundle"
                               "license" "MIT"
-                              "github" "testuser"
+                              "forge" "example.org/user"
                               "no-ask" true}}})
       (subcmd/run args)
       (def expect-entries [".gitignore"
@@ -262,8 +262,8 @@
          :description "A test bundle"
          :author "Test Author"
          :license "MIT"
-         :url "https://github.com/testuser/foo"
-         :repo "git+https://github.com/testuser/foo"
+         :url "https://example.org/user/foo"
+         :repo "git+https://example.org/user/foo"
          :dependencies []
          :vendored []
          :artifacts {:executables []

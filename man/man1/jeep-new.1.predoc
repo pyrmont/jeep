@@ -15,9 +15,9 @@ SYNOPSIS
 ========
 
 **jeep-new** [**-a** _name_ | **--author** _name_] [**-d** _text_ | **--desc**
-             _text_] [**-i** _type_ | **--license** _type_] [**-g** _username_ |
-             **--github** _username_] [**-u** _url_ | **--url** _url_] [**-r**
-             _url_ | **--repo** _url_] [**-e** | **--exe**] [**-l** | **--lib**]
+             _text_] [**-i** _type_ | **--license** _type_] [**-f** _url_ |
+             **--forge** _url_] [**-u** _url_ | **--url** _url_] [**-r** _url_ |
+             **--repo** _url_] [**-e** | **--exe**] [**-l** | **--lib**]
              [**-m** | **--man**] [**-n** | **--nat**] [**-s** | **--scr**]
              [**-b** | **--bare**] [**-A** | **--no-ask**] [**-t** _dir_ |
              **--templates** _dir_] _name_
@@ -55,10 +55,11 @@ Options
 - **-e** | **--exe**:
   Sets whether the bundle produces a compiled executable artifact.
 
-- **-g** _username_ | **--github** _username_:
-  Sets the GitHub username. This information is not saved in the __info file__
-  but it enables **jeep-new** to infer values to associate with the ``url``
-  and ``repo`` keys.
+- **-f** _url_ | **--forge** _url_:
+  Sets the forge where the bundle will be hosted. This information is not saved
+  in the __info file__ but it enables **jeep-new** to infer URLs to associate
+  with the ``:url`` and ``:repo`` keys. An example would be
+  'github.com/octocat'.
 
 - **-i** _type_ | **--license** _type_:
   Sets the license of the bundle. **jeep-new** is able to generate license
@@ -89,6 +90,7 @@ Options
 
   - \.gitignore
   - README.me
+  - binscript
   - bundle.janet
   - info.jdn
   - project.janet
