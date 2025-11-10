@@ -17,10 +17,10 @@ SYNOPSIS
 **jeep-new** [**-a** _name_ | **--author** _name_] [**-d** _text_ | **--desc**
              _text_] [**-i** _type_ | **--license** _type_] [**-f** _url_ |
              **--forge** _url_] [**-u** _url_ | **--url** _url_] [**-r** _url_ |
-             **--repo** _url_] [**-e** | **--exe**] [**-l** | **--lib**]
-             [**-m** | **--man**] [**-n** | **--nat**] [**-s** | **--scr**]
-             [**-b** | **--bare**] [**-A** | **--no-ask**] [**-t** _dir_ |
-             **--templates** _dir_] _name_
+             **--repo** _url_] [**-e** | **--executable**] [**-l** |
+             **--library**] [**-m** | **--manpage**] [**-n** | **--native**]
+             [**-s** | **--script**] [**-b** | **--bare**] [**-A** |
+             **--no-ask**] [**-t** _dir_ | **--templates** _dir_] _name_
 
 DESCRIPTION
 ===========

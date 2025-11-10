@@ -74,21 +74,21 @@
                      :proxy "url"
                      :help (helps :repo)}
            "----"
-           "--exe" {:kind :flag
-                    :short "e"
-                    :help (helps :art-exe)}
-           "--lib" {:kind :flag
-                    :short "l"
-                    :help (helps :art-lib)}
-           "--man" {:kind :flag
-                    :short "m"
-                    :help (helps :art-man)}
-           "--nat" {:kind :flag
-                    :short "n"
-                    :help (helps :art-nat)}
-           "--scr" {:kind :flag
-                    :short "s"
-                    :help (helps :art-scr)}
+           "--executable" {:kind :flag
+                           :short "e"
+                           :help (helps :art-exe)}
+           "--library" {:kind :flag
+                        :short "l"
+                        :help (helps :art-lib)}
+           "--manpage" {:kind :flag
+                        :short "m"
+                        :help (helps :art-man)}
+           "--native" {:kind :flag
+                       :short "n"
+                       :help (helps :art-nat)}
+           "--script" {:kind :flag
+                       :short "s"
+                       :help (helps :art-scr)}
            "----"
            "--bare" {:kind :flag
                      :short "b"
@@ -307,11 +307,11 @@
   (def forge (setup-forge opts))
   (put meta :url (answer "url" (string forge name)))
   (put meta :repo (answer "repo" (string "git+" forge name)))
-  (put meta :exe? (get opts "exe"))
-  (put meta :lib? (get opts "lib"))
-  (put meta :man? (get opts "man"))
-  (put meta :nat? (get opts "nat"))
-  (put meta :scr? (get opts "scr"))
+  (put meta :exe? (get opts "executable"))
+  (put meta :lib? (get opts "library"))
+  (put meta :man? (get opts "manpage"))
+  (put meta :nat? (get opts "native"))
+  (put meta :scr? (get opts "script"))
   # make files
   (make-info-file tdir meta bopts)
   # make optional files

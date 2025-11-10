@@ -62,7 +62,7 @@
               :err err]
     (h/in-dir d
       (def args {:sub {:params {:name "foo"}
-                       :opts {"lib" true
+                       :opts {"library" true
                               "no-ask" true}}})
       (subcmd/run args)
       (def expect-entries [".gitignore"
@@ -98,7 +98,7 @@
               :err err]
     (h/in-dir d
       (def args {:sub {:params {:name "foo"}
-                       :opts {"scr" true
+                       :opts {"script" true
                               "no-ask" true}}})
       (subcmd/run args)
       (def expect-entries [".gitignore"
@@ -136,7 +136,7 @@
               :err err]
     (h/in-dir d
       (def args {:sub {:params {:name "foo"}
-                       :opts {"exe" true
+                       :opts {"executable" true
                               "no-ask" true}}})
       (subcmd/run args)
       (def expect-entries [".gitignore"
@@ -170,7 +170,7 @@
               :err err]
     (h/in-dir d
       (def args {:sub {:params {:name "foo"}
-                       :opts {"man" true
+                       :opts {"manpage" true
                               "no-ask" true}}})
       (subcmd/run args)
       (def expect-entries [".gitignore"
@@ -206,7 +206,7 @@
               :err err]
     (h/in-dir d
       (def args {:sub {:params {:name "foo"}
-                       :opts {"nat" true
+                       :opts {"native" true
                               "no-ask" true}}})
       (subcmd/run args)
       (def expect-entries [".gitignore"
@@ -295,8 +295,8 @@
               :err err]
     (h/in-dir d
       (def args {:sub {:params {:name "foo"}
-                       :opts {"lib" true
-                              "man" true
+                       :opts {"library" true
+                              "manpage" true
                               "no-ask" true}}})
       (subcmd/run args)
       (def expect-entries [".gitignore"
