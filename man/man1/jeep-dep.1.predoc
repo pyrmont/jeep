@@ -15,7 +15,7 @@ SYNOPSIS
 ========
 
 **jeep-dep** [**-a** | **--autotag**] [**-r** | **--remove**] [**-u** |
-**--update**] [**-v** | **--vendor**] _deps_ ...
+             **--update**] [**-v** | **--vendor**] _deps_ ...
 
 DESCRIPTION
 ===========
