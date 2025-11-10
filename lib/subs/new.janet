@@ -235,17 +235,11 @@
     (nil? forge)
     "https://example.org/"
     (string/has-prefix? "https://" forge)
-    (if (string/has-suffix? "/" forge)
-      forge
-      (string forge "/"))
+    (string forge (unless (string/has-suffix? "/" forge) "/"))
     (string/has-prefix? "http://" forge)
-    (if (string/has-suffix? "/" forge)
-      forge
-      (string forge "/"))
+    (string forge (unless (string/has-suffix? "/" forge) "/"))
     # default
-    (if (string/has-suffix? "/" forge)
-      (string "https://" forge)
-      (string "https://" forge "/"))))
+    (string "https://" forge (unless (string/has-suffix? "/" forge) "/"))))
 
 (defn- setup-paths
   [user-dir]
