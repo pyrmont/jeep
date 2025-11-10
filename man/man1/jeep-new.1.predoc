@@ -52,7 +52,7 @@ Options
 - **-d** _text_ | **--desc** _text_:
   Sets the description of the bundle.
 
-- **-e** | **--exe**:
+- **-e** | **--executable**:
   Sets whether the bundle produces a compiled executable artifact.
 
 - **-f** _url_ | **--forge** _url_:
@@ -66,13 +66,13 @@ Options
   files for 'Apache-2.0', 'BSD-3-Clause', 'GPL-3.0', 'ISC' and 'MIT'. If a
   user uses one of those specific names, the file 'LICENSE' will be generated.
 
-- **-l** | **--lib**:
+- **-l** | **--library**:
   Sets whether the bundle produces a pure Janet library artifact.
 
-- **-m** | **--man**:
+- **-m** | **--manpage**:
   Sets whether the bundle produces a man page artifact.
 
-- **-n** | **--nat**:
+- **-n** | **--native**:
   Sets whether the bundle produces a native library artifact.
 
 - **-r** _url_ | **--repo** _url_:
@@ -81,7 +81,7 @@ Options
   ``git+https://github.com/<username>/<bundle>``. Otherwise, the placeholder
   ``https://example.org/<bundle>`` will be the inference.
 
-- **-s** | **--scr**:
+- **-s** | **--script**:
   Sets whether the bundle produces an executable script artifact.
 
 - **-t** _dir_ | **--templates** _dir_:
