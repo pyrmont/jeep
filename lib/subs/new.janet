@@ -115,7 +115,7 @@
   (array/push to-make [(string/join path-bits util/sep) contents mode]))
 
 (defn- get-ask
-  [dict k &opt dflt]
+  [name dict k &opt dflt]
   (if (has-key? dict k)
     (break (get dict k)))
   (unless warned?
@@ -123,7 +123,6 @@
     (def hr (string/repeat "-" (length warn)))
     (print hr "\n" warn "\n" hr)
     (set warned? true))
-  (def name (get dict :name))
   (def dflt-desc (cond (= "" dflt) "<empty>" (nil? dflt) "nil" dflt))
   (def k-desc
     (case k
@@ -165,8 +164,9 @@
     (enqueue [dir "lib"]))
   (when (get meta :lib?)
     (enqueue [dir "lib"])
-    (enqueue [dir "init.janet" ""]))
+    (enqueue [dir "init.janet"] ""))
   (when (get meta :man?)
+    (enqueue [dir "man"])
     (enqueue [dir "man" "man1"])
     (def contents "Visit <pyrmont.github.io/predoc> for more information about Predoc.")
     (enqueue [dir "man" "man1" (string (get meta :name) ".1.predoc")] contents))
@@ -203,6 +203,7 @@
 
 (defn- make-license
   [dir meta opts]
+  (when (get opts :bare?) (break))
   (def ldir (get-in opts [:files :licenses]))
   (def lpath (string ldir util/sep (get meta :license) ".txt"))
   (when (= :file (os/stat lpath :mode))
@@ -250,6 +251,10 @@
   (if (= :file (os/stat rm-path :mode))
     (put res :readme rm-path)
     (put res :readme (string template-dir util/sep "README.md")))
+  (def sf-path (string dir util/sep "binscript"))
+  (if (= :file (os/stat sf-path :mode))
+    (put res :binscript sf-path)
+    (put res :binscript (string template-dir util/sep "binscript")))
   res)
 
 (defn run
@@ -261,7 +266,6 @@
   (set warned? false)
   # setup name
   (def name (get params :name))
-  (put opts :name name)
   # setup target directory
   (assertf (nil? (os/stat name)) "directory '%s' already exists" name)
   (def tdir name)
@@ -271,7 +275,10 @@
   (put bopts :ask? (nil? (get opts "no-ask")))
   (put bopts :files (setup-paths (get opts "templates")))
   # setup answer function
-  (def answer (partial (if (get bopts :ask?) get-ask get) opts))
+  (def answer
+    (if (get bopts :ask?)
+      (partial get-ask name opts)
+      (partial get opts)))
   # setup bundle metadata
   (def meta @{})
   (put meta :name name)
