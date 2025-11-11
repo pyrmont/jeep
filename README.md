@@ -23,6 +23,7 @@ Jeep offers the following commands for use at both the global and bundle level:
 
 - `jeep install`
 - `jeep list`
+- `jeep new`
 - `jeep quickbin`
 - `jeep uninstall`
 
