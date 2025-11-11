@@ -1,4 +1,7 @@
-(def info (-> (slurp "info.jdn") parse))
+(def if1 (when (os/stat "info.jdn") "info.jdn"))
+(def if2 (when (and (not if1) (os/stat "bundle/info.jdn")) "bundle/info.jdn"))
+(def info-file (or if1 if2 (error "no info file in bundle")))
+(def info (-> (slurp info-file) parse))
 
 (declare-project
   :name (info :name)
