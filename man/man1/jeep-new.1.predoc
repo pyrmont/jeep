@@ -70,8 +70,8 @@ Options
   'github.com/octocat'.
 
 - **-i** _type_ | **--license** _type_:
-  Sets the license of the bundle. **jeep-new** is able to generate license
-  files for 'Apache-2.0', 'BSD-3-Clause', 'GPL-3.0', 'ISC' and 'MIT'. If a
+  Sets the license of the bundle. **jeep-new** is able to generate license files
+  for 'Apache-2.0', 'BSD-3-Clause', 'CC0-1.0', 'GPL-3.0', 'ISC' and 'MIT'. If a
   user uses one of those specific names, the file 'LICENSE' will be generated.
 
 - **-k** _type_ | **--alias** _type_:
@@ -109,7 +109,8 @@ Options
 - _name_:
   The name of the bundle.
 
-For more information about the __info file__, see CONCEPTS in `jeep(1)`.
+For more information about the __info file__ and __bundle script__, see CONCEPTS
+in `jeep(1)`.
 
 TEMPLATES
 =========
@@ -128,6 +129,7 @@ In addition, the following template license files are also included:
 
 - Apache-2.0
 - BSD-3-Clause
+- CC0-1.0
 - GPL-3.0
 - ISC
 - MIT

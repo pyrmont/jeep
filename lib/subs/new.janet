@@ -42,8 +42,8 @@
    `The repository URL of the bundle.`
    :templates
    `A directory containing the templates to use. When generating files, Jeep
-   will check it first for '.gitignore', 'README.md', 'bundle.janet, 'info.jdn'
-   and 'project.janet'.`
+   will check it first for 'licenses/', '.gitignore', 'README.md', 'binscript',
+   'bundle.janet, 'info.jdn' and 'project.janet'.`
    :url
    `The URL of the bundle.`
    :about
