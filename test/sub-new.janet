@@ -343,4 +343,70 @@
   (is (empty? out))
   (is (empty? err)))
 
+(deftest create-bundle-with-alias-bundle
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir d
+      (def args {:sub {:params {:name "foo"}
+                       :opts {"alias" ["bundle"]
+                              "no-ask" true}}})
+      (subcmd/run args)
+      (def expect-entries [".gitignore"
+                           "LICENSE"
+                           "README.md"
+                           "bundle.janet"
+                           "info.jdn"
+                           "test"])
+      (def actual-entries (sort (os/dir (string d h/sep "foo"))))
+      (is (== expect-entries actual-entries))))
+  (def expect-out
+    ```
+    adding foo/info.jdn...
+    adding foo/bundle.janet...
+    adding foo/.gitignore...
+    adding foo/LICENSE...
+    adding foo/README.md...
+    adding foo/test...
+    Bundle created.
+    ```)
+  (is (== (h/add-nl expect-out) out))
+  (is (empty? err)))
+
+(deftest create-bundle-with-no-alias-info
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir d
+      (def args {:sub {:params {:name "foo"}
+                       :opts {"no-alias" ["info"]
+                              "no-ask" true}}})
+      (subcmd/run args)
+      (def expect-entries [".gitignore"
+                           "LICENSE"
+                           "README.md"
+                           "bundle"
+                           "test"])
+      (def actual-entries (sort (os/dir (string d h/sep "foo"))))
+      (is (== expect-entries actual-entries))
+      # Verify bundle directory contents
+      (def expect-bundle-entries ["info.jdn" "init.janet"])
+      (def actual-bundle-entries (sort (os/dir (string d h/sep "foo" h/sep "bundle"))))
+      (is (== expect-bundle-entries actual-bundle-entries))))
+  (def expect-out
+    ```
+    adding foo/bundle...
+    adding foo/bundle/info.jdn...
+    adding foo/bundle/init.janet...
+    adding foo/.gitignore...
+    adding foo/LICENSE...
+    adding foo/README.md...
+    adding foo/test...
+    Bundle created.
+    ```)
+  (is (== (h/add-nl expect-out) out))
+  (is (empty? err)))
+
 (run-tests!)

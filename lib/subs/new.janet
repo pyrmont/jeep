@@ -7,6 +7,9 @@
   {:name
    `The name of the bundle to create. Used as both the directory name and the
    bundle name in the info file.`
+   :alias
+   `Create the bundle script or info file in its aliased path. Valid values are
+   'bundle' or 'info'.`
    :art-exe
    `Use when a native executable artifact is produced.`
    :art-lib
@@ -30,6 +33,9 @@
    :license
    `The license type for the bundle. Jeep can generate license files for
    certain licenses. See 'man jeep-new' for a complete list.`
+   :no-alias
+   `Create the bundle script or info file in its non-aliased path. Valid values
+   are 'bundle' or 'info'.`
    :no-ask
    `Do not ask for missing options.`
    :repo
@@ -90,9 +96,15 @@
                        :short "s"
                        :help (helps :art-scr)}
            "----"
+           "--alias" {:kind :multi
+                      :short "k"
+                      :help (helps :alias)}
            "--bare" {:kind :flag
                      :short "b"
                      :help (helps :bare)}
+           "--no-alias" {:kind :multi
+                         :short "K"
+                         :help (helps :alias)}
            "--no-ask" {:kind :flag
                        :short "A"
                        :help (helps :no-ask)}
@@ -190,8 +202,11 @@
   (when (get opts :bare?) (break))
   (def t (slurp (get-in opts [:files :bundle-script])))
   (def contents (musty/render t meta))
-  (enqueue [dir "bundle"])
-  (enqueue [dir "bundle" "init.janet"] contents))
+  (if (get-in opts [:aliases :bundle])
+    (enqueue [dir "bundle.janet"] contents)
+    (do
+      (enqueue [dir "bundle"])
+      (enqueue [dir "bundle" "init.janet"] contents))))
 
 (defn- make-gitignore
   [dir meta opts]
@@ -204,7 +219,11 @@
   [dir meta opts]
   (def t (slurp (get-in opts [:files :info-file])))
   (def contents (musty/render t meta))
-  (enqueue [dir "info.jdn"] contents))
+  (if (get-in opts [:aliases :info])
+    (enqueue [dir "info.jdn"] contents)
+    (do
+      (enqueue [dir "bundle"])
+      (enqueue [dir "bundle" "info.jdn"] contents))))
 
 (defn- make-license
   [dir meta opts]
@@ -228,9 +247,27 @@
   (def contents (musty/render t meta))
   (enqueue [dir "README.md"] contents))
 
+(defn- setup-aliases
+  [aliases no-aliases]
+  (assert (not (and (index-of "bundle" aliases)
+                    (index-of "bundle" no-aliases)))
+          "cannot set 'bundle' in --alias and --no-alias")
+  (assert (not (and (index-of "info" aliases)
+                    (index-of "info" no-aliases)))
+          "cannot set 'info' in --alias and --no-alias")
+  (def res @{:bundle false :info true})
+  (if (index-of "bundle" aliases)
+    (put res :bundle true))
+  (if (index-of "info" aliases)
+    (put res :info true))
+  (if (index-of "bundle" no-aliases)
+    (put res :bundle false))
+  (if (index-of "info" no-aliases)
+    (put res :info false))
+  res)
+
 (defn- setup-forge
-  [opts]
-  (def forge (get opts "forge"))
+  [forge]
   (cond
     (nil? forge)
     "https://example.org/"
@@ -291,6 +328,8 @@
   (put bopts :bare? (not (nil? (get opts "bare"))))
   (put bopts :ask? (nil? (get opts "no-ask")))
   (put bopts :files (setup-paths (get opts "templates")))
+  (put bopts :aliases (setup-aliases (get opts "alias" [])
+                                     (get opts "no-alias" [])))
   # setup answer function
   (def answer
     (if (get bopts :ask?)
@@ -304,7 +343,7 @@
   (put meta :author (answer "author" (get-author)))
   (put meta :year (os/strftime "%Y" (os/time) true))
   (put meta :license (answer "license" "MIT"))
-  (def forge (setup-forge opts))
+  (def forge (setup-forge (get opts "forge")))
   (put meta :url (answer "url" (string forge name)))
   (put meta :repo (answer "repo" (string "git+" forge name)))
   (put meta :exe? (get opts "executable"))
@@ -324,10 +363,12 @@
   # update file system
   (util/mkdir tdir)
   (each [path contents mode] to-make
-    (print "adding " path "...")
     (if (nil? contents)
-      (util/mkdir path)
-      (spit path contents))
+      (if (util/mkdir path)
+        (print "adding " path "..."))
+      (do
+        (print "adding " path "...")
+        (spit path contents)))
     (when mode
       (os/chmod path mode)))
   (print "Bundle created."))
