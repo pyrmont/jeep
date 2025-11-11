@@ -83,12 +83,11 @@
 (defn- install-mans [manifest &]
   (def mans (get-in manifest [:info :artifacts :manpages] []))
   (each m mans
-    (def bits (peg/match pathg))
-    (var dir nil)
+    (def bits (peg/match pathg m))
+    (array/pop bits)
+    (var dir (dyn :syspath))
     (each b bits
-      (if (nil? dir)
-        (set dir b)
-        (set dir (string dir s b)))
+      (set dir (string dir s b))
       (os/mkdir dir))
     (bundle/add-file manifest m)))
 
