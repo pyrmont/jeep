@@ -1,10 +1,10 @@
-{:name "{{name}}"
- :version "{{version}}"
- :description "{{desc}}"
- :author "{{author}}"
- :license "{{license}}"
- :url "{{url}}"
- :repo "{{repo}}"
+{:name "{{{name}}}"
+ :version "{{{version}}}"
+ :description "{{{desc}}}"
+ :author "{{{author}}}"
+ :license "{{{license}}}"
+ :url "{{{url}}}"
+ :repo "{{{repo}}}"
  :dependencies []
  :vendored []
  :artifacts {:executables []

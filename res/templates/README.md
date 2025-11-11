@@ -1,10 +1,10 @@
-# {{name}}
+# {{{name}}}
 
 [Description]
 
 ## Rationale
 
-[Rational]
+[Rationale]
 
 ## Installation
 
@@ -24,6 +24,6 @@
 
 ## License
 
-{{name}} is licensed under the {{license}} License. See [LICENSE][] for more details.
+{{{name}}} is licensed under the {{{license}}} License. See [LICENSE][] for more details.
 
 [LICENSE]: LICENSE
