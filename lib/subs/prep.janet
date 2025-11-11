@@ -32,7 +32,7 @@
 
 (defn- vendor-deps-legacy
   [dirs-deps &named force-deps?]
-  (def msg (string "use of %s with :vendored is deprecated, "
+  (def msg (string "warning: use of %ss with :vendored is deprecated, "
                    "refer to the man page for more information"))
   (printf msg (string (type dirs-deps)))
   (each [dir deps] (pairs dirs-deps)
@@ -44,7 +44,8 @@
 (defn- vendor-deps
   [deps &named force-deps?]
   (each d deps
-    (if (has-key? d :files)
+    (if (or (has-key? d :paths)
+            (has-key? d :files))
       (util/fetch-dep d)
       (do
         (def dir (get d :prefix "."))
@@ -75,7 +76,7 @@
   (print "  copying LICENSE to " bundle-dir util/sep "spork" util/sep "LICENSE")
   (util/copy from-licence to-licence)
   (each f essentials
-    (def from (string spork-dir util/sep "spork" util/sep f))
+    (def from (string spork-dir util/sep f))
     (def to (string bundle-dir util/sep "spork" util/sep f))
     (print "  copying " f " to " to)
     (util/copy from to)))

@@ -6,38 +6,36 @@
  :url "https://github.com/pyrmont/jeep"
  :repo "git+https://github.com/pyrmont/jeep"
 
- :vendored {
-   "deps" [
-     {:name "argy-bargy"
-      :url "https://github.com/pyrmont/argy-bargy"
-      :prefix "argy-bargy"
-      :files ["argy-bargy.janet"
-              "LICENSE"]}
-     {:name "musty"
-      :url "https://github.com/pyrmont/musty"
-      :prefix "musty"
-      :files ["lib/musty.janet"
-              "init.janet"
-              "LICENSE"]}
-     {:name "spork"
-      :url "https://github.com/janet-lang/spork"
-      :prefix "spork"
-      :files ["spork/build-rules.janet"
-              "spork/cc.janet"
-              "spork/cjanet.janet"
-              "spork/declare-cc.janet"
-              "spork/path.janet"
-              "spork/pm.janet"
-              "spork/pm-config.janet"
-              "spork/sh.janet"
-              "spork/stream.janet"
-              "LICENSE"]}
-     {:name "testament"
-      :url "https://github.com/pyrmont/testament"
-      :prefix "testament"
-      :files ["lib/testament.janet"
-              "init.janet"
-              "LICENSE"]}]}
+ :vendored [{:name "argy-bargy"
+             :url "https://github.com/pyrmont/argy-bargy"
+             :prefix "deps/argy-bargy"
+             :paths ["argy-bargy.janet"
+                     "LICENSE"]}
+            {:name "musty"
+             :url "https://github.com/pyrmont/musty"
+             :prefix "deps/musty"
+             :paths ["lib/musty.janet"
+                     "init.janet"
+                     "LICENSE"]}
+            {:name "spork"
+             :url "https://github.com/janet-lang/spork"
+             :prefix "deps"
+             :paths ["spork/build-rules.janet"
+                     "spork/cc.janet"
+                     "spork/cjanet.janet"
+                     "spork/declare-cc.janet"
+                     "spork/path.janet"
+                     "spork/pm.janet"
+                     "spork/pm-config.janet"
+                     "spork/sh.janet"
+                     "spork/stream.janet"
+                     ["LICENSE" "spork/LICENSE"]]}
+            {:name "testament"
+             :url "https://github.com/pyrmont/testament"
+             :prefix "deps/testament"
+             :paths ["lib/testament.janet"
+                     "init.janet"
+                     "LICENSE"]}]
 
  :artifacts {:libraries [{:prefix "jeep"
                           :paths ["deps"

@@ -1,4 +1,4 @@
-(import ../deps/spork/spork/pm)
+(import ../deps/spork/pm)
 (import ./util)
 
 (defn- manifest-pm-extract

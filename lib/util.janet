@@ -2,7 +2,7 @@
 (defdyn *tarpath* "What tar command to use to fetch dependencies")
 (defdyn *curlpath* "What curl command to use to fetch dependencies")
 
-(def colours {:green "\e[32m" :red "\e[31m"})
+(def colours {:green "\e[32m" :orange "\e[33m" :red "\e[31m"})
 
 (def sep (get {:windows "\\" :cygwin "\\" :mingw "\\"} (os/which) "/"))
 (def esc (cond (os/getenv "PSModulePath")
@@ -218,7 +218,11 @@
   (def {:url url
         :tag tag
         :prefix prefix
-        :files files} dep)
+        :paths files} dep)
+  (default files
+    (do
+      (print "warning: use of :files is deprecated in vendored dependencies")
+      (get dep :files)))
   (assert url (error "fetched bundles need a :url key"))
   (def tmp (tmp-dir))
   (def cwd (os/cwd))

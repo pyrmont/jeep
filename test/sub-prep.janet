@@ -144,8 +144,9 @@
       (is (== ["mod1.janet" "mod2.janet"] (sorted (os/dir libpath))))))
   (def origin "../../res/fixtures/example")
   (def expect-out
-    (string "use of struct with :vendored is deprecated, "
+    (string "warning: use of structs with :vendored is deprecated, "
             "refer to the man page for more information" nl
+            "warning: use of :files is deprecated in vendored dependencies" nl
             "vendoring " origin " to deps" h/sep "example" nl
             "  copying " origin h/sep "lib to deps" h/sep "example" h/sep "lib" nl
             confirmation))
@@ -165,7 +166,7 @@
             {:name "example"
              :url "file::../../res/fixtures/example"
              :prefix "deps/example"
-             :files ["lib"]}]})
+             :paths ["lib"]}]})
       (def path (h/make-bundle "." ;(kvs dep)))
       (os/cd path)
       (def args {:sub {:params {:profile "vendor"}}})
@@ -193,7 +194,7 @@
             {:name "example"
              :url "file::../../res/fixtures/example"
              :prefix "deps/example"
-             :files [["lib/mod1.janet" "foo/"]
+             :paths [["lib/mod1.janet" "foo/"]
                      ["lib/mod2.janet" "foo/mod2.janet"]]}]})
       (def path (h/make-bundle "." ;(kvs dep)))
       (os/cd path)
@@ -222,7 +223,7 @@
          :vendored [
             {:name "example"
              :url "file::../../res/fixtures/example"
-             :files ["lib"]}]})
+             :paths ["lib"]}]})
       (def path (h/make-bundle "." ;(kvs dep)))
       (os/cd path)
       (def args {:sub {:params {:profile "vendor"}}})

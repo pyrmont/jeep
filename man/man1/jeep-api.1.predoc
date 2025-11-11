@@ -1,6 +1,6 @@
 ---
 Title: JEEP-API(1)
-Date: 2025/09/20
+Date: 2025/11/12
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -22,15 +22,24 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-**jeep-api** generates an API document based on information in a bundle's info
-file. The document is output as a Markdown-formatted text file that will display
-nicely in online hosting repository websites (e.g. GitHub).
+**jeep-api** generates an API document based on information in a bundle's
+__info file__. The document is output as a Markdown-formatted text file that
+will display nicely in online hosting repository websites (e.g. GitHub).
 
-Note that, in order to generate a document, the info file __must__ describe the
-files in a particular way. Namely, the struct/table must include a ``:source``
-key which must be associated with a struct/table that includes a ``:files`` key
-that must be associated with an array/tuple listing the files. If this is not
-present, Jeep will exit with an error.
+In order to generate a document, the __info file__ must describe the
+files in a particular way. This is best seen with an example:
+
+````
+{:name "foobar"
+ :artifacts {:libraries [{:prefix "foobar"
+                          :paths ["a.janet"
+                                  "b.janet"]}]}}
+````
+
+As can be seen above, the __info file__ must include (1) a struct/table with an
+``:artifacts`` key that is mapped to (2) a struct/table with a ``:libraries``
+key that is mapped to (3) an array/tuple with (4) one or more struct/tables
+with a ``:paths`` key. If this is not present, Jeep will exit with an error.
 
 Options
 -------

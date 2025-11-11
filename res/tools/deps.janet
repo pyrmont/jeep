@@ -4,8 +4,7 @@
   [& args]
   (def project-root (-> (dyn :current-file)
                         (util/abspath)
-                        (util/parent 2)))
+                        (util/parent 3)))
   (def info (util/load-meta project-root))
-  (each [dir deps] (pairs (get info :vendored))
-    (each d deps
-      (util/fetch-dep dir d))))
+  (each dep (get info :vendored)
+    (util/fetch-dep dep)))

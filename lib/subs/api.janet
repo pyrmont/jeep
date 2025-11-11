@@ -299,9 +299,12 @@
   [info-file]
   (assertf (os/stat info-file) "file %s does not exist" info-file)
   (def info (-> (slurp info-file) (parse)))
-  (def files (get-in info [:source :files]))
-  (assert files "info file does not have keys [:source :files]")
-  (assert (indexed? files) "info file does not have array/tuple under [:source :files]")
+  (def libs (get-in info [:artifacts :libraries]))
+  (def files (get (first libs) :paths))
+  (assert libs "info file does not have libraries under [:artifacts :libraries]")
+  (assert (indexed? libs) "info file does not have array/tuple under [:artifacts :libraries]")
+  (assert files "info file does not have paths in the first element of the array/tuple under [:artifacts :libraries]")
+  (assert (indexed? files) "info file does not have array/tuple in the first element of the array/tuple under [:artifacts :libraries]")
   info)
 
 (defn- abspath
@@ -311,14 +314,17 @@
     (os/realpath (string root util/sep path))))
 
 (defn- filter-paths
-  [paths bundle-root matches no-matches]
+  [libs bundle-root matches no-matches]
   (def res @[])
   (def includes (if matches (map (fn [s] (abspath s bundle-root)) matches)))
   (def excludes (if no-matches (map (fn [s] (abspath s bundle-root)) no-matches)))
   (def abspaths
     (do
       (def res @[])
-      (def check (map (fn [s] (abspath s bundle-root)) paths))
+      (def check @[])
+      (each l libs
+        (array/concat check (map (fn [s] (abspath s bundle-root)) (get l :paths))))
+      # (def check (map (fn [s] (abspath s bundle-root)) paths))
       (each c check
         (case (os/stat c :mode)
           :file
@@ -371,7 +377,7 @@
       path))
   (array/push module/paths [check-build-dir :native])
   # determine paths to scan
-  (def paths (filter-paths (get-in info [:source :files]) bundle-root matches no-matches))
+  (def paths (filter-paths (get-in info [:artifacts :libraries]) bundle-root matches no-matches))
   # get environments
   (def envs (tabseq [p :in paths] p (extract-env p syspath)))
   # get bindings

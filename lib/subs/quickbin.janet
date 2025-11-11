@@ -1,4 +1,4 @@
-(import ../../deps/spork/spork/declare-cc :as dcc)
+(import ../../deps/spork/declare-cc :as dcc)
 
 (def- helps
   {:script

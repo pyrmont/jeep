@@ -302,7 +302,7 @@
     (h/in-dir d
       (def args {:sub {:params {:input (string example-broken "/no-source.jdn")}
                        :opts {"output" "api.md"}}})
-      (assert-thrown-message "info file does not have keys [:source :files]"
+      (assert-thrown-message "info file does not have libraries under [:artifacts :libraries]"
                              (subcmd/run args))))
   (is (empty? out))
   (is (empty? err)))
@@ -315,7 +315,7 @@
     (h/in-dir d
       (def args {:sub {:params {:input (string example-broken "/no-list.jdn")}
                        :opts {"output" "api.md"}}})
-      (assert-thrown-message "info file does not have keys [:source :files]"
+      (assert-thrown-message "info file does not have libraries under [:artifacts :libraries]"
                              (subcmd/run args))))
   (is (empty? out))
   (is (empty? err)))
