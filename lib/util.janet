@@ -2,7 +2,7 @@
 (defdyn *tarpath* "What tar command to use to fetch dependencies")
 (defdyn *curlpath* "What curl command to use to fetch dependencies")
 
-(def colours {:green "\e[32m" :orange "\e[33m" :red "\e[31m"})
+(def colours {:green "\e[32m" :red "\e[31m"})
 
 (def sep (get {:windows "\\" :cygwin "\\" :mingw "\\"} (os/which) "/"))
 (def esc (cond (os/getenv "PSModulePath")
