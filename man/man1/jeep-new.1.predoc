@@ -118,7 +118,7 @@ TEMPLATES
 **jeep-new** comes with the following template files to populate a new bundle
 directory:
 
-- \.gitignore
+- .gitignore
 - README.me
 - binscript
 - bundle.janet
