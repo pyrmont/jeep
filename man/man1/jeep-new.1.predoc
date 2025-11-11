@@ -19,8 +19,10 @@ SYNOPSIS
              **--forge** _url_] [**-u** _url_ | **--url** _url_] [**-r** _url_ |
              **--repo** _url_] [**-e** | **--executable**] [**-l** |
              **--library**] [**-m** | **--manpage**] [**-n** | **--native**]
-             [**-s** | **--script**] [**-b** | **--bare**] [**-A** |
-             **--no-ask**] [**-t** _dir_ | **--templates** _dir_] _name_
+             [**-s** | **--script**] [**-k** _type_ | **--alias** _type_]
+             [**-K** _type_ | **--no-alias** _type_] [**-b** | **--bare**]
+             [**-A** | **--no-ask**] [**-t** _dir_ | **--templates** _dir_]
+             _name_
 
 DESCRIPTION
 ===========
@@ -40,6 +42,12 @@ Options
   certain options. The information **jeep-new** will ask about are values
   specified in the **--author**, **--desc**, **--license**, **--repo** and
   **--url** options.
+
+- **-K** _type_ | **--no-alias** _type_:
+  Sets whether to not use the aliased path for _type_. The valid values for
+  _type_ are ***bundle*** and ***info***. By default, the __info file__ uses an
+  alias (it is saved in `./info.jdn`) and the __bundle script__ does not (it is
+  saved `./bundle/init.janet`).
 
 - **-a** _name_ | **--author** _name_:
   Sets the name of the author of the bundle. If not provided, **jeep-new**
@@ -66,6 +74,12 @@ Options
   files for 'Apache-2.0', 'BSD-3-Clause', 'GPL-3.0', 'ISC' and 'MIT'. If a
   user uses one of those specific names, the file 'LICENSE' will be generated.
 
+- **-k** _type_ | **--alias** _type_:
+  Sets whether to use the aliased path for _type_. The valid values for _type_
+  are ***bundle*** and ***info***. By default, the __info file__ uses an alias
+  (it is saved in `./info.jdn`) and the __bundle script__ does not (it is saved
+  `./bundle/init.janet`).
+
 - **-l** | **--library**:
   Sets whether the bundle produces a pure Janet library artifact.
 
@@ -76,45 +90,57 @@ Options
   Sets whether the bundle produces a native library artifact.
 
 - **-r** _url_ | **--repo** _url_:
-  Sets the repository URL of the bundle. If the GitHub username is set with
-  **--github**, the inferred URL will be of the form
-  ``git+https://github.com/<username>/<bundle>``. Otherwise, the placeholder
-  ``https://example.org/<bundle>`` will be the inference.
+  Sets the repository URL of the bundle. If **--forge** is provided, the
+  inferred URL will be of the form ``git+https://<forge>/<bundle>``. Otherwise,
+  the placeholder ``https://example.org/<bundle>`` will be the inference.
 
 - **-s** | **--script**:
   Sets whether the bundle produces an executable script artifact.
 
 - **-t** _dir_ | **--templates** _dir_:
-  Sets a directory to look for templates. **jeep-new** includes the following
-  templates:
-
-  - \.gitignore
-  - README.me
-  - binscript
-  - bundle.janet
-  - info.jdn
-  - project.janet
-
-  **jeep-new** also includes a number of licenses in a ``license/`` directory
-  (described above  in under **--license**). If a user specifies a templates
-  directory, that directory will be searched for each file first before
-  **jeep-new** falls back on the included templates. This allows a user to
-  specify only some of the templates.
-
-  The templates are processed through Musty, a Janet implementation of the
-  Mustache templating language. More information is available at
-  <https://github.com/pyrmont/musty>.
+  Sets a directory to look for templates. See `<TEMPLATES>` below for more
+  information.
 
 - **-u** _url_ | **--url** _url_:
-  Sets the URL of the bundle. If the GitHub username is set with **--github**,
-  the inferred URL will be of the form ``https://github.com/<username>/<bundle>``.
-  Otherwise, the placeholder ``https://example.org/<bundle>`` will be the
-  inference.
+  Sets the URL of the bundle. If **--forge** is provided, the inferred URL will
+  be of the form ``https://<forge>/<bundle>``. Otherwise, the placeholder
+  ``https://example.org/<bundle>`` will be the inference.
 
 - _name_:
   The name of the bundle.
 
 For more information about the __info file__, see CONCEPTS in `jeep(1)`.
+
+TEMPLATES
+=========
+
+**jeep-new** comes with the following template files to populate a new bundle
+directory:
+
+- \.gitignore
+- README.me
+- binscript
+- bundle.janet
+- info.jdn
+- project.janet
+
+In addition, the following template license files are also included:
+
+- Apache-2.0
+- BSD-3-Clause
+- GPL-3.0
+- ISC
+- MIT
+
+If an individual user finds that these templates are insufficient, **jeep-new**
+can be directed to look in a different template directory using the
+**--templates** option. If the template directory does not contain a particular
+file, **jeep-new** will fall back to using the provided template.
+
+Templates are processed through Musty, a Janet implementation of the Mustache
+templating language. The values in the __info file__ are available under the
+same keys (e.g. the name of the bundle can be replaced with ``{{{name}}}``).
+For more information, see <https://mustache.github.io>.
 
 EXAMPLES
 ========
