@@ -71,9 +71,9 @@ installed. Second, the prep __bundle hook__ is run.
 
 The project author specifies each dependency using a struct. The struct should,
 at a minimum, include the ``:name`` and ``:url`` keys. If the struct includes a
-``:files`` key, the dependency is not installed using the Janet's
+``:paths`` key, the dependency is not installed using the Janet's
 ``bundle/install`` function. Instead **jeep-prep** downloads the dependency and
-then copies the files listed. Files can be specified as strings or as two-
+then copies the paths listed. Paths can be specified as strings or as two-
 element array/tuples containing a source and destination path. The source path
 is relative to the root of the dependency. The destination path is relative to
 the directory specified in the ``:prefix`` (if no directory is specified, the
@@ -112,7 +112,7 @@ The following examples assume an __info file__ as follows:
    {:name "dep5"
     :url "https://example.org/dep5"
     :prefix "deps/dep5"
-    :files ["foo.janet"
+    :paths ["foo.janet"
             "LICENSE"]}]}
 ````
 
