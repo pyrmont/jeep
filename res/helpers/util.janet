@@ -134,8 +134,8 @@
               :vendored vendored})
   (def broot (string dir sep name))
   (mkdirp broot)
-  (spit (string broot sep "info.jdn") (format info))
-  (spit (string broot sep "bundle.janet") script)
+  (spit (string broot sep "info.jdn") (format info) :wb)
+  (spit (string broot sep "bundle.janet") script :wb)
   (os/realpath broot))
 
 (defn make-manifests
@@ -147,7 +147,7 @@
     (def mpath (string mroot sep (meta :name)))
     (mkdirp mpath)
     (def manifest (string/format "%j" meta))
-    (spit (string mpath sep "manifest.jdn") manifest)))
+    (spit (string mpath sep "manifest.jdn") manifest :wb)))
 
 (defn make-syspath
   "Creates a new syspath"

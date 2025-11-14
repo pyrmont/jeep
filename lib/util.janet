@@ -103,7 +103,7 @@
 
 (defn spit-maybe
   [path s]
-  (when-with [f (file/open path :w)]
+  (when-with [f (file/open path :wb)]
     (file/write f s)))
 
 (defn tmp-dir
