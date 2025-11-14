@@ -31,7 +31,7 @@
     adding foo/test...
     Bundle created.
     ```)
-  (is (== (-> (h/add-nl expect-out) h/fix-eols) out))
+  (is (== (-> (h/add-nl expect-out) h/fix-seps) out))
   (is (empty? err)))
 
 (deftest create-bare-bundle
@@ -52,7 +52,7 @@
     adding foo/info.jdn...
     Bundle created.
     ```)
-  (is (== (-> (h/add-nl expect-out) h/fix-eols) out))
+  (is (== (-> (h/add-nl expect-out) h/fix-seps) out))
   (is (empty? err)))
 #
 (deftest create-bundle-with-lib-artifact
@@ -88,7 +88,7 @@
     adding foo/test...
     Bundle created.
     ```)
-  (is (== (-> (h/add-nl expect-out) h/fix-eols) out))
+  (is (== (-> (h/add-nl expect-out) h/fix-seps) out))
   (is (empty? err)))
 #
 (deftest create-bundle-with-script-artifact
@@ -126,7 +126,7 @@
     adding foo/test...
     Bundle created.
     ```)
-  (is (== (-> (h/add-nl expect-out) h/fix-eols) out))
+  (is (== (-> (h/add-nl expect-out) h/fix-seps) out))
   (is (empty? err)))
 #
 (deftest create-bundle-with-exe-artifact
@@ -160,7 +160,7 @@
     adding foo/test...
     Bundle created.
     ```)
-  (is (== (-> (h/add-nl expect-out) h/fix-eols) out))
+  (is (== (-> (h/add-nl expect-out) h/fix-seps) out))
   (is (empty? err)))
 #
 (deftest create-bundle-with-man-artifact
@@ -196,7 +196,7 @@
     adding foo/test...
     Bundle created.
     ```)
-  (is (== (-> (h/add-nl expect-out) h/fix-eols) out))
+  (is (== (-> (h/add-nl expect-out) h/fix-seps) out))
   (is (empty? err)))
 #
 (deftest create-bundle-with-nat-artifact
@@ -230,7 +230,7 @@
     adding foo/test...
     Bundle created.
     ```)
-  (is (== (-> (h/add-nl expect-out) h/fix-eols) out))
+  (is (== (-> (h/add-nl expect-out) h/fix-seps) out))
   (is (empty? err)))
 #
 (deftest create-bundle-with-custom-metadata
@@ -285,7 +285,7 @@
     adding foo/test...
     Bundle created.
     ```)
-  (is (== (-> (h/add-nl expect-out) h/fix-eols) out))
+  (is (== (-> (h/add-nl expect-out) h/fix-seps) out))
   (is (empty? err)))
 #
 (deftest create-bundle-with-multiple-artifacts
@@ -326,7 +326,7 @@
     adding foo/test...
     Bundle created.
     ```)
-  (is (== (-> (h/add-nl expect-out) h/fix-eols) out))
+  (is (== (-> (h/add-nl expect-out) h/fix-seps) out))
   (is (empty? err)))
 
 (deftest fail-when-directory-exists
@@ -371,7 +371,7 @@
     adding foo/test...
     Bundle created.
     ```)
-  (is (== (-> (h/add-nl expect-out) h/fix-eols) out))
+  (is (== (-> (h/add-nl expect-out) h/fix-seps) out))
   (is (empty? err)))
 
 (deftest create-bundle-with-no-alias-info
@@ -406,7 +406,7 @@
     adding foo/test...
     Bundle created.
     ```)
-  (is (== (-> (h/add-nl expect-out) h/fix-eols) out))
+  (is (== (-> (h/add-nl expect-out) h/fix-seps) out))
   (is (empty? err)))
 
 (run-tests!)

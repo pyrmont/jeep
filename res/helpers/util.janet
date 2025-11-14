@@ -117,6 +117,13 @@
   [src dest]
   (cpr src dest))
 
+(defn fix-seps
+  "Normalise path separators in s to be platform-specific."
+  [s]
+  (if (= "\\" sep)
+    (string/replace "/" "\\" s)
+    s))
+
 (defn info-file
   "Retrieves the info file in `d`"
   [d]
@@ -155,11 +162,6 @@
   (mkdirp (string "_system" sep "bundle"))
   (def syspath (os/realpath "_system"))
   (setdyn :syspath syspath))
-
-(defn fix-eols
-  "Normalise EOL characters to be \n."
-  [s]
-  (string/replace "\r\n" "\n" s))
 
 (defmacro in-dir
   ```
