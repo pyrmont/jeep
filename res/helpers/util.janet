@@ -156,6 +156,11 @@
   (def syspath (os/realpath "_system"))
   (setdyn :syspath syspath))
 
+(defn fix-eols
+  "Normalise EOL characters to be \n."
+  [s]
+  (string/replace "\r\n" "\n" s))
+
 (defmacro in-dir
   ```
   Evaluates `body` in a temporary directory
