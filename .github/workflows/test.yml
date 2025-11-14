@@ -55,6 +55,9 @@ jobs:
     name: "Test on Windows"
     runs-on: windows-latest
     steps:
+    - name: "disable git autocrlf"
+      shell: cmd
+      run: git config --global core.autocrlf fals
     - name: "checkout project"
       uses: actions/checkout@v4
       with:
