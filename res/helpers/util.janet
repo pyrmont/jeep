@@ -121,7 +121,7 @@
   "Normalise path separators in s to be platform-specific."
   [s]
   (if (= "\\" sep)
-    (string/replace "/" "\\" s)
+    (string/replace-all "/" "\\" s)
     s))
 
 (defn info-file
