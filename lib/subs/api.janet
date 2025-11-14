@@ -227,7 +227,8 @@
                 (length util/sep)
                 (if (nil? drop-prefix) 0 (length drop-prefix))))
   (def end (if (string/has-suffix? ".janet" path) -7))
-  (string/slice path begin end))
+  (->> (string/slice path begin end)
+       (string/replace util/sep "/")))
 
 (defn- find-aliases
   ```
