@@ -7,10 +7,10 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
-
+  # Linux
+  test-linux:
+    name: Build and test on Linux
     runs-on: ubuntu-latest
-
     steps:
     - name: "checkout project"
       uses: actions/checkout@v4
@@ -50,3 +50,42 @@ jobs:
     - name: "run tests"
       run: 'for f in test/*.janet; do janet "$f" || { rc=$?; break; }; done; (exit ${rc:-0})'
       shell: bash
+  # Windows
+  test-windows:
+    runs-on: windows-latest
+    steps:
+    - name: "checkout project"
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+    - name: "find latest version of janet"
+      uses: oprypin/find-latest-tag@v1
+      with:
+        repository: janet-lang/janet
+        releases-only: true
+        prefix: 'v'
+      id: janet-ver
+    - name: "download janet"
+      shell: cmd
+      run: |
+        set TAG=${{ steps.janet-ver.outputs.tag }}
+        set TAG_NUM=%TAG:~1%
+        set "URL=https://github.com/janet-lang/janet/releases/download/%TAG%/janet-%TAG_NUM%-windows-x64-installer.msi"
+        curl -fSLo janet.msi %URL%
+    - name: "install janet"
+      shell: cmd
+      run: msiexec /quiet /i janet.msi ALLUSERS=1 /norestart
+    - name: "run tests"
+      shell: cmd
+      run: |
+        setlocal enabledelayedexpansion
+        set RC=0
+        for %%F in (test\*.janet) do (
+          janet "%%F"
+          if errorlevel 1 (
+            set RC=!errorlevel!
+            goto :endtests
+          )
+        )
+        :endtests
+        endlocal & exit /b %RC%
