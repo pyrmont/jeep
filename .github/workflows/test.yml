@@ -57,7 +57,7 @@ jobs:
     steps:
     - name: "disable git autocrlf"
       shell: cmd
-      run: git config --global core.autocrlf fals
+      run: git config --global core.autocrlf false
     - name: "checkout project"
       uses: actions/checkout@v4
       with:
