@@ -9,7 +9,7 @@ on:
 jobs:
   # Linux
   test-linux:
-    name: Build and test on Linux
+    name: "Test on Linux"
     runs-on: ubuntu-latest
     steps:
     - name: "checkout project"
@@ -52,6 +52,7 @@ jobs:
       shell: bash
   # Windows
   test-windows:
+    name: "Test on Windows"
     runs-on: windows-latest
     steps:
     - name: "checkout project"
@@ -74,10 +75,12 @@ jobs:
         curl -fSLo janet.msi %URL%
     - name: "install janet"
       shell: cmd
-      run: msiexec /quiet /i janet.msi ALLUSERS=1 /norestart
+      run: msiexec /i janet.msi /qn /norestart
     - name: "run tests"
       shell: cmd
       run: |
+        set JANET_INSTALL=%LOCALAPPDATA%\Programs\Janet
+        set PATH=%JANET_INSTALL%\bin;%PATH%
         setlocal enabledelayedexpansion
         set RC=0
         for %%F in (test\*.janet) do (
