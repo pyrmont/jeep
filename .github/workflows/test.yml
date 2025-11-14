@@ -75,16 +75,14 @@ jobs:
         curl -fSLo janet.msi %URL%
     - name: "install janet"
       shell: cmd
-      run: msiexec /i janet.msi /qn /norestart
+      run: msiexec /quiet /i janet.msi ALLUSERS=1 /log install.log && type install.log
     - name: "run tests"
       shell: cmd
       run: |
-        set JANET_INSTALL=%LOCALAPPDATA%\Programs\Janet
-        set PATH=%JANET_INSTALL%\bin;%PATH%
         setlocal enabledelayedexpansion
         set RC=0
         for %%F in (test\*.janet) do (
-          janet "%%F"
+          refreshenv & janet "%%F"
           if errorlevel 1 (
             set RC=!errorlevel!
             goto :endtests
