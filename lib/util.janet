@@ -175,9 +175,9 @@
   res)
 
 (defn parent
-  [path &opt level]
+  [path &opt level posix?]
   (default level 1)
-  (def parts (apart path))
+  (def parts (apart path posix?))
   (if (empty? parts)
     parts
     (do
@@ -264,7 +264,7 @@
       (def posix-to (string dest-dir "/" dest))
       (if (string/has-suffix? "/" posix-to)
         (mkdir posix-to true)
-        (mkdir (parent posix-to) true))
+        (mkdir (parent posix-to 1 true) true))
       (def from ((if (= "\\" sep) win-path identity) (string src-dir "/" src)))
       (def to (if (= "\\" sep) (win-path posix-to) posix-to))
       (print "  copying " from " to " to)
