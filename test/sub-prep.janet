@@ -142,7 +142,7 @@
       (subcmd/run args)
       (def libpath (string "deps" h/sep "example" h/sep "lib"))
       (is (== ["mod1.janet" "mod2.janet"] (sorted (os/dir libpath))))))
-  (def origin "../../res/fixtures/example")
+  (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example"))
   (def expect-out
     (string "warning: use of structs with :vendored is deprecated, "
             "refer to the man page for more information" nl
@@ -173,7 +173,7 @@
       (subcmd/run args)
       (def libpath (string "deps" h/sep "example" h/sep "lib"))
       (is (== ["mod1.janet" "mod2.janet"] (sorted (os/dir libpath))))))
-  (def origin "../../res/fixtures/example")
+  (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example"))
   (def expect-out
     (string "vendoring " origin nl
             "  copying " origin h/sep "lib to deps" h/sep "example" h/sep "lib" nl
@@ -202,7 +202,7 @@
       (subcmd/run args)
       (def libpath (string "deps" h/sep "example" h/sep "foo"))
       (is (== ["mod1.janet" "mod2.janet"] (sorted (os/dir libpath))))))
-  (def origin "../../res/fixtures/example")
+  (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example"))
   (def expect-out
     (string "vendoring " origin nl
             "  copying " origin h/sep "lib" h/sep "mod1.janet to deps" h/sep "example" h/sep "foo/" nl
@@ -230,7 +230,7 @@
       (subcmd/run args)
       (def libpath (string "lib"))
       (is (== ["mod1.janet" "mod2.janet"] (sorted (os/dir libpath))))))
-  (def origin "../../res/fixtures/example")
+  (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example"))
   (def expect-out
     (string "vendoring " origin nl
             "  copying " origin h/sep "lib to ./lib" nl
