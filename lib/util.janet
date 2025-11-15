@@ -186,7 +186,8 @@
 
 (defn win-path
   [s]
-  (-> (apart s true) (string/join sep)))
+  (def trailing (if (string/has-suffix? "/" s) sep ""))
+  (-> (apart s true) (string/join sep) (string trailing)))
 
 # Other functions
 
