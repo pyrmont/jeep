@@ -162,11 +162,13 @@
 (defn mkdir
   [path &opt posix?]
   (def parts (apart path posix?))
-  (when (and (not posix?)
-             (index-of (os/which) [:mingw :windows])
-             (string/has-suffix? ":\\" (first parts)))
-    (put parts 1 (string (get parts 0) (get parts 1)))
-    (array/remove parts 0))
+  (cond
+    # absolute path
+    (= "" (first parts))
+    (put parts 0 (if posix? "/" sep))
+    # Windows path beginning with drive letter
+    (string/has-suffix? ":" (first parts))
+    (put parts 0 (string (first parts) "\\")))
   (var res false)
   (def cwd (os/cwd))
   (each part parts
@@ -181,7 +183,8 @@
   (def parts (apart path posix?))
   (when (empty? parts)
     (break parts))
-  (def joined (string/join (array/slice parts 0 (- -1 level)) sep))
+  (def s (if posix? "/" sep))
+  (def joined (string/join (array/slice parts 0 (- -1 level)) s))
   (if (= "" joined)
     sep
     joined))
@@ -271,7 +274,7 @@
         (mkdir posix-to true)
         (mkdir (parent posix-to 1 true) true))
       (def from ((if (= "\\" sep) win-path identity) (string src-dir "/" src)))
-      (def to (if (= "\\" sep) (win-path posix-to) posix-to))
+      (def to ((if (= "\\" sep) win-path identity) posix-to))
       (print "  copying " from " to " to)
       (copy from to))))
 

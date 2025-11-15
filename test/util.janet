@@ -145,7 +145,7 @@
   (is (== "\\" (util/parent "\\absolute\\path\\too\\" 3)))
   (is (== "relative\\path" (util/parent "relative\\path\\too\\")))
   (is (== "relative" (util/parent "relative/path" 1 true)))
-  (is (== "relative\\path" (util/parent "relative/path/too/" 1 true))))
+  (is (== "relative/path" (util/parent "relative/path/too/" 1 true))))
 
 (deftest rmrf
   (defer (rmrf "tmp")
