@@ -212,9 +212,9 @@
                       src
                       " "
                       dest
-                      (when dir? (string sep (last (apart src))))
                       " "
-                      "/y /s /e /i > nul"))
+                      (if dir? "/y /s /e /i" "/y")
+                      " > nul"))
     (os/execute ["cp" "-a" src dest] :px)))
 
 (defn fetch-git
@@ -260,7 +260,7 @@
     (mkdir dest-dir true)
     (each f files
       (def [src dest] (if (indexed? f) f [f f]))
-      # use POSIX path separator to match info file
+      # use POSIX path separators to match info file
       (def posix-to (string dest-dir "/" dest))
       (if (string/has-suffix? "/" posix-to)
         (mkdir posix-to true)
