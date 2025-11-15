@@ -32,7 +32,7 @@
 (defn- mkdirp [path]
   (var res false)
   (def pwd (os/cwd))
-  (each part (string/split "/" path)
+  (each part (string/split sep path)
     (set res (os/mkdir part))
     (os/cd part))
   (os/cd pwd)
