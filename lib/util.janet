@@ -15,7 +15,8 @@
 (def pathg ~{:main (* (+ :abspath :relpath) (? :sep) -1)
              :abspath (* :root (any :relpath))
              :relpath (* :part (any (* :sep :part)))
-             :root '(+ "/" (* (? (* :a ":")) `\`))
+             :root (+ (* :sep (constant ""))
+                      (* '(* :a ":") `\`))
              :sep ,sep
              :part (* (+ :quoted :unquoted) (> (+ :sep -1)))
              :quoted (* `"`
@@ -30,7 +31,7 @@
 (def- posix-pathg ~{:main     (* (+ :abspath :relpath) (? :sep) -1)
                     :abspath  (* :root (any :relpath))
                     :relpath  (* :part (any (* :sep :part)))
-                    :root     '"/"
+                    :root     (* :sep (constant ""))
                     :sep      "/"
                     :part     (* (+ :quoted :unquoted) (> (+ :sep -1)))
                     :quoted   (* `"`
@@ -50,7 +51,7 @@
 (defn abspath?
   [path]
   (if (= :windows (os/which))
-    (peg/match '(* (? (* :a ":")) `\`) path)
+    (not (nil? (peg/match '(* (? (* :a ":")) `\`) path)))
     (string/has-prefix? "/" path)))
 
 (defn apart
@@ -178,11 +179,12 @@
   [path &opt level posix?]
   (default level 1)
   (def parts (apart path posix?))
-  (if (empty? parts)
-    parts
-    (do
-      (put parts 0 (string/replace sep "" (first parts)))
-      (string/join (array/slice parts 0 (- -1 level)) sep))))
+  (when (empty? parts)
+    (break parts))
+  (def joined (string/join (array/slice parts 0 (- -1 level)) sep))
+  (if (= "" joined)
+    sep
+    joined))
 
 (defn win-path
   [s]

@@ -1,4 +1,5 @@
 (use ../deps/testament)
+(import ../res/helpers/util :as h)
 
 (import ../lib/util)
 
@@ -20,23 +21,50 @@
     # --
     (os/rm path)))
 
-# Tests
-
-(deftest abspath?
-  (is (== true (util/abspath? "/absolute/path")))
-  (is (== false (util/abspath? "relative/path"))))
-
-(deftest apart-posix
+(defn- get-posix [sym]
   (def env (make-env))
   (defn posix/os/which [] :posix)
   (put env 'os/which @{:value posix/os/which})
   (defn posix/os/getenv [k] (if (= "PSModulePath" k) false (os/getenv k)))
   (put env 'os/getenv @{:value posix/os/getenv})
   (def module (require "../lib/util" :fresh true :env env))
-  (def util/apart (module/value module 'apart))
+  (module/value module sym))
+
+(defn- get-powershell [sym]
+  (def env (make-env))
+  (defn ps/os/which [] :windows)
+  (put env 'os/which @{:value ps/os/which})
+  (defn ps/os/getenv [k] (if (= "PSModulePath" k) true (os/getenv k)))
+  (put env 'os/getenv @{:value ps/os/getenv})
+  (def module (require "../lib/util" :fresh true :env env))
+  (module/value module sym))
+
+(defn- get-windows [sym]
+  (def env (make-env))
+  (defn ps/os/which [] :windows)
+  (put env 'os/which @{:value ps/os/which})
+  (defn ps/os/getenv [k] (if (= "PSModulePath" k) false (os/getenv k)))
+  (put env 'os/getenv @{:value ps/os/getenv})
+  (def module (require "../lib/util" :fresh true :env env))
+  (module/value module sym))
+
+# Tests
+
+(deftest abspath?-posix
+  (def util/abspath? (get-posix 'abspath?))
+  (is (== true (util/abspath? "/absolute/path")))
+  (is (== false (util/abspath? "relative/path"))))
+
+(deftest abspath?-windows
+  (def util/abspath? (get-windows 'abspath?))
+  (is (== true (util/abspath? "\\absolute\\path")))
+  (is (== false (util/abspath? "relative\\path"))))
+
+(deftest apart-posix
+  (def util/apart (get-posix 'apart))
   (is (== [] (util/apart "")))
-  (is (== ["/"] (util/apart "/")))
-  (is (== ["/" "absolute" "path"] (util/apart "/absolute/path")))
+  (is (== [""] (util/apart "/")))
+  (is (== ["" "absolute" "path"] (util/apart "/absolute/path")))
   (is (== ["relative" "path"] (util/apart "relative/path")))
   (is (== ["relative" "path with spaces"] (util/apart `relative/"path with spaces"`)))
   (is (== ["relative" "path with escapes"] (util/apart `relative/path\ with\ escapes`)))
@@ -44,37 +72,33 @@
   (assert-thrown-message "invalid path" (util/apart "invalid path")))
 
 (deftest apart-powershell
-  (def env (make-env))
-  (defn ps/os/which [] :windows)
-  (put env 'os/which @{:value ps/os/which})
-  (defn ps/os/getenv [k] (if (= "PSModulePath" k) true (os/getenv k)))
-  (put env 'os/getenv @{:value ps/os/getenv})
-  (def module (require "../lib/util" :fresh true :env env))
-  (def util/apart (module/value module 'apart))
+  (def util/apart (get-powershell 'apart))
   (is (== [] (util/apart "")))
-  (is (== [`C:\`] (util/apart "C:\\")))
-  (is (== [`C:\` "absolute" "path"] (util/apart `C:\absolute\path`)))
+  (is (== ["C:"] (util/apart "C:\\")))
+  (is (== ["C:" "absolute" "path"] (util/apart `C:\absolute\path`)))
+  (is (== ["" "absolute" "path"] (util/apart `\absolute\path`)))
   (is (== ["relative" "path"] (util/apart `relative\path`)))
   (is (== ["relative" "path with spaces"] (util/apart `relative\"path with spaces"`)))
   (is (== ["relative" "path with escapes"] (util/apart "relative\\path` with` escapes")))
   (is (== ["relative"] (util/apart `relative\`)))
+  (is (== [""] (util/apart "/" true)))
+  (is (== ["" "absolute" "path"] (util/apart "/absolute/path" true)))
+  (is (== ["relative" "path"] (util/apart "relative/path" true)))
   (assert-thrown-message "invalid path" (util/apart "invalid path")))
 
 (deftest apart-cmd
-  (def env (make-env))
-  (defn ps/os/which [] :windows)
-  (put env 'os/which @{:value ps/os/which})
-  (defn ps/os/getenv [k] (if (= "PSModulePath" k) false (os/getenv k)))
-  (put env 'os/getenv @{:value ps/os/getenv})
-  (def module (require "../lib/util" :fresh true :env env))
-  (def util/apart (module/value module 'apart))
+  (def util/apart (get-windows 'apart))
   (is (== [] (util/apart "")))
-  (is (== [`C:\`] (util/apart "C:\\")))
-  (is (== [`C:\` "absolute" "path"] (util/apart `C:\absolute\path`)))
+  (is (== ["C:"] (util/apart "C:\\")))
+  (is (== ["C:" "absolute" "path"] (util/apart `C:\absolute\path`)))
+  (is (== ["" "absolute" "path"] (util/apart `\absolute\path`)))
   (is (== ["relative" "path"] (util/apart `relative\path`)))
   (is (== ["relative" "path with spaces"] (util/apart `relative\"path with spaces"`)))
   (is (== ["relative" "path with escapes"] (util/apart "relative\\path^ with^ escapes")))
   (is (== ["relative"] (util/apart `relative\`)))
+  (is (== [""] (util/apart "/" true)))
+  (is (== ["" "absolute" "path"] (util/apart "/absolute/path" true)))
+  (is (== ["relative" "path"] (util/apart "relative/path" true)))
   (assert-thrown-message "invalid path" (util/apart "invalid path")))
 
 (deftest colour
@@ -101,7 +125,27 @@
     (is (== false (util/mkdir "tmp"))))
   (defer (rmrf "tmp")
     (os/mkdir "tmp")
-    (is (== true (util/mkdir (string/join ["tmp" "foo"] sep))))))
+    (is (== true (util/mkdir (string "tmp" sep "foo"))))))
+
+(deftest parent-posix
+  (def util/parent (get-posix 'parent))
+  (is (== "/" (util/parent "/")))
+  (is (== "/absolute" (util/parent "/absolute/path")))
+  (is (== "/absolute/path" (util/parent "/absolute/path/too/")))
+  (is (== "/" (util/parent "/absolute/path/too/" 3)))
+  (is (== "relative" (util/parent "relative/path")))
+  (is (== "relative/path" (util/parent "relative/path/too/"))))
+
+(deftest parent-windows
+  (def util/parent (get-windows 'parent))
+  (is (== "\\" (util/parent "C:\\")))
+  (is (== "C:\\absolute" (util/parent "C:\\absolute\\path")))
+  (is (== "C:\\absolute\\path" (util/parent "C:\\absolute\\path\\too\\")))
+  (is (== "C:" (util/parent "C:\\absolute\\path\\too\\" 3)))
+  (is (== "\\" (util/parent "\\absolute\\path\\too\\" 3)))
+  (is (== "relative\\path" (util/parent "relative\\path\\too\\")))
+  (is (== "relative" (util/parent "relative/path" 1 true)))
+  (is (== "relative\\path" (util/parent "relative/path/too/" 1 true))))
 
 (deftest rmrf
   (defer (rmrf "tmp")
