@@ -256,7 +256,7 @@
                     # use POSIX path separator to match info file
                     (string parent-dir (when prefix (string "/" prefix)))
                     (or prefix ".")))
-    (print "vendoring " origin)
+    (print "vendoring " (if local? (win-path origin) origin))
     (mkdir dest-dir true)
     (each f files
       (def [src dest] (if (indexed? f) f [f f]))
