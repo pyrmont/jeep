@@ -205,8 +205,8 @@
   (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example"))
   (def expect-out
     (string "vendoring " origin nl
-            "  copying " origin h/sep "lib" h/sep "mod1.janet to deps" h/sep "example" h/sep "foo/" nl
-            "  copying " origin h/sep "lib" h/sep "mod2.janet to deps" h/sep "example" h/sep "foo/mod2.janet" nl
+            "  copying " origin h/sep "lib" h/sep "mod1.janet to deps" h/sep "example" h/sep "foo" h/sep nl
+            "  copying " origin h/sep "lib" h/sep "mod2.janet to deps" h/sep "example" h/sep "foo" h/sep "mod2.janet" nl
             confirmation))
   (is (== expect-out out))
   (is (empty? err)))
@@ -233,7 +233,7 @@
   (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example"))
   (def expect-out
     (string "vendoring " origin nl
-            "  copying " origin h/sep "lib to ./lib" nl
+            "  copying " origin h/sep "lib to ." h/sep "lib" nl
             confirmation))
   (is (== expect-out out))
   (is (empty? err)))
