@@ -26,6 +26,21 @@
              :unquoted (% (some (+ :escaped (* (! (set `"\/ `)) '1))))
              :escaped (* ,esc '1)})
 
+# used for splitting POSIX paths
+(def- posix-pathg ~{:main     (* (+ :abspath :relpath) (? :sep) -1)
+                    :abspath  (* :root (any :relpath))
+                    :relpath  (* :part (any (* :sep :part)))
+                    :root     '"/"
+                    :sep      "/"
+                    :part     (* (+ :quoted :unquoted) (> (+ :sep -1)))
+                    :quoted   (* `"`
+                                 (% (some (+ (* "\\" "\\")
+                                             (* "\\" `"`)
+                                             (* (! `"`) '1))))
+                                 `"`)
+                    :unquoted (% (some (+ :escaped (* (! (set `"\/ `)) '1))))
+                    :escaped  (* "\\" '1)})
+
 # Path
 
 (def- this-file (os/realpath (dyn :current-file)))
@@ -39,10 +54,10 @@
     (string/has-prefix? "/" path)))
 
 (defn apart
-  [path]
+  [path &opt posix?]
   (if (empty? path)
     []
-    (or (peg/match pathg path)
+    (or (peg/match (if posix? posix-pathg pathg) path)
         (error "invalid path"))))
 
 (defn colour
@@ -144,9 +159,10 @@
     (string (os/cwd) sep path)))
 
 (defn mkdir
-  [path]
-  (def parts (apart path))
-  (when (and (index-of (os/which) [:mingw :windows])
+  [path &opt posix?]
+  (def parts (apart path posix?))
+  (when (and (not posix?)
+             (index-of (os/which) [:mingw :windows])
              (string/has-suffix? ":\\" (first parts)))
     (put parts 1 (string (get parts 0) (get parts 1)))
     (array/remove parts 0))
@@ -167,6 +183,10 @@
     (do
       (put parts 0 (string/replace sep "" (first parts)))
       (string/join (array/slice parts 0 (- -1 level)) sep))))
+
+(defn win-path
+  [s]
+  (-> (apart s true) (string/join sep)))
 
 # Other functions
 
@@ -233,17 +253,20 @@
     (def origin (if local? (string/slice url 6) url))
     (def src-dir (if local? origin (fetch-git :url url :tag tag :dir tmp)))
     (def dest-dir (if parent-dir
-                    (string parent-dir (when prefix (string sep prefix)))
+                    # use POSIX path separator to match info file
+                    (string parent-dir (when prefix (string "/" prefix)))
                     (or prefix ".")))
-    (print "vendoring " origin (when parent-dir (string " to " dest-dir)))
-    (mkdir dest-dir)
+    (print "vendoring " origin)
+    (mkdir dest-dir true)
     (each f files
       (def [src dest] (if (indexed? f) f [f f]))
-      (def from (string src-dir sep src))
-      (def to (string dest-dir sep dest))
-      (if (string/has-suffix? "/" to)
-        (mkdir to)
-        (mkdir (parent to)))
+      # use POSIX path separator to match info file
+      (def posix-to (string dest-dir "/" dest))
+      (if (string/has-suffix? "/" posix-to)
+        (mkdir posix-to true)
+        (mkdir (parent posix-to) true))
+      (def from ((if (= "\\" sep) win-path identity) (string src-dir "/" src)))
+      (def to (if (= "\\" sep) (win-path posix-to) posix-to))
       (print "  copying " from " to " to)
       (copy from to))))
 

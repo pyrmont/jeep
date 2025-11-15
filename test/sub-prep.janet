@@ -147,7 +147,7 @@
     (string "warning: use of structs with :vendored is deprecated, "
             "refer to the man page for more information" nl
             "warning: use of :files is deprecated in vendored dependencies" nl
-            "vendoring " origin " to deps" h/sep "example" nl
+            "vendoring " origin nl
             "  copying " origin h/sep "lib to deps" h/sep "example" h/sep "lib" nl
             confirmation))
   (is (== expect-out out))
