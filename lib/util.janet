@@ -209,11 +209,15 @@
   [src dest]
   (if (= :windows (os/which))
     (do
+      (def dest-dir? (= :directory (os/stat dest :mode)))
+      (def dest1 (if (and dest-dir? (not= (chr "\\") (last dest)))
+                   (string dest "\\")
+                   dest))
       (os/shell (string "C:\\Windows\\System32\\xcopy.exe "
                         src
                         " "
-                        dest
-                        " /e /h /i /k /o /r /x /y > nul")))
+                        dest1
+                        " /e /h /k /o /r /x /y > nul")))
     (os/execute ["cp" "-a" src dest] :px)))
 
 (defn fetch-git
