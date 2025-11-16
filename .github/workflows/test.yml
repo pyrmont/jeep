@@ -83,13 +83,7 @@ jobs:
       shell: cmd
       run: |
         setlocal enabledelayedexpansion
-        set RC=0
         for %%F in (test\*.janet) do (
           refreshenv & janet "%%F"
-          if errorlevel 1 (
-            set RC=!errorlevel!
-            goto :endtests
-          )
+          if errorlevel 1 exit /b 1
         )
-        :endtests
-        endlocal & exit /b %RC%
