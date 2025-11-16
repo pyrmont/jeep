@@ -88,7 +88,7 @@
     (h/in-dir d
       (def args {:sub {:params {:input (string example "/info.jdn")}
                        :opts {"output" "-"}}})
-      (subcmd/run args))) 
+      (subcmd/run args)))
   (def expect (string (h/add-nl api-doc 3) "Document generated.\n"))
   (is (== expect out))
   (is (empty? err)))
@@ -124,7 +124,7 @@
       (def expect (h/add-nl (string/replace-all ": lib/"
                                                 ": https://example.org/lib/"
                                                 api-doc)
-                            2)) 
+                            2))
       (def actual (slurp "api.md"))
       (is (== expect actual))))
   (is (== confirmation out))
@@ -184,20 +184,20 @@
         precisely when you call `foo`.
 
         [2]: lib/mod1.janet#L1
-        
-        
+
+
         ## quux
-        
+
         **function** | **private** | [source][3]
-        
+
         ```janet
         (quux)
         ```
-        
+
         Does quux
-        
+
         This function does quux. But it does it privately.
-        
+
         [3]: lib/mod1.janet#L21
 
 
@@ -237,7 +237,7 @@
       (def expect (h/add-nl (string/replace-all "## lib/"
                                                 "## "
                                                 api-doc)
-                            2)) 
+                            2))
       (def actual (slurp "api.md"))
       (is (== expect actual))))
   (is (== confirmation out))
@@ -256,7 +256,7 @@
       (def expect (->> (string/find "# lib/mod2" api-doc)
                        (dec)
                        (dec)
-                       (string/slice api-doc 0))) 
+                       (string/slice api-doc 0)))
       (def actual (slurp "api.md"))
       (is (== expect actual))))
   (is (== confirmation out))
@@ -275,7 +275,7 @@
       (def expect (->> (string/find "# lib/mod2" api-doc)
                        (dec)
                        (dec)
-                       (string/slice api-doc 0))) 
+                       (string/slice api-doc 0)))
       (def actual (slurp "api.md"))
       (is (== expect actual))))
   (is (== confirmation out))
