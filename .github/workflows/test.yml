@@ -79,9 +79,15 @@ jobs:
     - name: "install janet"
       shell: cmd
       run: msiexec /quiet /i janet.msi ALLUSERS=1 /log install.log && type install.log
-    - name: "set janet path"
+    - name: "set janet paths"
       shell: cmd
-      run: echo C:\Program Files\Janet\bin>>%GITHUB_PATH%
+      run: |
+        echo C:\Program Files\Janet\bin>>%GITHUB_PATH%
+        echo JANET_HEADERPATH=C:\Program Files\Janet\C>>%GITHUB_ENV%
+        echo JANET_BINPATH=C:\Program Files\Janet\bin>>%GITHUB_ENV%
+        echo JANET_LIBPATH=C:\Program Files\Janet\C>>%GITHUB_ENV%
+        echo JANET_MANPATH=C:\Program Files\Janet\docs>>%GITHUB_ENV%
+        echo JANET_PATH=C:\Program Files\Janet\Library>>%GITHUB_ENV%
     - name: "run tests"
       shell: cmd
       run: for %%F in (test\*.janet) do janet "%%F" || exit /b 1
