@@ -21,7 +21,8 @@
                                 :exe bin}}})
       (subcmd/run args)
       (is (os/stat bin))
-      (is (== 37 (os/execute ["./test-exe"] :p)))))
+      (is (== 37 (os/execute [(string "." h/sep bin)] :p)))
+      (if (= "\\" h/sep) (os/sleep 0.3))))
   (is (string/has-suffix? confirmation out))
   (is (empty? err)))
 

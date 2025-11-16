@@ -911,7 +911,9 @@ int main(int argc, const char **argv) {
       (def target (declare-executable :entry entry :name output))
       (build-rules/build-run rules "build")
       (print "copying " target " to " output)
-      (sh/copy target output))))
+      # added by @pyrmont on 2025/11/17
+      (sh/copy-file target output)
+      (os/chmod output 8r755))))
 
 ###
 ### Create an environment that emulates jpm's project.janet environment

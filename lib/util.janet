@@ -214,15 +214,27 @@
   [src dest]
   (if (= :windows (os/which))
     (do
-      (def dest-dir? (= :directory (os/stat dest :mode)))
-      (def dest1 (if (and dest-dir? (not= (chr "\\") (last dest)))
-                   (string dest "\\")
-                   dest))
+      (def express? (string/has-suffix? sep dest))
+      (def xcopy-dest
+        (if express?
+          dest
+          (do
+            (def dir (parent dest))
+            (def res (string dir sep (gensym)))
+            # this is not cleaned up if there's an error
+            (os/mkdir res)
+            (string res sep))))
       (os/shell (string "C:\\Windows\\System32\\xcopy.exe "
                         src
                         " "
-                        dest1
-                        " /e /h /k /o /r /x /y > nul")))
+                        xcopy-dest
+                        " /e /h /i /k /o /r /x /y >NUL"))
+      (unless express?
+        (os/shell (string "C:\\Windows\\System32\\cmd.exe /c move "
+                          (string/slice xcopy-dest 0 -2)
+                          " "
+                          dest
+                          " >NUL"))))
     (os/execute ["cp" "-a" src dest] :px)))
 
 (defn fetch-git

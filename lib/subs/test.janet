@@ -78,7 +78,7 @@
           (buffer/push b (string "(setdyn :" k " " v ") ")))
         (string b))))
   (def janet-exe (dyn :executable))
-  (if (zero? (os/execute [janet-exe "-m" (dyn *syspath*) "-e" setup path] :p))
+  (if (zero? (os/execute [janet-exe "-m" (dyn :syspath) "-e" setup path] :p))
     (result :green "pass")
     (do
       (result :red "fail")
@@ -87,6 +87,7 @@
 
 (defn- run-tests
   [path &named use? test skip]
+  (assert (dyn :syspath) "syspath must be set")
   (each f (sorted (os/dir path))
     (def fpath (string path util/sep f))
     (case (os/stat fpath :mode)

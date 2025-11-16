@@ -107,13 +107,12 @@
   (is (== "\e[0mfoo\e[0m" (util/colour :invalid "foo" true))))
 
 (deftest exec
-  (def [ls-r ls-w] (os/pipe))
-  (def act-exit (util/exec "ls" {:err ls-w :out ls-w} "bin"))
-  (ev/close ls-w)
-  (def act-out (ev/read ls-r :all))
-  (def exp-out "jeep\n")
+  (def [exec-r exec-w] (os/pipe))
+  (def act-exit (util/exec "hostname" {:err exec-w :out exec-w}))
+  (ev/close exec-w)
+  (def act-out (ev/read exec-r :all))
   (is (== 0 act-exit))
-  (is (== exp-out act-out)))
+  (is (> (length act-out) 0)))
 
 (deftest fexists?
   (is (== true (util/fexists? "info.jdn")))
