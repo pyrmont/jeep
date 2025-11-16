@@ -12,7 +12,7 @@
    `Prepares the bundle for a given profile by installing dependencies and
    running the optional prep hook. For more information, see jeep-prep(1).`
    :help
-   `Prepares dependencies for a given profile for the current bundle.`})
+   `Prepare dependencies for a given profile for the current bundle.`})
 
 (def config
   {:rules [:profile       {:default "system"
