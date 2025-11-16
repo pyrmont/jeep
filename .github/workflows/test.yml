@@ -44,9 +44,6 @@ jobs:
     - name: "extract janet"
       shell: bash
       run: tar -xzf janet-${{ steps.janet-ver.outputs.tag }}-linux-x64.tar.gz --strip-components=2 -C $PREFIX
-    - name: "return to workspace directory"
-      shell: bash
-      run: cd $GITHUB_WORKSPACE
     - name: "run tests"
       shell: bash
       run: 'for f in test/*.janet; do janet "$f" || { rc=$?; break; }; done; (exit ${rc:-0})'
