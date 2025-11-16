@@ -145,6 +145,9 @@
       "repo"
       "the repository URL"
       (error "unrecognised key")))
+  (print k-desc)
+  (print name)
+  (print dflt-desc)
   (def p (string/format "Enter %s of '%s' (default: %s): " k-desc name dflt-desc))
   (def resp (-> (getline p) (string/trim)))
   (def res
@@ -195,7 +198,7 @@
     (enqueue [dir "lib" "cli.janet"] "")
     (def t (slurp (get-in opts [:files :binscript])))
     (def contents (musty/render t meta))
-    (enqueue [dir "bin" (get meta :name)] contents 8r644)))
+    (enqueue [dir "bin" (get meta :name)] contents 8r755)))
 
 (defn- make-bundle-script
   [dir meta opts]
@@ -239,6 +242,13 @@
   [dir meta opts]
   (when (get opts :bare?) (break))
   (enqueue [dir "test"]))
+
+(defn- make-project
+  [dir meta opts]
+  (when (get opts :bare?) (break))
+  (def t (slurp (get-in opts [:files :project-file])))
+  (def contents (musty/render t meta))
+  (enqueue [dir "project.janet"] contents))
 
 (defn- make-readme
   [dir meta opts]
@@ -312,17 +322,16 @@
     (put res :binscript (string template-dir util/sep "binscript")))
   res)
 
-(defn run
-  [args]
-  (def opts (get-in args [:sub :opts] {}))
-  (def params (get-in args [:sub :params] {}))
+(defn create-bundle
+  [opts params &opt dir dflts]
+  # configure defaults
+  (default dflts @{})
   # reset global state
   (array/clear to-make)
   # setup name
   (def name (get params :name))
   # setup target directory
-  (assertf (nil? (os/stat name)) "directory '%s' already exists" name)
-  (def tdir name)
+  (def tdir (or dir name))
   # setup bundle opts
   (def bopts @{})
   (put bopts :bare? (not (nil? (get opts "bare"))))
@@ -338,14 +347,14 @@
   # setup bundle metadata
   (def meta @{})
   (put meta :name name)
-  (put meta :version (answer "version" "DEVEL"))
-  (put meta :desc (answer "desc" ""))
-  (put meta :author (answer "author" (get-author)))
+  (put meta :version (answer "version" (get dflts :version "DEVEL")))
+  (put meta :desc (answer "desc" (get dflts :description "")))
+  (put meta :author (answer "author" (get dflts :author (get-author))))
   (put meta :year (os/strftime "%Y" (os/time) true))
-  (put meta :license (answer "license" "MIT"))
-  (def forge (setup-forge (get opts "forge")))
-  (put meta :url (answer "url" (string forge name)))
-  (put meta :repo (answer "repo" (string "git+" forge name)))
+  (put meta :license (answer "license" (get dflts :license "MIT")))
+  (def url (string (setup-forge (get opts "forge")) name))
+  (put meta :url (answer "url" (get dflts :url url)))
+  (put meta :repo (answer "repo" (get dflts :repo (string "git+" url))))
   (put meta :exe? (get opts "executable"))
   (put meta :lib? (get opts "library"))
   (put meta :man? (get opts "manpage"))
@@ -358,11 +367,14 @@
   (make-artifacts tdir meta bopts)
   (make-gitignore tdir meta bopts)
   (make-license tdir meta bopts)
+  (make-project tdir meta bopts)
   (make-readme tdir meta bopts)
   (make-others tdir meta bopts)
   # update file system
   (util/mkdir tdir)
   (each [path contents mode] to-make
+    # (when (def kind (os/stat path :mode))
+    #   (print kind " exists at " path ", skipping"))
     (if (nil? contents)
       (if (util/mkdir path)
         (print "adding " path "..."))
@@ -370,5 +382,15 @@
         (print "adding " path "...")
         (spit path contents)))
     (when mode
-      (os/chmod path mode)))
+      (os/chmod path mode))))
+
+(defn run
+  [args]
+  (def opts (get-in args [:sub :opts] {}))
+  (def params (get-in args [:sub :params] {}))
+  # check directory
+  (def name (get params :name))
+  (assertf (nil? (os/stat name)) "directory '%s' already exists" name)
+  # create bundle
+  (create-bundle opts params)
   (print "Bundle created."))
