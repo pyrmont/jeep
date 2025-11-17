@@ -15,9 +15,9 @@
 (def pathg ~{:main (* (+ :abspath :relpath) (? :sep) -1)
              :abspath (* :root (any :relpath))
              :relpath (* :part (any (* :sep :part)))
-             :root (+ (* :sep (constant ""))
+             :root (+ (* ,sep (constant ""))
                       (* '(* :a ":") `\`))
-             :sep ,sep
+             :sep (some ,sep)
              :part (* (+ :quoted :unquoted) (> (+ :sep -1)))
              :quoted (* `"`
                         (% (some (+ (* ,esc ,esc)
@@ -31,8 +31,8 @@
 (def- posix-pathg ~{:main     (* (+ :abspath :relpath) (? :sep) -1)
                     :abspath  (* :root (any :relpath))
                     :relpath  (* :part (any (* :sep :part)))
-                    :root     (* :sep (constant ""))
-                    :sep      "/"
+                    :root     (* "/" (constant ""))
+                    :sep      (some "/")
                     :part     (* (+ :quoted :unquoted) (> (+ :sep -1)))
                     :quoted   (* `"`
                                  (% (some (+ (* "\\" "\\")
