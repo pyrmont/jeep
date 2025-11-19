@@ -8,6 +8,8 @@
    `Force installation of dependencies.`
    :no-deps
    `Skip installation of dependencies.`
+   :no-hook
+   `Skip running the prep hook.`
    :about
    `Prepares the bundle for a given profile by installing dependencies and
    running the optional prep hook. For more information, see jeep-prep(1).`
@@ -23,6 +25,9 @@
            "--no-deps"    {:kind :flag
                            :short "D"
                            :help (helps :no-deps)}
+           "--no-hook"    {:kind :flag
+                           :short "H"
+                           :help (helps :no-hook)}
            "----"]
    :info {:about (get helps :about)}
    :help (get helps :help)})
@@ -99,8 +104,11 @@
   [args &opt jeep-config]
   (def info (util/load-meta "."))
   (def profile (get-in args [:sub :params :profile]))
-  (def no-deps? (get-in args [:sub :opts "no-deps"]))
-  (def force-deps? (get-in args [:sub :opts "force-deps"]))
+  (def opts (get-in args [:sub :opts]))
+  (def no-deps? (get opts "no-deps"))
+  (def no-hook? (get opts "no-hook"))
+  (def force-deps? (get opts "force-deps"))
+  # install deps
   (unless no-deps?
     (case profile
       "system"
@@ -110,6 +118,12 @@
       "vendor"
       (install-vendor info :force-deps? force-deps?)))
   # run hook
-  (def man @{:info info})
-  (util/local-hook :prep man profile)
+  (unless no-hook?
+    (def man @{:info info})
+    (try
+      (util/local-hook :prep man profile)
+      ([e f]
+       (def rider "; use --no-hook to skip loading")
+       (def msg (if (= "failed to load bundle script" e) (string e rider) e))
+       (propagate msg f))))
   (print "Preparations completed."))

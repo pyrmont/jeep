@@ -19,7 +19,7 @@
         ```)
       (spit "info.jdn" info-file)
       (def args {:sub {:params {:args []}}})
-      (def msg "failed to load bundle script")
+      (def msg "failed to load bundle script; use --no-hook to skip loading")
       (assert-thrown-message msg (subcmd/run args))))
   (is (empty? out))
   (is (empty? err)))

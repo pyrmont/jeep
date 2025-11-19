@@ -1,6 +1,6 @@
 ---
 Title: JEEP-PREP(1)
-Date: 2025/11/06
+Date: 2025/11/20
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -14,7 +14,8 @@ NAME
 SYNOPSIS
 ========
 
-**jeep-prep** [**-f** | **--force-deps**] [**-D** | **--no-deps**] [_profile_]
+**jeep-prep** [**-f** | **--force-deps**] [**-D** | **--no-deps**] [**-H** |
+              **--no-hook**] [_profile_]
 
 DESCRIPTION
 ===========
@@ -25,13 +26,17 @@ by installing dependencies and running the prep __bundle hook__.
 Options
 -------
 
-- **-f**, **--force-deps**:
-  This forces the installation of dependencies. By default, Janet will not
-  install a dependency if it is already installed.
-
 - **-D**, **--no-deps**:
   This skips the installation of dependencies. In other words, it only runs the
   prep __bundle hook__.
+
+- **-H**, **--no-hook**:
+  This skips the installation of the prep hook. In other words, it only installs
+  the dependencies for the given profile.
+
+- **-f**, **--force-deps**:
+  This forces the installation of dependencies. By default, Janet will not
+  install a dependency if it is already installed.
 
 - _profile_:
   Specifies one of the following profiles to use:
