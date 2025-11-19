@@ -46,16 +46,16 @@ Options
 - **-K** _type_ | **--no-alias** _type_:
   Sets whether to not use the aliased path for _type_. The valid values for
   _type_ are ***bundle*** and ***info***. By default, the __info file__ uses an
-  alias (it is saved in `./info.jdn`) and the __bundle script__ does not (it is
-  saved `./bundle/init.janet`).
+  alias (it is saved to `./info.jdn`) and the __bundle script__ does not (it is
+  saved to `./bundle/init.janet`).
 
 - **-a** _name_ | **--author** _name_:
-  Sets the name of the author of the bundle. If not provided, **jeep-new**
-  will try to find the information in the user's Git configuration file.
+  Sets the name of the author of the bundle. If not provided, **jeep-new** will
+  try to find the information in the user's Git configuration file.
 
 - **-b** | **--bare**:
-  Sets whether **jeep-new** will create a bare bundle. A bare bundle contains
-  an __info file__ but does not generate any other files or directories.
+  Sets whether **jeep-new** will create a bare bundle. A bare bundle contains an
+  __info file__ but does not generate any other files or directories.
 
 - **-d** _text_ | **--desc** _text_:
   Sets the description of the bundle.
