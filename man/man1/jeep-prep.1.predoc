@@ -9,7 +9,7 @@ Version: DEVEL
 NAME
 ====
 
-**jeep-prep** - prepare a Janet project
+**jeep-prep** - prepare a Janet bundle
 
 SYNOPSIS
 ========
@@ -19,8 +19,8 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-**jeep-prep** prepares a Janet project. A project is prepared for a given
-profile by installing dependencies and running the prep __bundle hook__.
+**jeep-prep** prepares a Janet bundle. A bundle is prepared for a given profile
+by installing dependencies and running the prep __bundle hook__.
 
 Options
 -------
@@ -69,7 +69,7 @@ OPERATION
 **jeep-prep** consists of a two-step workflow. First, dependencies are
 installed. Second, the prep __bundle hook__ is run.
 
-The project author specifies each dependency using a struct. The struct should,
+The bundle author specifies each dependency using a struct. The struct should,
 at a minimum, include the ``:name`` and ``:url`` keys. If the struct includes a
 ``:paths`` key, the dependency is not installed using the Janet's
 ``bundle/install`` function. Instead **jeep-prep** downloads the dependency and
@@ -80,7 +80,7 @@ the directory specified in the ``:prefix`` (if no directory is specified, the
 bundle root). Dependencies can be added to the __info file__ using
 `jeep-dep(1)`.
 
-The project author optionally binds a function to the prep __bundle hook__ by
+The bundle author optionally binds a function to the prep __bundle hook__ by
 defining a function called ``prep`` in the __bundle script__. When invoked, the
 function will receive two arguments: (1) a table representing the bundle
 manifest and (2) a string matching the name of the profile specified by the
@@ -116,21 +116,21 @@ The following examples assume an __info file__ as follows:
             "LICENSE"]}]}
 ````
 
-The following command prepares the project using the default ***system***
+The following command prepares the bundle using the default ***system***
 profile. This installs 'dep1' and 'dep2' to the global syspath.
 
 ````
 $ jeep prep
 ````
 
-The following command prepares the project using the ***system*** profile. This
+The following command prepares the bundle using the ***system*** profile. This
 installs 'dep1' and 'dep2' to `./_system`, the local syspath.
 
 ````
 $ jeep -l prep system
 ````
 
-The following command prepares the project using the ***vendor*** profile. This
+The following command prepares the bundle using the ***vendor*** profile. This
 installs 'dep3' to the `./bundle` directory, installs 'dep4' to the `./deps`
 directory and copies 'foo.janet' and 'LICENSE' to the `./deps/dep5` directory.
 
@@ -138,7 +138,7 @@ directory and copies 'foo.janet' and 'LICENSE' to the `./deps/dep5` directory.
 $ jeep prep vendor
 ````
 
-The following command prepares the project using the ***build*** profile. This
+The following command prepares the bundle using the ***build*** profile. This
 copies the default build-time files to `./bundle`.
 
 ````

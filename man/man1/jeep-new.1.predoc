@@ -34,6 +34,9 @@ By default, **jeep-new** will prompt the user for certain information that was
 not included in the command-line invocation. See **--no-ask** below for more
 details.
 
+To convert an existing __legacy bundle__ into a __modern bundle__, see
+`jeep-enhance(1)`.
+
 Options
 -------
 
@@ -77,8 +80,8 @@ Options
 - **-k** _type_ | **--alias** _type_:
   Sets whether to use the aliased path for _type_. The valid values for _type_
   are ***bundle*** and ***info***. By default, the __info file__ uses an alias
-  (it is saved in `./info.jdn`) and the __bundle script__ does not (it is saved
-  `./bundle/init.janet`).
+  (it is saved to `./info.jdn`) and the __bundle script__ does not (it is saved
+  to `./bundle/init.janet`).
 
 - **-l** | **--library**:
   Sets whether the bundle produces a pure Janet library artifact.
@@ -109,8 +112,8 @@ Options
 - _name_:
   The name of the bundle.
 
-For more information about the __info file__ and __bundle script__, see CONCEPTS
-in `jeep(1)`.
+For more information about the __info file__, __bundle script__, __legacy
+bundles__ and __modern bundles__, see CONCEPTS in `jeep(1)`.
 
 TEMPLATES
 =========
