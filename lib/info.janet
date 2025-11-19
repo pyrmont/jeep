@@ -414,12 +414,9 @@
         (array/push coll dcl)))))
 
 (defn- swap
-  [coll i to indent]
-  (cond
-    (or (array? to) (table? to))
-    (buffer/push indent "  ")
-    (or (struct? to) (tuple? to))
-    (buffer/push indent " "))
+  [coll i to indent &opt add-indent?]
+  (when add-indent?
+    (buffer/push indent (string/repeat " " (length (first coll)))))
   (put coll i (-> (janet->string to indent)
                   (jdn-str->jdn-arr)
                   (array/pop))))
@@ -455,7 +452,7 @@
                 (assertf (dict? el) "expected struct/table, found %n" el)
                 (assoc el add (buffer indent (string/repeat " " (+ (length (get coll 0))
                                                                    (length (get el 0)))))))
-              (swap coll i to indent))))
+              (swap coll i to indent true))))
         (++ i)))
     (do
       (var val-i (last trail))
