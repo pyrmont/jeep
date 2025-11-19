@@ -32,6 +32,7 @@ The following commands work at the bundle level only:
 - `jeep api`
 - `jeep build`
 - `jeep clean`
+- `jeep enhance`
 - `jeep dep`
 - `jeep meta`
 - `jeep prep`
