@@ -306,7 +306,7 @@
 (defn local-hook
   [name & args]
   (def [ok? module] (protect (require "/bundle" :fresh true)))
-  (assert ok? "error loading bundle script")
+  (assert ok? "failed to load bundle script")
   (when-let [hookf (module/value module (symbol name))]
     (apply hookf args)
     true))

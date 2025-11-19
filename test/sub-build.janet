@@ -35,7 +35,7 @@
         ```)
       (spit "info.jdn" info-file)
       (def args {:sub {:params {:args []}}})
-      (def msg "error loading bundle script")
+      (def msg "failed to load bundle script")
       (assert-thrown-message msg (subcmd/run args))
       (is (= :directory (os/stat "_build" :mode)))))
   (is (empty? out))
