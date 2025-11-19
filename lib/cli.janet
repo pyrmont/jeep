@@ -13,6 +13,7 @@
 (import ./subs/build :as cmd/build)
 (import ./subs/clean :as cmd/clean)
 (import ./subs/dep :as cmd/dep)
+(import ./subs/enhance :as cmd/enhance)
 (import ./subs/meta :as cmd/meta)
 (import ./subs/prep :as cmd/prep)
 (import ./subs/test :as cmd/test)
@@ -54,6 +55,7 @@
    "build" cmd/build/config
    "clean" cmd/clean/config
    "dep" cmd/dep/config
+   "enhance" cmd/enhance/config
    "meta" cmd/meta/config
    "prep" cmd/prep/config
    "test" cmd/test/config])
