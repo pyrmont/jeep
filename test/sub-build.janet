@@ -16,6 +16,7 @@
         {:name "test-build"}
         ```)
       (spit "info.jdn" info-file)
+      (spit "bundle.janet" "")
       (def args {:sub {:params {:args []}}})
       (subcmd/run args)
       (is (= :directory (os/stat "_build" :mode)))
@@ -34,9 +35,10 @@
         ```)
       (spit "info.jdn" info-file)
       (def args {:sub {:params {:args []}}})
-      (subcmd/run args)
+      (def msg "error loading bundle script")
+      (assert-thrown-message msg (subcmd/run args))
       (is (= :directory (os/stat "_build" :mode)))))
-  (is (== confirmation out))
+  (is (empty? out))
   (is (empty? err)))
 
 (deftest build-with-build-function
@@ -98,6 +100,7 @@
         {:name "test-preserve"}
         ```)
       (spit "info.jdn" info-file)
+      (spit "bundle.janet" "")
       (os/mkdir "_build")
       (spit "_build/existing.txt" "existing content")
       (def args {:sub {:params {:args []}}})

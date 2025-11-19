@@ -301,12 +301,13 @@
   [&opt dir]
   (default dir ".")
   (when-let [info (load-info dir)]
-   (parse info)))
+    (parse info)))
 
 (defn local-hook
   [name & args]
   (def [ok? module] (protect (require "/bundle" :fresh true)))
-  (when-let [hookf (and ok? (module/value module (symbol name)))]
+  (assert ok? "error loading bundle script")
+  (when-let [hookf (module/value module (symbol name))]
     (apply hookf args)
     true))
 

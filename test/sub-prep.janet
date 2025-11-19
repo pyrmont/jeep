@@ -7,6 +7,23 @@
 (def fdir "../res/fixtures")
 (def nl "\n")
 
+(deftest prep-with-no-bundle-script
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir d
+      (def info-file
+        ```
+        {:name "test-no-script"}
+        ```)
+      (spit "info.jdn" info-file)
+      (def args {:sub {:params {:args []}}})
+      (def msg "error loading bundle script")
+      (assert-thrown-message msg (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
 (deftest prep-default-profile
   (def out @"")
   (def err @"")

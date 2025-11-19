@@ -6,6 +6,23 @@
 (def confirm-cleaned "Cleaning completed.\n")
 (def confirm-nothing "No files to clean.\n")
 
+(deftest build-with-no-bundle-script
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir d
+      (def info-file
+        ```
+        {:name "test-no-script"}
+        ```)
+      (spit "info.jdn" info-file)
+      (def args {:sub {:params {:args []}}})
+      (def msg "error loading bundle script")
+      (assert-thrown-message msg (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
 (deftest clean-with-no-directories
   (def out @"")
   (def err @"")
@@ -17,6 +34,7 @@
         {:name "test-clean"}
         ```)
       (spit "info.jdn" info-file)
+      (spit "bundle.janet" "")
       (def args {:sub {:opts {}}})
       (subcmd/run args)))
   (is (== confirm-nothing out))
@@ -33,6 +51,7 @@
         {:name "test-clean"}
         ```)
       (spit "info.jdn" info-file)
+      (spit "bundle.janet" "")
       (os/mkdir "_build")
       (spit "_build/file1.txt" "content1")
       (spit "_build/file2.txt" "content2")
@@ -54,6 +73,7 @@
         {:name "test-clean"}
         ```)
       (spit "info.jdn" info-file)
+      (spit "bundle.janet" "")
       (os/mkdir "_build")
       (spit "_build/file.txt" "content")
       (def args {:sub {:opts {"build" true}}})
@@ -73,6 +93,7 @@
         {:name "test-clean"}
         ```)
       (spit "info.jdn" info-file)
+      (spit "bundle.janet" "")
       (os/mkdir "_system")
       (spit "_system/file.txt" "content")
       (def args {:sub {:opts {"system" true}}})
@@ -92,6 +113,7 @@
         {:name "test-clean"}
         ```)
       (spit "info.jdn" info-file)
+      (spit "bundle.janet" "")
       (os/mkdir "_build")
       (spit "_build/file1.txt" "content1")
       (os/mkdir "_system")
@@ -137,6 +159,7 @@
         {:name "test-clean"}
         ```)
       (spit "info.jdn" info-file)
+      (spit "bundle.janet" "")
       (os/mkdir "_build")
       (os/mkdir "_build/subdir")
       (spit "_build/subdir/file.txt" "content")
