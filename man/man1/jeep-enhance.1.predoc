@@ -1,0 +1,173 @@
+---
+Title: JEEP-ENHANCE(1)
+Date: 2025/11/19
+Authors: Michael Camilleri <mike@inqk.net>
+Project: Jeep
+Version: DEVEL
+---
+
+NAME
+====
+
+**jeep-enhance** - enhance a legacy Janet bundle into a modern Janet bundle
+
+SYNOPSIS
+========
+
+**jeep-enhance** [**-a** _name_ | **--author** _name_] [**-d** _text_ |
+                 **--desc** _text_] [**-i** _type_ | **--license** _type_]
+                 [**-f** _url_ | **--forge** _url_] [**-u** _url_ | **--url**
+                 _url_] [**-r** _url_ | **--repo** _url_] [**-e** |
+                 **--executable**] [**-l** | **--library**] [**-m** |
+                 **--manpage**] [**-n** | **--native**] [**-s** | **--script**]
+                 [**-k** _type_ | **--alias** _type_] [**-K** _type_ |
+                 **--no-alias** _type_] [**-b** | **--bare**] [**-A** |
+                 **--no-ask**] [**-t** _dir_ | **--templates** _dir_] _name_
+
+DESCRIPTION
+===========
+
+**jeep-enhance** enhances a __legacy bundle__ in the current directory into a
+__modern bundle__. This command is intended for projects that use the older
+`project.janet` format with `declare-project` and `declare-source` calls.
+
+At minimum, the enhancement process:
+
+1. parses the existing `./project.janet` file to extract metadata
+2. backs up the original `./project.janet` to `./project.janet.original`
+3. creates an __info file__ with the extracted metadata
+
+It uses the same underlying logic as `jeep-new(1)` and is intended to create a
+bundle that is equivalent to what the user would get if they ran `jeep-new(1)`
+with metadata equivalent to that of the legacy bundle.
+
+Note that, with the exception of `./project.janet`, if a file exists with the
+same path as one `jeep-new(1)` would create, **jeep-enhance** does not create
+the file and leaves the existing file in place.
+
+Options
+-------
+
+- **-A** | **--no-ask**:
+  Sets whether to prompt the user to provide information not specified in
+  certain options. The information **jeep-enhance** will ask about are values
+  specified in the **--author**, **--desc**, **--license**, **--repo** and
+  **--url** options.
+
+- **-K** _type_ | **--no-alias** _type_:
+  Sets whether to not use the aliased path for _type_. The valid values for
+  _type_ are ***bundle*** and ***info***. By default, the __info file__ uses an
+  alias (it is saved to `./info.jdn`) and the __bundle script__ does not (it is
+  saved to `./bundle/init.janet`).
+
+- **-a** _name_ | **--author** _name_:
+  Sets the name of the author of the bundle. If not provided, **jeep-enhance**
+  will try to find the information in the user's Git configuration file.
+
+- **-b** | **--bare**:
+  Sets whether **jeep-enhance** will create a bare bundle. A bare bundle
+  contains an __info file__ but does not generate any other files or
+  directories.
+
+- **-d** _text_ | **--desc** _text_:
+  Sets the description of the bundle.
+
+- **-e** | **--executable**:
+  Sets whether the bundle produces a compiled executable artifact.
+
+- **-f** _url_ | **--forge** _url_:
+  Sets the forge where the bundle will be hosted. This information is not saved
+  in the __info file__ but it enables **jeep-enhance** to infer URLs to
+  associate with the ``:url`` and ``:repo`` keys. An example would be
+  'github.com/octocat'.
+
+- **-i** _type_ | **--license** _type_:
+  Sets the license of the bundle. **jeep-enhance** is able to generate license
+  files for 'Apache-2.0', 'BSD-3-Clause', 'CC0-1.0', 'GPL-3.0', 'ISC' and 'MIT'.
+  If a user uses one of those specific names, the file 'LICENSE' will be
+  generated.
+
+- **-k** _type_ | **--alias** _type_:
+  Sets whether to use the aliased path for _type_. The valid values for _type_
+  are ***bundle*** and ***info***. By default, the __info file__ uses an alias
+  (it is saved to `./info.jdn`) and the __bundle script__ does not (it is saved
+  to `./bundle/init.janet`).
+
+- **-l** | **--library**:
+  Sets whether the bundle produces a pure Janet library artifact.
+
+- **-m** | **--manpage**:
+  Sets whether the bundle produces a man page artifact.
+
+- **-n** | **--native**:
+  Sets whether the bundle produces a native library artifact.
+
+- **-r** _url_ | **--repo** _url_:
+  Sets the repository URL of the bundle. If **--forge** is provided, the
+  inferred URL will be of the form ``git+https://<forge>/<bundle>``. Otherwise,
+  the placeholder ``https://example.org/<bundle>`` will be the inference.
+
+- **-s** | **--script**:
+  Sets whether the bundle produces an executable script artifact.
+
+- **-t** _dir_ | **--templates** _dir_:
+  Sets a directory to look for templates. See `<TEMPLATES>` below for more
+  information.
+
+- **-u** _url_ | **--url** _url_:
+  Sets the URL of the bundle. If **--forge** is provided, the inferred URL will
+  be of the form ``https://<forge>/<bundle>``. Otherwise, the placeholder
+  ``https://example.org/<bundle>`` will be the inference.
+
+For more information about the __info file__ and __bundle script__, see CONCEPTS
+in `jeep(1)`.
+
+TEMPLATES
+=========
+
+**jeep-enhance** uses the same template files as `jeep-new(1)` to populate the
+enhanced bundle:
+
+- .gitignore
+- README.me
+- binscript
+- bundle.janet
+- info.jdn
+- project.janet
+
+If an individual user finds that these templates are insufficient,
+**jeep-enhance** can be directed to look in a different template directory using
+the **--templates** option. If the template directory does not contain a
+particular file, **jeep-enhance** will fall back to using the provided template.
+
+Templates are processed through Musty, a Janet implementation of the Mustache
+templating language. The values extracted from the original `project.janet` are
+available under the same keys as the __info file__ (e.g. the name of the bundle
+can be replaced with ``{{{name}}}``). For more information, see
+<https://mustache.github.io>.
+
+EXAMPLES
+========
+
+To enhance the bundle in the current directory:
+
+````
+$ jeep enhance
+````
+
+To enhance the bundle without being prompted for additional information:
+
+````
+$ jeep enhance --no-ask
+````
+
+To enhance the bundle with custom templates:
+
+````
+$ jeep enhance --templates my/templates/dir
+````
+
+BUGS
+====
+
+Report issues at <https://github.com/pyrmont/jeep>
