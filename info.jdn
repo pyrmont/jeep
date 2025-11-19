@@ -46,6 +46,7 @@
                         "man/man1/jeep-build.1"
                         "man/man1/jeep-clean.1"
                         "man/man1/jeep-dep.1"
+                        "man/man1/jeep-enhance.1"
                         "man/man1/jeep-install.1"
                         "man/man1/jeep-list.1"
                         "man/man1/jeep-meta.1"
