@@ -105,8 +105,7 @@
         (sub/run parsed)
         ([e f]
          (eprint "error: " e)
-         (if (os/getenv "JEEP_DEBUG")
-           (debug/stacktrace f))
+         (debug/stacktrace f)
          (os/exit 1))))))
 
 (defn main [& args] (run))
