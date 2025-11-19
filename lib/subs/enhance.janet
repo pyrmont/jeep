@@ -25,10 +25,15 @@
   (each f pf
     (def op (first f))
     (when (or (= 'declare-project op)
+              (= 'declare-binscript op)
               (= 'declare-source op))
       (def k (keyword/slice op 8))
-      (assertf (nil? (get project k)) "multiple calls to %s in project.janet" op)
-      (put project k (struct ;(slice f 1)))))
+      (if (= :project k)
+        (put project k (struct ;(slice f 1)))
+        (do
+          (unless (has-key? project k)
+            (put project k @[]))
+          (array/push (get project k) (struct ;(slice f 1)))))))
   project)
 
 (defn- setup-defaults
@@ -39,9 +44,21 @@
            :dependencies])
   (each k ks
     (put res k (get meta k)))
-  (def lib (get project :source))
-  (put-in res [:artifacts :libraries] [{:prefix (get lib :prefix)
-                                        :paths (get lib :source)}])
+  # libraries
+  (def libs (seq [s :in (get project :source [])]
+              {:prefix (get s :prefix)
+               :paths (get s :source)}))
+  # scripts
+  (def scps (seq [b :in (get project :binscript [])]
+              {:path (get b :main)
+               # NOTE Is this needed in modern bundles?
+               # :syspath? (get b :hardcode-syspath)
+               }))
+  (put res :artifacts {:executables []
+                       :libraries (tuple/slice libs 0)
+                       :manpages []
+                       :natives []
+                       :scripts (tuple/slice scps 0)})
   res)
 
 (defn run

@@ -4,7 +4,8 @@
   :author "A Programmer"
   :license "MIT"
   :url "https://example.org/foobar"
-  :repo "git+https://example.org/foobar")
+  :repo "git+https://example.org/foobar"
+  :dependencies [{:url "https://example.org/bazquux"}])
 
 (declare-source
   :prefix "foobar"
