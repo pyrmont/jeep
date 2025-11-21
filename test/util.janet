@@ -25,17 +25,6 @@
   (def env (make-env))
   (defn posix/os/which [] :posix)
   (put env 'os/which @{:value posix/os/which})
-  (defn posix/os/getenv [k] (if (= "PSModulePath" k) false (os/getenv k)))
-  (put env 'os/getenv @{:value posix/os/getenv})
-  (def module (require "../lib/util" :fresh true :env env))
-  (module/value module sym))
-
-(defn- get-powershell [sym]
-  (def env (make-env))
-  (defn ps/os/which [] :windows)
-  (put env 'os/which @{:value ps/os/which})
-  (defn ps/os/getenv [k] (if (= "PSModulePath" k) true (os/getenv k)))
-  (put env 'os/getenv @{:value ps/os/getenv})
   (def module (require "../lib/util" :fresh true :env env))
   (module/value module sym))
 
@@ -43,8 +32,6 @@
   (def env (make-env))
   (defn ps/os/which [] :windows)
   (put env 'os/which @{:value ps/os/which})
-  (defn ps/os/getenv [k] (if (= "PSModulePath" k) false (os/getenv k)))
-  (put env 'os/getenv @{:value ps/os/getenv})
   (def module (require "../lib/util" :fresh true :env env))
   (module/value module sym))
 
@@ -68,29 +55,9 @@
   (is (== ["" "absolute" "path"] (util/apart "/absolute//path")))
   (is (== ["relative" "path"] (util/apart "relative/path")))
   (is (== ["relative" "path"] (util/apart "relative//path")))
-  (is (== ["relative" "path with spaces"] (util/apart `relative/"path with spaces"`)))
-  (is (== ["relative" "path with escapes"] (util/apart `relative/path\ with\ escapes`)))
-  (is (== ["relative"] (util/apart "relative/")))
-  (assert-thrown-message "invalid path" (util/apart "invalid path")))
+  (is (== ["relative"] (util/apart "relative/"))))
 
-(deftest apart-powershell
-  (def util/apart (get-powershell 'apart))
-  (is (== [] (util/apart "")))
-  (is (== ["C:"] (util/apart "C:\\")))
-  (is (== ["C:" "absolute" "path"] (util/apart `C:\absolute\path`)))
-  (is (== ["" "absolute" "path"] (util/apart `\absolute\path`)))
-  (is (== ["" "absolute" "path"] (util/apart `\absolute\\path`)))
-  (is (== ["relative" "path"] (util/apart `relative\path`)))
-  (is (== ["relative" "path"] (util/apart `relative\\path`)))
-  (is (== ["relative" "path with spaces"] (util/apart `relative\"path with spaces"`)))
-  (is (== ["relative" "path with escapes"] (util/apart "relative\\path` with` escapes")))
-  (is (== ["relative"] (util/apart `relative\`)))
-  (is (== [""] (util/apart "/" true)))
-  (is (== ["" "absolute" "path"] (util/apart "/absolute/path" true)))
-  (is (== ["relative" "path"] (util/apart "relative/path" true)))
-  (assert-thrown-message "invalid path" (util/apart "invalid path")))
-
-(deftest apart-cmd
+(deftest apart-windows
   (def util/apart (get-windows 'apart))
   (is (== [] (util/apart "")))
   (is (== ["C:"] (util/apart "C:\\")))
@@ -99,13 +66,10 @@
   (is (== ["" "absolute" "path"] (util/apart `\absolute\\path`)))
   (is (== ["relative" "path"] (util/apart `relative\path`)))
   (is (== ["relative" "path"] (util/apart `relative\\path`)))
-  (is (== ["relative" "path with spaces"] (util/apart `relative\"path with spaces"`)))
-  (is (== ["relative" "path with escapes"] (util/apart "relative\\path^ with^ escapes")))
   (is (== ["relative"] (util/apart `relative\`)))
   (is (== [""] (util/apart "/" true)))
   (is (== ["" "absolute" "path"] (util/apart "/absolute/path" true)))
-  (is (== ["relative" "path"] (util/apart "relative/path" true)))
-  (assert-thrown-message "invalid path" (util/apart "invalid path")))
+  (is (== ["relative" "path"] (util/apart "relative/path" true))))
 
 (deftest colour
   (is (== "\e[32mfoo\e[0m" (util/colour :green "foo" true)))

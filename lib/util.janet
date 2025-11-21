@@ -5,27 +5,14 @@
 (def colours {:green "\e[32m" :red "\e[31m"})
 
 (def sep (get {:windows "\\" :cygwin "\\" :mingw "\\"} (os/which) "/"))
-(def esc (cond (os/getenv "PSModulePath")
-               "`"
-               (index-of (os/which) [:mingw :windows])
-               "^"
-               # default
-               "\\"))
 
-(def pathg ~{:main (* (+ :abspath :relpath) (? :sep) -1)
+(def pathg ~{:main    (* (+ :abspath :relpath) (? :sep) -1)
              :abspath (* :root (any :relpath))
              :relpath (* :part (any (* :sep :part)))
-             :root (+ (* ,sep (constant ""))
-                      (* '(* :a ":") `\`))
-             :sep (some ,sep)
-             :part (* (+ :quoted :unquoted) (> (+ :sep -1)))
-             :quoted (* `"`
-                        (% (some (+ (* ,esc ,esc)
-                                 (* ,esc `"`)
-                                 (* (! `"`) '1))))
-                        `"`)
-             :unquoted (% (some (+ :escaped (* (! (set `"\/ `)) '1))))
-             :escaped (* ,esc '1)})
+             :root    (+ (* ,sep (constant ""))
+                         (* '(* :a ":") `\`))
+             :sep     (some ,sep)
+             :part    '(some (* (! :sep) 1))})
 
 # used for splitting POSIX paths
 (def- posix-pathg ~{:main     (* (+ :abspath :relpath) (? :sep) -1)
@@ -33,14 +20,7 @@
                     :relpath  (* :part (any (* :sep :part)))
                     :root     (* "/" (constant ""))
                     :sep      (some "/")
-                    :part     (* (+ :quoted :unquoted) (> (+ :sep -1)))
-                    :quoted   (* `"`
-                                 (% (some (+ (* "\\" "\\")
-                                             (* "\\" `"`)
-                                             (* (! `"`) '1))))
-                                 `"`)
-                    :unquoted (% (some (+ :escaped (* (! (set `"\/ `)) '1))))
-                    :escaped  (* "\\" '1)})
+                    :part     '(some (* (! :sep) 1))})
 
 # Path
 

@@ -5,16 +5,9 @@
 (def- posix-pathg ~{:main     (* (+ :abspath :relpath) (? :sep) -1)
                     :abspath  (* :root (any :relpath))
                     :relpath  (* :part (any (* :sep :part)))
-                    :root     (* :sep (constant ""))
-                    :sep      "/"
-                    :part     (* (+ :quoted :unquoted) (> (+ :sep -1)))
-                    :quoted   (* `"`
-                                 (% (some (+ (* "\\" "\\")
-                                             (* "\\" `"`)
-                                             (* (! `"`) '1))))
-                                 `"`)
-                    :unquoted (% (some (+ :escaped (* (! (set `"\/ `)) '1))))
-                    :escaped  (* "\\" '1)})
+                    :root     (* "/" (constant ""))
+                    :sep      (some "/")
+                    :part     '(some (* (! :sep) 1))})
 
 # based on code from spork/declare-cc.janet
 (defn- add-bat-shim [manifest bin-name &opt chmod-mode]
