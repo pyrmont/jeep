@@ -4,13 +4,16 @@
 
 (def colours {:green "\e[32m" :red "\e[31m"})
 
-(def sep (get {:windows "\\" :cygwin "\\" :mingw "\\"} (os/which) "/"))
+(def psep "/")
+(def wsep "\\")
+(def sep (get {:windows wsep :cygwin wsep :mingw wsep} (os/which) psep))
+(def dir-suffix "/.")
 
 (def pathg ~{:main    (* (+ :abspath :relpath) (? :sep) -1)
              :abspath (* :root (any :relpath))
              :relpath (* :part (any (* :sep :part)))
              :root    (+ (* ,sep (constant ""))
-                         (* '(* :a ":") `\`))
+                         (* '(* :a ":") ,wsep))
              :sep     (some ,sep)
              :part    '(some (* (! :sep) 1))})
 
@@ -18,8 +21,8 @@
 (def- posix-pathg ~{:main     (* (+ :abspath :relpath) (? :sep) -1)
                     :abspath  (* :root (any :relpath))
                     :relpath  (* :part (any (* :sep :part)))
-                    :root     (* "/" (constant ""))
-                    :sep      (some "/")
+                    :root     (* ,psep (constant ""))
+                    :sep      (some ,psep)
                     :part     '(some (* (! :sep) 1))})
 
 # Path
@@ -31,8 +34,8 @@
 (defn abspath?
   [path]
   (if (= :windows (os/which))
-    (not (nil? (peg/match '(* (? (* :a ":")) `\`) path)))
-    (string/has-prefix? "/" path)))
+    (not (nil? (peg/match ~(* (? (* :a ":")) ,wsep) path)))
+    (string/has-prefix? psep path)))
 
 (defn apart
   [path &opt posix?]
@@ -145,10 +148,10 @@
   (cond
     # absolute path
     (= "" (first parts))
-    (put parts 0 (if posix? "/" sep))
+    (put parts 0 (if posix? psep sep))
     # Windows path beginning with drive letter
     (string/has-suffix? ":" (first parts))
-    (put parts 0 (string (first parts) "\\")))
+    (put parts 0 (string (first parts) wsep)))
   (var res false)
   (def cwd (os/cwd))
   (each part parts
@@ -163,7 +166,7 @@
   (def parts (apart path posix?))
   (when (empty? parts)
     (break parts))
-  (def s (if posix? "/" sep))
+  (def s (if posix? psep sep))
   (def joined (string/join (array/slice parts 0 (- -1 level)) s))
   (if (= "" joined)
     sep
@@ -171,7 +174,7 @@
 
 (defn win-path
   [s]
-  (def trailing (if (string/has-suffix? "/" s) sep ""))
+  (def trailing (if (string/has-suffix? psep s) sep ""))
   (-> (apart s true) (string/join sep) (string trailing)))
 
 # Other functions
@@ -194,10 +197,18 @@
   [src dest]
   (if (= :windows (os/which))
     (do
+      (def copy-contents? (string/has-suffix? "\\." src))
+      (def xcopy-src (if copy-contents?
+                       (string (string/slice src 0 -2) "*")
+                       src))
       (def express? (string/has-suffix? sep dest))
       (def xcopy-dest
-        (if express?
+        (cond
+          express?
           dest
+          copy-contents?
+          (string dest sep)
+          # default
           (do
             (def dir (parent dest))
             (def res (string dir sep (gensym)))
@@ -205,11 +216,12 @@
             (os/mkdir res)
             (string res sep))))
       (os/shell (string "C:\\Windows\\System32\\xcopy.exe "
-                        src
+                        xcopy-src
                         " "
                         xcopy-dest
                         " /e /h /i /k /o /r /x /y >NUL"))
-      (unless express?
+      # Only move if not express and not copying contents
+      (unless (or express? copy-contents?)
         (os/shell (string "C:\\Windows\\System32\\cmd.exe /c move "
                           (string/slice xcopy-dest 0 -2)
                           " "
@@ -254,19 +266,26 @@
     (def src-dir (if local? origin (fetch-git :url url :tag tag :dir tmp)))
     (def dest-dir (if parent-dir
                     # use POSIX path separator to match info file
-                    (string parent-dir (when prefix (string "/" prefix)))
+                    (string parent-dir (when prefix (string psep prefix)))
                     (or prefix ".")))
     (print "vendoring " (if local? (win-path origin) origin))
     (mkdir dest-dir true)
+    (def to-plat (if (= wsep sep) win-path identity))
     (each f files
       (def [src dest] (if (indexed? f) f [f f]))
+      (def full-src (string src-dir psep src))
       # use POSIX path separators to match info file
-      (def posix-to (string dest-dir "/" dest))
-      (if (string/has-suffix? "/" posix-to)
+      (def posix-to (string dest-dir psep dest))
+      (if (string/has-suffix? psep posix-to)
         (mkdir posix-to true)
         (mkdir (parent posix-to 1 true) true))
-      (def from ((if (= "\\" sep) win-path identity) (string src-dir "/" src)))
-      (def to ((if (= "\\" sep) win-path identity) posix-to))
+      (def posix-from
+        (if (and (not (string/has-suffix? dir-suffix full-src))
+                 (= :directory (os/stat full-src :mode)))
+          (string full-src dir-suffix)
+          full-src))
+      (def from (to-plat posix-from))
+      (def to (to-plat posix-to))
       (print "  copying " from " to " to)
       (copy from to))))
 

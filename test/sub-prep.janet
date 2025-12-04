@@ -165,7 +165,7 @@
             "refer to the man page for more information" nl
             "warning: use of :files is deprecated in vendored dependencies" nl
             "vendoring " origin nl
-            "  copying " origin h/sep "lib to deps" h/sep "example" h/sep "lib" nl
+            "  copying " origin h/sep "lib" h/sep ". to deps" h/sep "example" h/sep "lib" nl
             confirmation))
   (is (== expect-out out))
   (is (empty? err)))
@@ -193,7 +193,7 @@
   (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example"))
   (def expect-out
     (string "vendoring " origin nl
-            "  copying " origin h/sep "lib to deps" h/sep "example" h/sep "lib" nl
+            "  copying " origin h/sep "lib" h/sep ". to deps" h/sep "example" h/sep "lib" nl
             confirmation))
   (is (== expect-out out))
   (is (empty? err)))
@@ -250,7 +250,7 @@
   (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example"))
   (def expect-out
     (string "vendoring " origin nl
-            "  copying " origin h/sep "lib to ." h/sep "lib" nl
+            "  copying " origin h/sep "lib" h/sep ". to ." h/sep "lib" nl
             confirmation))
   (is (== expect-out out))
   (is (empty? err)))
