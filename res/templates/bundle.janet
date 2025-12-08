@@ -34,8 +34,8 @@
   (each exe exes
     (cond
       # uncomment when building quickbins
-      # (get exe :quickbin)
-      # (declare/quickbin (string build-dir s (get exe :name)) (get exe :entry))
+      # (get exe :quickbin?)
+      # (declare/quickbin (get exe :entry) (string build-dir s (get exe :name)))
       # default
       nil)))
 
