@@ -64,21 +64,22 @@
     (print (util/colour c m))))
 
 (defn- run-janet
-  [path & args]
+  [path args & dyns]
+  (default args [])
   (prin "running " (relpath path) "... ")
   (flush)
   (if no-result?
     (print))
   (def setup
-    (if (empty? args)
+    (if (empty? dyns)
       ""
       (do
         (def b @"")
-        (each [k v] (partition 2 args)
+        (each [k v] (partition 2 dyns)
           (buffer/push b (string "(setdyn :" k " " v ") ")))
         (string b))))
   (def janet-exe (dyn :executable))
-  (if (zero? (os/execute [janet-exe "-m" (dyn :syspath) "-e" setup path] :p))
+  (if (zero? (os/execute [janet-exe "-m" (dyn :syspath) "-e" setup path ;args] :p))
     (result :green "pass")
     (do
       (result :red "fail")
@@ -86,29 +87,30 @@
   (++ script-count))
 
 (defn- run-tests
-  [path &named use? test skip]
+  [path &named args use? test skip]
   (assert (dyn :syspath) "syspath must be set")
   (each f (sorted (os/dir path))
     (def fpath (string path util/sep f))
     (case (os/stat fpath :mode)
       :file
       (when (use? fpath)
-        (run-janet fpath
+        (run-janet fpath args
                    :test/tests (if (nil? test) "nil" (string "[" (map (partial string "'") test) "]"))
                    :test/skips (if (nil? skip) "nil" (string "[" (map (partial string "'") skip) "]"))
                    :test/color? true))
       :directory
-      (run-tests fpath :use? use? :test test :skip skip))))
+      (run-tests fpath :args args :use? use? :test test :skip skip))))
 
 (defn run
   [args &opt jeep-config]
+  (def params (get-in args [:sub :params] {}))
   (def opts (get-in args [:sub :opts] {}))
   (when (and (get opts "file") (get opts "no-file"))
     (error "cannot call with both --file and --no-file"))
   (when (and (get opts "test") (get opts "no-test"))
     (error "cannot call with both --test and --no-test"))
   (if (get opts "check")
-    (util/local-hook :check))
+    (util/local-hook :check (get params :args)))
   (def only-paths (get opts "file"))
   (def excl-paths (get opts "no-file"))
   (set no-result? (get opts "no-result"))
@@ -120,7 +122,7 @@
       excl-paths
       (not (find match? excl-paths))
       (string/has-suffix? ".janet" path)))
-  (run-tests (os/realpath "test") :use? use? :test (get opts "test") :skip (get opts "no-test"))
+  (run-tests (os/realpath "test") :args (get params :args) :use? use? :test (get opts "test") :skip (get opts "no-test"))
   (if (empty? failures)
     (print "All scripts passed.")
     (do
