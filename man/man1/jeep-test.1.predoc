@@ -1,6 +1,6 @@
 ---
 Title: JEEP-TEST(1)
-Date: 2025/09/11
+Date: 2026/01/07
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -47,12 +47,12 @@ Options
   useful where your test files are responsible for printing their own results.
 
 - **-t** _name_, **--test** _name_:
-  Name of the test to run. Other tests are not run. Can be used multiple times.
+  Adds _name_ to dynamic binding ``:test/tests``. See below for more details.
   This option is incompatible with **--no-test**.
 
 - **-T** _name_, **--no-test** _name_:
-  Name of the test not to run. Other tests will be run. Can be used multiple
-  times. This option is incompatible with **--test**.
+  Adds _name_ to dynamic binding ``:test/skips``. See below for more details.
+  This option is incompatible with **--test**.
 
 - _check-args_:
   Arguments to pass to the check __bundle hook__. The check __bundle hook__
@@ -81,13 +81,11 @@ two bases on which to control the tests which are run:
 - __Test-based__ -
   There are two mutually exclusive options:
 
-  1. The user selects the tests to run using **--test**. All other tests are
-     excluded.
-  2. The user selects the tests not to run using **--no-test**. All other tests
-     are excluded.
+  1. The user selects the tests to run using **--test**.
+  2. The user selects the tests not to run using **--no-test**.
 
   This basis requires the testing framework to respect the dynamic binding
-  ``:tests`` (in the case of **--test**) or ``:skips`` (in the case of
+  ``:test/tests`` (in the case of **--test**) or ``:test/skips`` (in the case of
   **--no-test**).
 
 By default, the check __bundle hook__ is not run but this can be toggled with
@@ -108,7 +106,7 @@ To test only the file `./test/foo.janet`:
 $ jeep test --file ./test/foo.janet
 ````
 
-To skip the test ``bar``:
+To skip the test ``bar`` (assuming your testing framework supports this):
 
 ````
 $ jeep test --no-test bar

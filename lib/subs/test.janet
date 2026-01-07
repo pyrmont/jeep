@@ -10,9 +10,9 @@
    :no-file
    `Path of file not to run. Other files will be run.`
    :test
-   `Name of test to run. Other tests will not be run.`
+   `Adds <name> to dynamic binding :test/tests.`
    :no-test
-   `Name of test not to run. Other tests will be run.`
+   `Adds <name> to dynamic binding :test/skips.`
    :no-result
    `Skips printing pass/fail result.`
    :about
@@ -54,6 +54,14 @@
 (var- script-count 0)
 (var- failures @[])
 
+(defn- as-str [v]
+  (if (or (nil? v) (empty? v))
+    "nil"
+    (string "["
+            (-> (map (partial string "'") v)
+                (string/join " "))
+            "]")))
+
 (defn- relpath
   [path]
   (string/replace (os/cwd) "." path))
@@ -87,19 +95,22 @@
   (++ script-count))
 
 (defn- run-tests
-  [path &named args use? test skip]
+  [path &named args use? tests skips]
   (assert (dyn :syspath) "syspath must be set")
   (each f (sorted (os/dir path))
     (def fpath (string path util/sep f))
+    (def dyn-tests (as-str tests))
+    (def dyn-skips (as-str skips))
     (case (os/stat fpath :mode)
       :file
       (when (use? fpath)
         (run-janet fpath args
-                   :test/tests (if (nil? test) "nil" (string "[" (map (partial string "'") test) "]"))
-                   :test/skips (if (nil? skip) "nil" (string "[" (map (partial string "'") skip) "]"))
-                   :test/color? true))
+                   :test/color? true
+                   :test/runner ":jeep"
+                   :test/tests dyn-tests
+                   :test/skips dyn-skips))
       :directory
-      (run-tests fpath :args args :use? use? :test test :skip skip))))
+      (run-tests fpath :args args :use? use? :tests tests :skips skips))))
 
 (defn run
   [args &opt jeep-config]
@@ -122,7 +133,10 @@
       excl-paths
       (not (find match? excl-paths))
       (string/has-suffix? ".janet" path)))
-  (run-tests (os/realpath "test") :args (get params :args) :use? use? :test (get opts "test") :skip (get opts "no-test"))
+  (def [ok? path] (protect (os/realpath "test")))
+  (unless ok?
+    (error "no directory ./test"))
+  (run-tests path :args (get params :args) :use? use? :tests (get opts "test") :skips (get opts "no-test"))
   (if (empty? failures)
     (print "All scripts passed.")
     (do
