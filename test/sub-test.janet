@@ -4,9 +4,7 @@
 (import ../lib/subs/test :as subcmd)
 
 (defn- passed [path]
-  (string "running ./"
-          path
-          "... \nAll scripts passed.\n"))
+  )
 
 (deftest no-dir
   (def out @"")
@@ -59,7 +57,9 @@
                    :test/tests ['foo 'bar]})
       (def actual (-> (slurp "test/dyns_result.jdn") parse))
       (is (== expect actual))))
-  (is (== (passed "test/dyns.janet") out))
+  (def path (string "test" h/sep "dyns.janet"))
+  (def expect (string "running ." h/sep path "... \nAll scripts passed.\n"))
+  (is (== expect out))
   (is (empty? err)))
 
 (run-tests!)

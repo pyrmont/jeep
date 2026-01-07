@@ -9,6 +9,8 @@
 (def sep (get {:windows wsep :cygwin wsep :mingw wsep} (os/which) psep))
 (def dir-suffix "/.")
 
+(def windows? (= sep wsep))
+
 (def pathg ~{:main    (* (+ :abspath :relpath) (? :sep) -1)
              :abspath (* :root (any :relpath))
              :relpath (* :part (any (* :sep :part)))

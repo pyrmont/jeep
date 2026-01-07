@@ -133,8 +133,13 @@
       excl-paths
       (not (find match? excl-paths))
       (string/has-suffix? ".janet" path)))
-  (def [ok? path] (protect (os/realpath "test")))
-  (unless ok?
+  (def [ok? path]
+    (protect
+      (do
+        (when (and util/windows? (nil? (os/stat "test")))
+          (error "No such file or directory: test"))
+        (os/realpath "test"))))
+  (unless (or ok?)
     (error "no directory ./test"))
   (run-tests path :args (get params :args) :use? use? :tests (get opts "test") :skips (get opts "no-test"))
   (if (empty? failures)
