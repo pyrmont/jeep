@@ -54,7 +54,7 @@
       (util/fetch-dep d)
       (do
         (def dir (get d :prefix "."))
-        (install/install-to d dir :force-deps? force-deps?)))))
+        (install/install-to d dir :force-update force-deps?)))))
 
 (defn- install-build
   [info &named force-deps?]

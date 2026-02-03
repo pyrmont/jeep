@@ -26,7 +26,7 @@
   (def repo (get-in args [:sub :params :bundle]))
   (def replace? (get-in args [:sub :opts "replace"]))
   (if (nil? repo)
-    (install/install "file::." :replace? replace? :force-update true :no-deps true)
+    (install/install "file::." :replace? replace? :force-update true)
     (each rep repo
       (def [ok? res] (protect (parse rep)))
       (install/install (if (and ok? (dictionary? res)) res rep)
