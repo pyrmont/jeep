@@ -121,6 +121,249 @@
     text))
 
 
+### Diff functions
+
+(defn- strip-common-prefix
+  ```
+  Returns [common-prefix s1-remainder s2-remainder]
+  ```
+  [s1 s2]
+  (def len (min (length s1) (length s2)))
+  (var i 0)
+  (while (and (< i len) (= (get s1 i) (get s2 i)))
+    (++ i))
+  [(string/slice s1 0 i) (string/slice s1 i) (string/slice s2 i)])
+
+
+(defn- strip-common-suffix
+  ```
+  Returns [s1-remainder s2-remainder common-suffix]
+  ```
+  [s1 s2]
+  (def len1 (length s1))
+  (def len2 (length s2))
+  (def len (min len1 len2))
+  (var i 0)
+  (while (and (< i len) (= (get s1 (- len1 1 i)) (get s2 (- len2 1 i))))
+    (++ i))
+  (if (zero? i)
+    [s1 s2 ""]
+    [(string/slice s1 0 (- len1 i))
+     (string/slice s2 0 (- len2 i))
+     (string/slice s1 (- len1 i))]))
+
+(defn- merge-consecutives
+  ```
+  Merges consecutive segments of the same type
+  ```
+  [segments]
+  (var i 1)
+  (while (def nxt (get segments i))
+    (def cur (get segments (- i 1)))
+    (if (= (cur :type) (nxt :type))
+      (do
+        (put cur :text (string (cur :text) (nxt :text)))
+        (array/remove segments i))
+      (++ i)))
+  segments)
+
+
+(defn- merge-islands
+  ```
+  Merges isolated equal segments (i.e. islands) for readability
+  ```
+  [segments]
+  (var i 2)
+  (while (def nxt (get segments i))
+    (def prv (get segments (- i 2)))
+    (def cur (get segments (- i 1)))
+    (cond
+      # case 1: skip
+      (or (= :equal (prv :type))
+          (= :equal (nxt :type))
+          (not= :equal (cur :type))
+          (string/find " " (cur :text)))
+      (set i (+ i 1))
+      # case 2: prv and nxt different types
+      (not= (prv :type) (nxt :type))
+      (do
+        (put prv :text (string (prv :text) (cur :text)))
+        (put nxt :text (string (cur :text) (nxt :text)))
+        (array/remove segments (- i 1))
+        (set i (+ i 1)))
+      # case 3: prv and nxt same types
+      # Check if there's a non-equal segment after nxt with different type
+      (if (def nxt-nxt (get segments (+ i 1)))
+        (if (and (not= :equal (nxt-nxt :type))
+                 (not= (nxt :type) (nxt-nxt :type)))
+          # case 3a: nxt-nxt is non-equal and different type - duplicate cur
+          (do
+            (put nxt :text (string (cur :text) (nxt :text)))
+            (put nxt-nxt :text (string (cur :text) (nxt-nxt :text)))
+            (array/remove segments (- i 1))  # remove cur
+            (set i (+ i 1)))
+          # case 3b: nxt-nxt is equal or same type - merge prv, cur, nxt
+          (do
+            (put prv :text (string (prv :text) (cur :text) (nxt :text)))
+            (array/remove segments (- i 1))   # remove cur
+            (array/remove segments (- i 1)))) # remove nxt
+        # case 3c: no nxt-nxt - merge all three into prv
+        (do
+          (put prv :text (string (prv :text) (cur :text) (nxt :text)))
+          (array/remove segments (- i 1))     # remove cur
+          (array/remove segments (- i 1)))))) # remove nxt
+  (merge-consecutives segments))
+
+
+(defn- lcs-lengths
+  ```
+  Computes LCS lengths for last row only (linear space)
+  ```
+  [s1 s2]
+  (def m (length s1))
+  (def n (length s2))
+  (var prv (array/new-filled (+ n 1) 0))
+  (var cur (array/new-filled (+ n 1) 0))
+  (loop [i :range [1 (+ m 1)]]
+    (loop [j :range [1 (+ n 1)]]
+      (if (= (get s1 (- i 1)) (get s2 (- j 1)))
+        (put cur j (+ (get prv (- j 1)) 1))
+        (put cur j (max (get prv j) (get cur (- j 1))))))
+    # swap rows
+    (def tmp prv)
+    (set prv cur)
+    (set cur tmp)
+    (array/fill cur 0))
+  prv)
+
+
+(defn- hirschberg-diff
+  ```
+  Computes diff using Hirschberg's algorithm (linear space)
+  ```
+  [s1 s2]
+  (def m (length s1))
+  (def n (length s2))
+  (cond
+    # Base case: s1 is empty
+    (zero? m)
+    (if (zero? n)
+      @[]
+      @[@{:type :insert :text s2}])
+    # Base case: s2 is empty
+    (zero? n)
+    @[@{:type :delete :text s1}]
+    # Base case: single character in s1
+    (= m 1)
+    (do
+      (def c (get s1 0))
+      (var found nil)
+      (var i 0)
+      (while (and (< i n) (nil? found))
+        (when (= c (get s2 i))
+          (set found i))
+        (++ i))
+      (if found
+        # character found, split s2
+        (let [result @[]]
+          (unless (zero? found)
+            (array/push result @{:type :insert :text (string/slice s2 0 found)}))
+          (array/push result @{:type :equal :text (string/from-bytes c)})
+          (unless (= found (- n 1))
+            (array/push result @{:type :insert :text (string/slice s2 (+ found 1))}))
+          result)
+        # not found, delete s1 and insert s2
+        @[@{:type :delete :text s1}
+          @{:type :insert :text s2}]))
+    # Recursive case: divide and conquer
+    (let [mid (math/floor (/ m 2))
+          s1-left (string/slice s1 0 mid)
+          s1-right (string/slice s1 mid)
+          # compute LCS lengths from left
+          left-lens (lcs-lengths s1-left s2)
+          # compute LCS lengths from right (reversed)
+          right-lens (lcs-lengths (string/reverse s1-right)
+                                  (string/reverse s2))
+          # find optimal split point in s2
+          split-point (do
+                        (var best-j 0)
+                        (var best-len (+ (get left-lens 0)
+                                         (get right-lens n)))
+                        (loop [j :range [1 (+ n 1)]]
+                          (def total (+ (get left-lens j)
+                                        (get right-lens (- n j))))
+                          (when (> total best-len)
+                            (set best-len total)
+                            (set best-j j)))
+                        best-j)
+          s2-left (string/slice s2 0 split-point)
+          s2-right (string/slice s2 split-point)
+          # Recursively solve left and right halves
+          left-diff (hirschberg-diff s1-left s2-left)
+          right-diff (hirschberg-diff s1-right s2-right)]
+      # Merge results and consolidate consecutive same-type segments
+      (merge-consecutives (array/concat left-diff right-diff)))))
+
+
+(defn- compute-diff
+  ```
+  Computes byte-level diff between two strings with prefix/suffix optimization
+  ```
+  [s1 s2]
+  # separate prefix and suffix as optimisation
+  (def [prefix s1-mid s2-mid] (strip-common-prefix s1 s2))
+  (def [s1-core s2-core suffix] (strip-common-suffix s1-mid s2-mid))
+  # compare core difference
+  (def diff-core
+    (if (and (empty? s1-core) (empty? s2-core))
+      @[]
+      (hirschberg-diff s1-core s2-core)))
+  # glue back together
+  (def result @[])
+  (unless (empty? prefix)
+    (array/push result @{:type :equal :text prefix}))
+  (array/concat result diff-core)
+  (unless (empty? suffix)
+    (array/push result @{:type :equal :text suffix}))
+  # merge small, isolated equal segments
+  (merge-islands result))
+
+
+(defn- render-diff-line
+  ```
+  Renders a single line from diff data, showing either deletes or inserts
+  ```
+  [diff-data show-type]
+  (def parts @[])
+  (each segment diff-data
+    (case (segment :type)
+      :equal
+      (array/push parts (segment :text))
+
+      :delete
+      (when (= show-type :delete)
+        (array/push parts
+          (string "\e[48;5;52m" (segment :text) "\e[0m")))
+
+      :insert
+      (when (= show-type :insert)
+        (array/push parts
+          (string "\e[48;5;22m" (segment :text) "\e[0m")))))
+  (string/join parts))
+
+
+(defn- format-with-diff
+  ```
+  Formats expect/actual with diff highlighting
+  ```
+  [expect-str actual-str]
+  (def diff (compute-diff expect-str actual-str))
+  (def expect-line (render-diff-line diff :delete))
+  (def actual-line (render-diff-line diff :insert))
+  (string "Expect (L): " expect-line "\n"
+          "Actual (R): " actual-line))
+
+
 (defn- ruler
   ```
   Prints a dashed line as long as the longest line
@@ -149,8 +392,12 @@
   [result]
   (case (result :kind)
     :equal
-    (string "Expect (L): " (string/format "%q" (result :expect)) "\n"
-            "Actual (R): " (string/format "%q" (result :actual)))
+    (let [expect-str (string/format "%q" (result :expect))
+          actual-str (string/format "%q" (result :actual))]
+      (if (dyn :test/color?)
+        (format-with-diff expect-str actual-str)
+        (string "Expect (L): " expect-str "\n"
+                "Actual (R): " actual-str)))
 
     :matches
     (string "Expect (L): Structure " (string/format "%q" (result :expect)) "\n"

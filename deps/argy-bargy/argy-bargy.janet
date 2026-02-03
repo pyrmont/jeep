@@ -25,8 +25,10 @@
   Gets the columns of the current terminal
   ```
   [&opt force?]
-  (if (and cols (not force?))
+  (when (and cols (not force?))
     (break cols))
+  (unless (os/isatty)
+    (break max-width))
   (def win? (= :windows (os/which)))
   (def cmd
     (if win?
@@ -69,6 +71,18 @@
     (array/concat res (peg/match grammar arg))
     (++ i))
   res)
+
+(defn- get-default
+  ```
+  Gets the default value from a rule
+
+  If the default is a function, calls it. Otherwise returns the value as-is.
+  ```
+  [rule]
+  (def dflt (rule :default))
+  (if (function? dflt)
+    (dflt)
+    dflt))
 
 (defn- make-parser
   ```
@@ -144,6 +158,7 @@
     (array/push (ordered :opts) ["help" help-rule]))
   # lookup table for subcommands
   (def subs @{})
+  (def short-subs @{})
   # categorise subs
   (set i 0)
   (while (< i (length config-subs))
@@ -158,14 +173,18 @@
                  "number of elements in subcommands must be even: %p" config-subs)
         (assertf (dictionary? v)
                  "each subcommand must be struct or table: %p" v)
-        (put subs k v)
-        (array/push (ordered :subs) [k v])))
+        (def config (merge v {:name k}))
+        (put subs k config)
+        (when (config :short)
+          (put short-subs (config :short) config))
+        (array/push (ordered :subs) [k config])))
     (++ i))
   # return value
   @{:long-opts long-opts
     :short-opts short-opts
     :params params
     :subs subs
+    :short-subs short-subs
     :ordered ordered})
 
 ## String manipulation
@@ -273,7 +292,7 @@
     (def usage-help
       (stitch [(rule :help)
                (when (rule :default)
-                 (string "(Default: " (rule :default) ")"))]))
+                 (string "(Default: " (get-default rule) ")"))]))
     (array/push usages [usage-prefix usage-help])
     (set pad (max (+ pad-inset (length usage-prefix)) pad)))
   # print usage descriptions
@@ -310,7 +329,7 @@
         (def usage-help
           (stitch [(rule :help)
                    (when (rule :default)
-                     (string "(Default: " (rule :default) ")"))]))
+                     (string "(Default: " (get-default rule) ")"))]))
         (array/push usages [usage-prefix usage-help])
         (set pad (max (+ pad-inset (length usage-prefix)) pad)))))
   # print usage descriptions
@@ -339,10 +358,11 @@
     (if (= hr name)
       (array/push usages [nil nil])
       (do
-        (def usage-prefix (string " " name))
+        (def usage-prefix
+          (string " " (when (config :short) (string (config :short) ", ")) name))
         (def usage-help (get config :help ""))
         (array/push usages [usage-prefix usage-help])
-        (set pad (max (+ pad-inset (length usage-prefix)) pad)))))
+        (set pad (max (+ pad-inset (length usage-prefix) 1) pad)))))
   # print usage descriptions
   (unless (empty? usages)
     (xprint help)
@@ -534,7 +554,7 @@
   (def opts (result :opts))
   (eachp [name rule] (parser :long-opts)
     (when (and (rule :default) (nil? (opts name)))
-      (put-in result [:opts name] (rule :default)))))
+      (put-in result [:opts name] (get-default rule)))))
 
 (defn- check-params
   ```
@@ -556,7 +576,7 @@
       (do
         (usage-error (or (rule :proxy) name) " is required")
         (break))
-      (put-in result [:params name] (rule :default)))
+      (put-in result [:params name] (get-default rule)))
     (++ j)))
 
 (defn- check-subcommand
@@ -621,21 +641,21 @@
              (do
                (def help? (= "help" arg))
                (def subcommand (if help? (get args (inc i)) arg))
-               (def subconfig (get-in parser [:subs subcommand]))
+               (def subconfig (get-in parser [:subs subcommand] (get-in parser [:short-subs subcommand])))
                (if subcommand
                  (if subconfig
                    (if (not help?)
                      (with-dyns [:args (array/slice args i)]
                        (def subresult (if (nil? (subconfig :rules))
-                                        @{:cmd subcommand :args (array/slice (dyn :args) 1)}
-                                        (parse-args-impl (string command " " subcommand) subconfig)))
-                       (put subresult :cmd subcommand)
+                                        @{:cmd (subconfig :name) :args (array/slice (dyn :args) 1)}
+                                        (parse-args-impl (string command " " (subconfig :name)) subconfig)))
+                       (put subresult :cmd (subconfig :name))
                        (put result :sub subresult)
                        (break))
                      (do
                        (put-in result [:opts "help"] true)
-                       (put result :sub @{:cmd subcommand})
-                       (set command (string command " " subcommand))
+                       (put result :sub @{:cmd (subconfig :name)})
+                       (set command (string command " " (subconfig :name)))
                        (def subparser (make-parser subconfig))
                        (usage subconfig subparser)))
                    (usage-error "unrecognized subcommand '" subcommand "'"))
