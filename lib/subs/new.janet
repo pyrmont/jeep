@@ -197,12 +197,12 @@
   (def home (os/getenv "HOME"))
   (def oldskool (string home util/sep ".gitconfig"))
   (def newskool (string home util/sep ".config" util/sep "git" util/sep "config"))
-  (def config (cond
-                (= :file (os/stat oldskool :mode))
-                (slurp oldskool)
-                (= :file (os/stat newskool :mode))
-                (slurp newskool)))
-  (-?>> config (peg/match ~{:main (* (thru "name = ") '(to "\n"))}) array/pop))
+  (def gitconfig (cond
+                  (= :file (os/stat oldskool :mode))
+                  (slurp oldskool)
+                  (= :file (os/stat newskool :mode))
+                  (slurp newskool)))
+  (-?>> gitconfig (peg/match ~{:main (* (thru "name = ") '(to "\n"))}) array/pop))
 
 (defn- make-artifacts
   [dir meta opts]

@@ -110,9 +110,9 @@
   [{:file file :line line} bundle-root url]
   (default url "")
   (if (nil? file) (break))
-  (def link (->> (string/replace (string bundle-root util/sep) url file)
-                 (string/replace util/sep "/")))
-  (string link "#L" line))
+  (def http-link (->> (string/replace (string bundle-root util/sep) url file)
+                      (string/replace util/sep "/")))
+  (string http-link "#L" line))
 
 (defn- internal-link
   [name headings]
@@ -321,7 +321,7 @@
   (def excludes (if no-matches (map (fn [s] (abspath s bundle-root)) no-matches)))
   (def abspaths
     (do
-      (def res @[])
+      (def abs-res @[])
       (def check @[])
       (each l libs
         (array/concat check (map (fn [s] (abspath s bundle-root)) (get l :paths))))
@@ -331,12 +331,12 @@
           :file
           (cond
             (string/has-suffix? ".janet" c)
-            (array/push res c))
+            (array/push abs-res c))
           :directory
           (each entry (os/dir c)
             (unless (index-of entry ["." ".."])
               (array/push check (string c util/sep entry))))))
-      res))
+      abs-res))
   (each p abspaths
     (def add? (if includes
                 (find (fn [i] (string/has-prefix? i p))

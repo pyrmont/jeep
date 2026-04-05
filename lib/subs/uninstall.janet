@@ -48,19 +48,19 @@
   (when (def man (legacy-manifest name))
     (each p (get man :paths)
       (print "remove " p)
-      (def [ok? res] (protect (util/rmrf p)))
-      (unless ok?
-        (eprint "cannot remove " p " (" res ")"))
+      (def [p-ok? p-res] (protect (util/rmrf p)))
+      (unless p-ok?
+        (eprint "cannot remove " p " (" p-res ")"))
       # hack to remove prefix directory
       (when (string/has-prefix? (dyn :syspath) p)
         (def parent (util/parent p))
-        (def [ok? _] (protect (os/rmdir parent)))
-        (if ok? (print "remove " parent))))
+        (def [parent-ok? _] (protect (os/rmdir parent)))
+        (if parent-ok? (print "remove " parent))))
     # remove manifest file
     (def mpath (legacy-mpath name))
-    (def [ok? res] (protect (util/rmrf mpath)))
-    (unless ok?
-      (eprint "cannot remove " mpath " (" res ")"))))
+    (def [mpath-ok? mpath-res] (protect (util/rmrf mpath)))
+    (unless mpath-ok?
+      (eprint "cannot remove " mpath " (" mpath-res ")"))))
 
 (defn run
   [args &opt jeep-config]
