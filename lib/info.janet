@@ -108,7 +108,7 @@
 
 # Dependent functions
 
-(var- last-line (fn :last-line [b el]))
+(var- last-line (fn :last-line [b el] b el))
 
 (defn- add-space
   [b el]

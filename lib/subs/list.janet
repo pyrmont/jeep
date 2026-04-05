@@ -17,6 +17,7 @@
 
 (defn run
   [args &opt jeep-config]
+  jeep-config # TODO: Add support for configuring via existing file
   (def no-legacy? (get-in args [:sub :opts "no-legacy"]))
   (def mbundles (bundle/list))
   (def lbundles (if no-legacy? [] (util/legacy-bundles)))
@@ -47,6 +48,6 @@
   (print pad "  syspath: " (dyn :syspath))
   (def environ (os/environ))
   (print "\nEnvironment:")
-  (print pad "  JANET_PATH: " (get (os/environ) "JANET_PATH" "<undefined>"))
+  (print pad "  JANET_PATH: " (get environ "JANET_PATH" "<undefined>"))
   (print pad "  jeep: " (util/version))
   (print "\nListing completed."))

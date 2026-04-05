@@ -108,4 +108,4 @@
          (debug/stacktrace f)
          (os/exit 1))))))
 
-(defn main [& args] (run))
+(defn main [&] (run))

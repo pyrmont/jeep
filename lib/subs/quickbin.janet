@@ -21,6 +21,7 @@
 
 (defn run
   [args &opt jeep-config]
+  jeep-config # TODO: Add support for configuring via existing file
   (def params (get-in args [:sub :params]))
   (dcc/quickbin (params :script) (params :exe))
   (print "Executable created."))

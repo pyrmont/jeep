@@ -57,7 +57,7 @@
         (install/install-to d dir :force-update force-deps?)))))
 
 (defn- install-build
-  [info &named force-deps?]
+  [&]
   (def essentials
     ["build-rules.janet"
      "cc.janet"
@@ -102,6 +102,7 @@
 
 (defn run
   [args &opt jeep-config]
+  jeep-config # TODO: Add support for configuring via existing file
   (def info (util/load-meta "."))
   (def profile (get-in args [:sub :params :profile]))
   (def opts (get-in args [:sub :opts]))

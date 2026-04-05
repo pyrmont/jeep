@@ -143,10 +143,11 @@
       (array/push to-make [path contents mode]))
     (array/push to-make [path contents mode])))
 
-(defn- queue-move
-  [src-bits dest-bits &named backup?]
-  (array/push to-move [(string/join src-bits util/sep)
-                       (string/join dest-bits util/sep)]))
+# TODO: Consider if this function is required
+# (defn- queue-move
+#   [src-bits dest-bits &named backup?]
+#   (array/push to-move [(string/join src-bits util/sep)
+#                        (string/join dest-bits util/sep)]))
 
 (defn- queue-undo
   [op path &opt more]
@@ -286,6 +287,7 @@
 
 (defn- make-others
   [dir meta opts]
+  meta # avoid strict compiler warning
   (when (get opts :bare?) (break))
   (queue-make [dir "test"]))
 

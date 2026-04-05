@@ -114,6 +114,7 @@
 
 (defn run
   [args &opt jeep-config]
+  jeep-config # TODO: Add support for configuring via existing file
   (def params (get-in args [:sub :params] {}))
   (def opts (get-in args [:sub :opts] {}))
   (when (and (get opts "file") (get opts "no-file"))

@@ -17,6 +17,7 @@
 
 (defn run
   [args &opt jeep-config]
+  jeep-config # TODO: Add support for configuring via existing file
   (os/mkdir "_build")
   (def man @{:info (util/load-meta ".")})
   (def bargs (get-in args [:sub :params :args] []))

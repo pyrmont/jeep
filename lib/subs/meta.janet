@@ -84,6 +84,7 @@
 
 (defn run
   [args &opt jeep-config]
+  jeep-config # TODO: Add support for configuring via existing file
   (set changed? false)
   (def opts (get-in args [:sub :opts] {}))
   (def keyvals (get-in args [:sub :params :kvs] []))

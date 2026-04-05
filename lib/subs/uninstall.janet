@@ -64,6 +64,7 @@
 
 (defn run
   [args &opt jeep-config]
+  jeep-config # TODO: Add support for configuring via existing file
   (def repo (get-in args [:sub :params :name]))
   (if (nil? repo)
     (let [meta (util/load-meta ".")]

@@ -23,6 +23,7 @@
 
 (defn run
   [args &opt jeep-config]
+  jeep-config # TODO: Add support for configuring via existing file
   (def repo (get-in args [:sub :params :bundle]))
   (def replace? (get-in args [:sub :opts "replace"]))
   (if (nil? repo)

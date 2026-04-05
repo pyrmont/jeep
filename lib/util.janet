@@ -328,7 +328,7 @@
       (def bundle-root (-> this-file parent parent))
       (def ver "local")
       (os/cd bundle-root)
-      (def [ok? res] (protect (exec :git {:out w} "describe" "--always" "--dirty")))
+      (def [ok? _] (protect (exec :git {:out w} "describe" "--always" "--dirty")))
       (:close w)
       (if ok?
         (string ver "-" (string/trim (ev/read r :all)))

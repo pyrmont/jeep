@@ -202,7 +202,7 @@
   [name meta maybe-ns]
   (def ns (or (meta :ns) maybe-ns))
   (def value (or (meta :value) (first (meta :ref))))
-  (def [file line col] (source-map meta))
+  (def [file line _] (source-map meta))
   (def kind (cond (meta :macro) :macro
                   (meta :kind) (meta :kind)
                   (type value)))

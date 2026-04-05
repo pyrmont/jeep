@@ -26,6 +26,7 @@
 
 (defn run
   [args &opt jeep-config]
+  jeep-config # TODO: Add support for configuring via existing file
   (def opts (get-in args [:sub :opts]))
   (var cleaned? false)
   (set cleaned? (util/local-hook :clean))
