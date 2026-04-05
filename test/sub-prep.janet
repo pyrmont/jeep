@@ -65,17 +65,20 @@
       (set dir d)
       (def syspath (h/make-syspath "."))
       (def path (h/make-bundle "." :name "test"
-                                   :dependencies ["file::../../res/fixtures/example"]))
+                                   :dependencies ["file::../../res/fixtures/example-1"]))
       (os/cd path)
       (def args {:sub {:params {:profile "system"}
                        :opts {}}})
       (subcmd/run args)
-      (is (== [".cache" "bundle" "mod1.janet" "mod2.janet"] (sorted (os/dir syspath))))))
+      (is (== [".cache" "bundle" "mod1.janet" "mod2.janet" "mod3.janet"] (sorted (os/dir syspath))))))
   (def expect-out
-    (string "running hook install for bundle example" nl
+    (string "running hook install for bundle example-2" nl
+            "add " dir h/sep "_system" h/sep "mod3.janet" nl
+            "installed example-2" nl
+            "running hook install for bundle example-1" nl
             "add " dir h/sep "_system" h/sep "mod1.janet" nl
             "add " dir h/sep "_system" h/sep "mod2.janet" nl
-            "installed example" nl
+            "installed example-1" nl
             confirmation))
   (is (== expect-out out))
   (is (empty? err)))
@@ -90,7 +93,7 @@
       (set dir d)
       (def syspath (h/make-syspath "."))
       (def path (h/make-bundle "." :name "test"
-                                   :dependencies ["file::../../res/fixtures/example"]))
+                                   :dependencies ["file::../../res/fixtures/example-1"]))
       (os/cd path)
       (def args {:sub {:params {:profile "system"}
                        :opts {"no-deps" true}}})
@@ -151,7 +154,7 @@
           "deps" [
             {:name "example"
              :prefix "example"
-             :url "file::../../res/fixtures/example"
+             :url "file::../../res/fixtures/example-1"
              :files ["lib"]}]}})
       (def path (h/make-bundle "." ;(kvs dep)))
       (os/cd path)
@@ -159,7 +162,7 @@
       (subcmd/run args)
       (def libpath (string "deps" h/sep "example" h/sep "lib"))
       (is (== ["mod1.janet" "mod2.janet"] (sorted (os/dir libpath))))))
-  (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example"))
+  (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example-1"))
   (def expect-out
     (string "warning: use of structs with :vendored is deprecated, "
             "refer to the man page for more information" nl
@@ -181,7 +184,7 @@
         {:name "test"
          :vendored [
             {:name "example"
-             :url "file::../../res/fixtures/example"
+             :url "file::../../res/fixtures/example-1"
              :prefix "deps/example"
              :paths ["lib"]}]})
       (def path (h/make-bundle "." ;(kvs dep)))
@@ -190,7 +193,7 @@
       (subcmd/run args)
       (def libpath (string "deps" h/sep "example" h/sep "lib"))
       (is (== ["mod1.janet" "mod2.janet"] (sorted (os/dir libpath))))))
-  (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example"))
+  (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example-1"))
   (def expect-out
     (string "vendoring " origin nl
             "  copying " origin h/sep "lib" h/sep ". to deps" h/sep "example" h/sep "lib" nl
@@ -209,7 +212,7 @@
         {:name "test"
          :vendored [
             {:name "example"
-             :url "file::../../res/fixtures/example"
+             :url "file::../../res/fixtures/example-1"
              :prefix "deps/example"
              :paths [["lib/mod1.janet" "foo/"]
                      ["lib/mod2.janet" "foo/mod2.janet"]]}]})
@@ -219,7 +222,7 @@
       (subcmd/run args)
       (def libpath (string "deps" h/sep "example" h/sep "foo"))
       (is (== ["mod1.janet" "mod2.janet"] (sorted (os/dir libpath))))))
-  (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example"))
+  (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example-1"))
   (def expect-out
     (string "vendoring " origin nl
             "  copying " origin h/sep "lib" h/sep "mod1.janet to deps" h/sep "example" h/sep "foo" h/sep nl
@@ -239,7 +242,7 @@
         {:name "test"
          :vendored [
             {:name "example"
-             :url "file::../../res/fixtures/example"
+             :url "file::../../res/fixtures/example-1"
              :paths ["lib"]}]})
       (def path (h/make-bundle "." ;(kvs dep)))
       (os/cd path)
@@ -247,12 +250,35 @@
       (subcmd/run args)
       (def libpath (string "lib"))
       (is (== ["mod1.janet" "mod2.janet"] (sorted (os/dir libpath))))))
-  (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example"))
+  (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example-1"))
   (def expect-out
     (string "vendoring " origin nl
             "  copying " origin h/sep "lib" h/sep ". to ." h/sep "lib" nl
             confirmation))
   (is (== expect-out out))
+  (is (empty? err)))
+
+(deftest prep-vendor-profile-with-transitive-deps
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir d
+      (def syspath (h/make-syspath "."))
+      (def dep
+        {:name "test"
+         :vendored [
+            {:name "example-1"
+             :type :file
+             :url "../../res/fixtures/example-1"
+             :prefix "deps"}]})
+      (def path (h/make-bundle "." ;(kvs dep)))
+      (os/cd path)
+      (def args {:sub {:params {:profile "vendor"}}})
+      (subcmd/run args)
+      (def depspath (string "deps"))
+      (is (== ["mod1.janet" "mod2.janet" "mod3.janet"] (sorted (os/dir depspath))))))
+  (is (string/has-suffix? confirmation out))
   (is (empty? err)))
 
 (run-tests!)

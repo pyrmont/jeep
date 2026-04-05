@@ -1,3 +1,0 @@
-{:name "example"
- :artifacts {:libraries [{:paths ["lib/mod1.janet"
-                                  "lib/mod2.janet"]}]}}

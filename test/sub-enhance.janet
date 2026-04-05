@@ -4,7 +4,7 @@
 (import ../lib/subs/enhance :as subcmd)
 
 (def confirmation "Bundle enhanced.n")
-(def example-new "../res/fixtures/example")
+(def example-new "../res/fixtures/example-1")
 (def example-old "../res/fixtures/example-old")
 (def example-broken "../res/fixtures/example-broken")
 

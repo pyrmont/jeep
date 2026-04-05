@@ -5,7 +5,7 @@
 
 (def api-doc
   ````
-  # example API
+  # example-1 API
 
   ## lib/mod1
 
@@ -62,7 +62,7 @@
   [3]: lib/mod2.janet#L1
   ````)
 (def confirmation "Document generated.\n")
-(def example "../res/fixtures/example")
+(def example "../res/fixtures/example-1")
 (def example-broken "../res/fixtures/example-broken")
 
 (deftest generate-simple-api
@@ -105,7 +105,7 @@
                        :opts {"output" "api.md"
                               "template" template-path}}})
       (subcmd/run args)
-      (def expect "CUSTOM: example")
+      (def expect "CUSTOM: example-1")
       (def actual (slurp "api.md"))
       (is (== expect actual))
       (is (== confirmation out))
@@ -148,7 +148,7 @@
       (subcmd/run args-2)
       (def expect-2
         ````
-        # example API
+        # example-1 API
 
         ## lib/mod1
 

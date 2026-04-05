@@ -1,0 +1,6 @@
+{:name "example-1"
+ :dependencies [{:name "example-2"
+                 :type :file
+                 :url "../example-2"}]
+ :artifacts {:libraries [{:paths ["lib/mod1.janet"
+                                  "lib/mod2.janet"]}]}}

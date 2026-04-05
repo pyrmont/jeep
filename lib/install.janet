@@ -51,8 +51,11 @@
     (eprintf "  skipped bundle:  %.99M" bundle)
     (break))
   (def deps (get info :dependencies []))
-  (each d deps
-    (install d :replace? replace? :force-update force-update :auto-remove true))
+  (def cwd (os/cwd))
+  (defer (os/cd cwd)
+    (os/cd bdir)
+    (each d deps
+      (install d :replace? replace? :force-update force-update :auto-remove true)))
   (def config @{:pm bundle :installed-with "jeep" :auto-remove auto-remove})
   (unless no-install
     (if (and replace? conflict?)
@@ -77,7 +80,7 @@
         (def d (string dest util/sep (string/replace (dyn *syspath*) "" f)))
         (util/copy f d)))
     (each d (get man :dependencies)
-      (copy-dep (get man :name))))
+      (copy-dep (if (string? d) d (get d :name)))))
   (defer (do
            (util/change-syspath oldpath)
            (util/rmrf tmp))
