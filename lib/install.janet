@@ -83,7 +83,6 @@
       (copy-dep (if (string? d) d (get d :name)))))
   (defer (do
            (util/change-syspath oldpath)
-           (when util/windows? (os/sleep 0.3))
            (util/rmrf tmp))
     (install id :force-update force-update :no-install no-install :auto-remove auto-remove)
     (copy-dep (get id :name))))
