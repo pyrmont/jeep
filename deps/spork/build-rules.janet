@@ -5,6 +5,8 @@
 ### Use to implement a build system.
 ###
 
+(defdyn *implicit-deps* "Dependencies automatically added for all rules")
+
 (defn- cancel-all [fibers reason] (each f fibers (ev/cancel f reason) (put fibers f nil)))
 
 (defn- wait-for-fibers
@@ -36,6 +38,14 @@
     (set (mtime-cache path)
          (let [m (os/stat path :modified)]
            (if (nil? m) false m)))))
+
+(defn- make-sure-exists
+  "Assert that files exist. Helps debug rules that should create files"
+  [rules msg files]
+  (each f files
+    (def f-target (get rules f {}))
+    (unless (in f-target :task) # phony dep, don't check disk
+      (assert (os/stat f :mode) (string "file or directory " f msg)))))
 
 (defn- utd
   "Check if a target is up to date."
@@ -98,6 +108,7 @@
       (++ work-count))
     needs-build)
   (each target targets (needs-build? target))
+  (var bad-return false)
   (default n-workers 1)
 
   (defn worker
@@ -109,14 +120,30 @@
       (def rule (get all-targets target))
       (def dependent-set (get dependents target ()))
       (def r (assert (get rule :recipe)))
-      (edefer
-        (do
-          (each o (get rule :outputs [])
-            (protect (os/rm o)))
-          (repeat n-workers (ev/give q nil)))
-        (if (indexed? r)
-          (each rr r (rr))
-          (r)))
+
+      (def result
+        (try
+          (do
+            # Check that all inputs exists
+            (make-sure-exists rules " is missing as input" (get rule :inputs []))
+            (if (indexed? r)
+              (each rr r (rr))
+              (r))
+            # Make sure all outputs were created
+            (make-sure-exists rules " was not created by the rule" (get rule :outputs []))
+            :good)
+          ([err f]
+            (debug/stacktrace f err (string/format "rule %V failed: " target))
+            :bad)))
+
+      (when (= :bad result)
+        (set bad-return true)
+        (each o (get rule :outputs [])
+          (protect (os/rm o)))
+        (repeat n-workers (ev/give q nil))
+        (set work-count 0)
+        (break))
+
       (array/push targets-built target)
       (eachk next-target dependent-set
         (-- (dep-counts next-target))
@@ -130,6 +157,9 @@
     (def fib (ev/go worker i super))
     (put fibers fib fib))
   (wait-for-fibers super fibers)
+
+  (if bad-return
+    (error "failed to build"))
 
   targets-built)
 
@@ -156,9 +186,10 @@
       (string? target) [target]
       (indexed? target) target
       (errorf "bad target %v" target)))
-  (def target (first all-targets))
-  (each d [;deps ;all-targets]
-    (assert (string? d) "inputs and outputs must be strings"))
+  (def target :shadow (first all-targets))
+  (def id (dyn *implicit-deps* []))
+  (each d [;deps ;id ;all-targets]
+    (assert (string? d) (string/format "%v: inputs and outputs must be strings" d)))
   (unless (get rules target)
     (def new-rule
       @{:inputs @[]
@@ -166,6 +197,7 @@
         :recipe @[]})
     (put rules target new-rule))
   (each d deps (target-append rules target :inputs d))
+  (each d id (target-append rules target :inputs d))
   (if phony
     (put (gettarget rules target) :task target)
     (each t all-targets (target-append rules target :outputs t)))

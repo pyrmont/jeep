@@ -143,10 +143,10 @@
 
 (defn- get-cachedir
   [url bundle-type tag]
-  (def url (if (= tag :file) (os/realpath url) url)) # use absolute paths for file caches
+  (def url1 (if (= tag :file) (os/realpath url) url)) # use absolute paths for file caches
   (def cache (path/join (dyn *syspath*) ".cache"))
   (os/mkdir cache)
-  (def id (filepath-replace (string bundle-type "_" tag "_" url)))
+  (def id (filepath-replace (string bundle-type "_" tag "_" url1)))
   (path/join cache id))
 
 (defn download-bundle
@@ -218,7 +218,7 @@
   [bundle-name]
   (manifest-pm-extract (bundle/manifest bundle-name)))
 
-(defn- name-lookup
+(defn name-lookup
   "Find the bundle name of a bundle address"
   [bundle-addr]
   (def {:url url
@@ -302,8 +302,8 @@
   (when did-shim
     # patch deps after installing all jpm dependencies. This allows the bundle/* module to track dependencies, and
     # prevent things like uninstalling a dependency, breaking another installed package.
-    (def deps (seq [d :in jpm-deps] (jpm-dep-to-bundle-dep d)))
-    (def deps (filter identity deps))
+    (def deps-or-nils (seq [d :in jpm-deps] (jpm-dep-to-bundle-dep d)))
+    (def deps (filter identity deps-or-nils))
     (unless (index-of "spork" deps)
       # if spork is not installed, we are installing to a different tree.
       (when (bundle/installed? "spork") (array/push deps "spork")))
@@ -660,24 +660,30 @@
 
 (deftemplate enter-shell-template
   :private
-    ````
+  ````
     # . bin/activate
     if [ -n "$${_OLD_JANET_PATH+set}" ]; then
       echo 'An environment is already active, please run `deactivate` first.';
     else
       _OLD_JANET_PATH="$$JANET_PATH";
       _OLD_JANET_PATH_SET="$${JANET_PATH+set}";
+      _OLD_JANET_HISTFILE="$$JANET_HISTFILE";
+      _OLD_JANET_HISTFILE_SET="$${JANET_HISTFILE}";
       _OLD_PATH="$$PATH";
       _OLD_PS1="$$PS1";
       JANET_PATH="$abspath";
+      JANET_HISTFILE="$abspath/repl_history.jdn";
       PATH="$$JANET_PATH"/bin:"$$PATH";
       PS1="("$name") $${PS1:-}";
       export _OLD_JANET_PATH;
+      export _OLD_JANET_HISTFILE;
       export _OLD_PATH;
       export _OLD_PS1;
       export JANET_PATH;
+      export JANET_HISTFILE;
       export PATH;
       export PS1;
+      hash -r 2> /dev/null;
       deactivate() {
         PATH="$$_OLD_PATH";
         if [ -n "$$_OLD_JANET_PATH_SET" ]; then
@@ -685,21 +691,28 @@
         else
           unset JANET_PATH;
         fi
+        if [ -n "$$_OLD_JANET_HISTFILE_SET" ]; then
+          JANET_HISTFILE"$$_OLD_JANET_HISTFILE";
+        else
+          unset JANET_HISTFILE;
+        fi
         PS1="$$_OLD_PS1";
         export JANET_PATH;
+        export JANET_HISTFILE;
         export PATH;
         export PS1;
         unset _OLD_JANET_PATH;
-        unset _OLD_JANET_PATH;
+        unset _OLD_JANET_HISTFILE;
         unset _OLD_PATH;
         unset _OLD_PS1;
         unset -f deactivate;
         export _OLD_JANET_PATH;
+        export _OLD_JANET_HISTFILE;
         export _OLD_PATH;
         export _OLD_PS1;
         hash -r 2> /dev/null;
       }
-    fi
+    fi;
     hash -r 2> /dev/null;
     ````)
 
@@ -708,8 +721,10 @@
   ````
   # . bin/activate.ps1
   $$global:_OLD_JANET_PATH=$$env:JANET_PATH
+  $$global:_OLD_JANET_HISTFILE=$$env:JANET_HISTFILE
   $$global:_OLD_PATH=$$env:PATH
   $$env:JANET_PATH="$abspath"
+  $$env:JANET_HISTFILE="$abspath\repl_history.jdn"
   $$env:PATH=$$env:JANET_PATH + "\bin;" + $$env:PATH
   $$function:old_prompt = $$function:prompt
   function global:prompt {
@@ -719,6 +734,7 @@
   function deactivate {
     $$env:PATH=$$global:_OLD_PATH
     $$env:JANET_PATH=$$global:_OLD_JANET_PATH
+    $$env:JANET_HISTFILE=$$global:_OLD_JANET_HISTFILE
     Remove-Item function:\deactivate
     $$function:prompt = $$function:old_prompt
     Remove-Item function:\old_prompt
@@ -730,9 +746,11 @@
   ````
   @rem bin\activate.bat
   @set _OLD_JANET_PATH=%JANET_PATH%
+  @set _OLD_JANET_HISTFILE=%JANET_HISTFILE%
   @set _OLD_PATH=%PATH%
   @set _OLD_PROMPT=%PROMPT%
   @set JANET_PATH=$abspath
+  @set JANET_HISTFILE=$abspath\repl_history.jdn
   @set PATH=%JANET_PATH%\bin;%PATH%
   @set PROMPT=($path) %PROMPT%
   ````)
@@ -742,11 +760,13 @@
   ````
   @rem bin\deactivate.bat
   @set JANET_PATH=%_OLD_JANET_PATH%
+  @set JANET_HISTFILE=%_OLD_JANET_HISTFILE%
   @set PATH=%_OLD_PATH%
   @set PROMPT=%_OLD_PROMPT%
-  @set _OLD_JANET_PATH=%PATH%
-  @set _OLD_PATH=%PATH%
-  @set _OLD_PROMPT=%PROMPT%
+  @set _OLD_JANET_PATH=""
+  @set _OLD_JANET_HISTFILE=""
+  @set _OLD_PATH=""
+  @set _OLD_PROMPT=""
   ````)
 
 (defn scaffold-pm-shell
@@ -770,10 +790,10 @@
   (print "(Unix sh)    run `. " path "/bin/activate` to enter the new environment, then `deactivate` to exit."))
 
 (defn- try-copy
-    [src dest]
-    (unless (sh/exists? src) (break false))
-    (sh/copy src dest)
-    true)
+  [src dest]
+  (unless (sh/exists? src) (break false))
+  (sh/copy src dest)
+  true)
 
 (defn vendor-binaries-pm-shell
   ```

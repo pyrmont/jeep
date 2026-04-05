@@ -20,10 +20,13 @@
       (if (= (path i) 46)
         (string/slice path (m 0))))))
 
+(def- env :flycheck (curenv))
+
 (defn- redef
   "Redef a value, keeping all metadata."
   [from to]
-  (setdyn (symbol to) (dyn (symbol from))))
+  (put env (symbol to) (dyn (symbol from)))
+  nil)
 
 #
 # Generating Macros
@@ -113,9 +116,11 @@
        (match x
          [:lead what] (set lead what)
          "." nil
-         ".." (if (= 0 seen)
+         ".." (if (and (nil? lead) (= 0 seen))
                 (array/push accum x)
-                (do (-- seen) (array/pop accum)))
+                (do
+                  (when (< 0 seen) (-- seen))
+                  (array/pop accum)))
          (do (++ seen) (array/push accum x))))
      (def ret (string (or lead "") (string/join accum ,sep)))
      (if (= "" ret) "." ret)))
@@ -157,7 +162,7 @@
   [path]
   (string/has-prefix? "/" path))
 
-(redef "ext" "posix/ext")
+(comptime (redef "ext" "posix/ext")) # for flycheck
 (decl-sep "posix" "/")
 (decl-delim "posix" ":")
 (decl-last-sep "posix" "/")
@@ -274,7 +279,7 @@
            true (if (= prefix-end (length path)) path (string/slice path 0 (if (= p prefix-end) p (dec p))))))
        path)))
 
-(redef "ext" "win32/ext")
+(comptime (redef "ext" "win32/ext")) # for flycheck
 (decl-sep "win32" "\\")
 (decl-delim "win32" ";")
 (decl-last-sep "win32" (set "\\/"))
@@ -286,23 +291,6 @@
 (decl-join "win32" "\\")
 (decl-abspath "win32")
 (decl-relpath "win32")
-
-
-#
-# satisfy flycheck
-#
-
-(def ext nil)
-(def sep nil)
-(def delim nil)
-(def basename nil)
-(def dirname nil)
-(def parent nil)
-(def abspath? nil)
-(def abspath nil)
-(def parts nil)
-(def normalize nil)
-(def join nil)
 
 #
 # Specialize for current OS
@@ -321,6 +309,8 @@
    "normalize"
    "join"
    "relpath"])
-(let [pre (if (= :windows (os/which)) "win32" "posix")]
-  (each sym syms
-    (redef (string pre "/" sym) sym)))
+
+(comptime # for flycheck
+          (let [pre (if (= :windows (os/which)) "win32" "posix")]
+            (each sym syms
+              (redef (string pre "/" sym) sym))))

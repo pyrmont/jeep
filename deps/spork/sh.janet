@@ -153,27 +153,38 @@
         (buffer/clear buf)))))
 
 (defn copy
-  `Copy a file or directory recursively from one location to another.
-  Expects input to be unix style paths`
+  `Copy a file or directory recursively from one location to another.`
   [src dest]
   (if (= :windows (os/which))
-    (let [end (last (path/posix/parts src))
-          isdir (= (os/stat src :mode) :directory)]
-      (os/shell (string "C:\\Windows\\System32\\xcopy.exe"
-                        " "
-                        (path/win32/join ;(path/posix/parts src))
-                        (path/win32/join ;(if isdir [;(path/posix/parts dest) end] (path/posix/parts dest)))
-                        "/y /s /e /i > nul")))
+    (let [end (last (path/parts src))
+          isdir (= (os/stat src :mode) :directory)
+          dest-isdir (= (os/stat dest :mode) :directory)]
+      (def srcfile (path/win32/join ;(path/parts src)))
+      (def destfile (path/win32/join ;(if (or dest-isdir isdir) [;(path/parts dest) end] (path/parts dest))))
+      # Create dest ahead of time so xcopy doesn't (badly) try to guess what we want
+      (if dest-isdir
+        (if isdir
+          (os/mkdir dest)
+          (spit destfile "")))
+      # xcopy copies important extra file attributes that a normal copy seems not to.
+      (with [nul (devnull)]
+        (os/execute
+          ["C:\\Windows\\System32\\xcopy.exe"
+           srcfile
+           destfile
+           "/y" "/s" "/e" "/q" "/i"]
+          :px {:out nul})))
     (os/execute ["cp" "-rf" src dest] :px)))
 
-(def- shlex-grammar (peg/compile ~{:ws (set " \t\r\n")
-                                   :escape (* "\\" (capture 1))
-                                   :dq-string (accumulate (* "\"" (any (+ :escape (if-not "\"" (capture 1)))) "\""))
-                                   :sq-string (accumulate (* "'" (any (if-not "'" (capture 1))) "'"))
-                                   :token-char (+ :escape (* (not :ws) (capture 1)))
-                                   :token (accumulate (some :token-char))
-                                   :value (* (any (+ :ws)) (+ :dq-string :sq-string :token) (any :ws))
-                                   :main (any :value)}))
+(def- shlex-grammar :flycheck
+  (peg/compile ~{:ws (set " \t\r\n")
+                 :escape (* "\\" (capture 1))
+                 :dq-string (accumulate (* "\"" (any (+ :escape (if-not "\"" (capture 1)))) "\""))
+                 :sq-string (accumulate (* "'" (any (if-not "'" (capture 1))) "'"))
+                 :token-char (+ :escape (* (not :ws) (capture 1)))
+                 :token (accumulate (some :token-char))
+                 :value (* (any (+ :ws)) (+ :dq-string :sq-string :token) (any :ws))
+                 :main (any :value)}))
 
 (defn split
   "Split a string into 'sh like' tokens, returns
