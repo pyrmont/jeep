@@ -1,6 +1,6 @@
 ---
 Title: JEEP-TEST(1)
-Date: 2026/01/07
+Date: 2026/04/16
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -17,7 +17,7 @@ SYNOPSIS
 **jeep-test** [**-c** | **--check**] [**-f** _path_ | **--file** _path_] [**-F**
               _path_ | **--no-file** _path_] [**-t** _name_ | **--test** _name_]
               [**-T** _name_ | **--no-test** _name_] [**-R** | **--no-result**]
-              [_check-args_]
+              [**-w** _level_ | **--warn** _level_] [_check-args_]
 
 DESCRIPTION
 ===========
@@ -53,6 +53,11 @@ Options
 - **-T** _name_, **--no-test** _name_:
   Adds _name_ to dynamic binding ``:test/skips``. See below for more details.
   This option is incompatible with **--test**.
+
+- **-w** _level_, **--warn** _level_:
+  Sets the lint warning level to pass to the ``janet`` executable that is used
+  to run the tests. The valid levels are ``none``, ``normal``, ``relaxed`` and
+  ``strict``.
 
 - _check-args_:
   Arguments to pass to the check __bundle hook__. The check __bundle hook__
