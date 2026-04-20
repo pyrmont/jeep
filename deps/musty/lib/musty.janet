@@ -36,7 +36,7 @@
 (var- only-ws? nil)
 (var- out nil)
 (var- pos nil)
-(var- root nil)
+(var- rnode nil)
 (var- t nil)
 (var- tag nil)
 
@@ -73,7 +73,7 @@
   (set only-ws? (get state :only-ws?))
   (set out (get state :out))
   (set pos (get state :pos))
-  (set root (get state :root))
+  (set rnode (get state :root))
   (set t (get state :t))
   (set tag (get state :tag)))
 
@@ -88,7 +88,7 @@
   (set only-ws? true)
   (set out @"")
   (set pos 0)
-  (set root nil)
+  (set rnode nil)
   (set t nil)
   (set tag nil))
 
@@ -104,14 +104,14 @@
   (put state :only-ws? only-ws?)
   (put state :out out)
   (put state :pos pos)
-  (put state :root root)
+  (put state :root rnode)
   (put state :t t)
   (put state :tag tag)
   state)
 
 # parser
 
-(var- parse* (fn :parse* [template &opt cwd cwf]))
+(var- parse* (fn :parse* [_template &opt _cwd _cwf]))
 
 # independent utility functions
 
@@ -120,6 +120,12 @@
   (assert (array? children) "(syntax) parent not containing node")
   (array/push children child))
 
+(defn- add-dir-sep [path]
+  (if (or (string/has-suffix? "/" path) (string/has-suffix? "\\" path))
+    (break path))
+  (def s (get {:mingw "\\" :windows "\\"} (os/which) "/"))
+  (string path s))
+
 (defn- add-line []
   (unless (and only-ws?
                (not no-tags?))
@@ -127,12 +133,6 @@
   (buffer/clear line)
   (set only-ws? true)
   (set no-tags? true))
-
-(defn- dir [path]
-  (if (or (string/has-suffix? "/" path) (string/has-suffix? "\\" path))
-    (break path))
-  (def s (get {:mingw "\\" :windows "\\"} (os/which) "/"))
-  (string path s))
 
 (defn- escape [s]
   (def res @"")
@@ -199,15 +199,15 @@
 
 # tag checking
 
-(defn- tag? [dop dcl]
+(defn- tag? [tdop tdcl]
   (def prv pos)
-  (unless (delim? dop)
+  (unless (delim? tdop)
     (set pos prv)
     (break))
   (var closed? false)
   # TODO Handle syntax errors
   (while (not-eof?)
-    (when (delim? dcl)
+    (when (delim? tdcl)
       (set closed? true)
       (break))
     (++ pos))
@@ -267,7 +267,7 @@
   (put new-node :id id)
   (put new-node :tag :partial)
   (put new-node :parent node)
-  (put new-node :value (string (dir ctd) id ".mustache"))
+  (put new-node :value (string (add-dir-sep ctd) id ".mustache"))
   (add-child node new-node)
   (set tag nil))
 
@@ -316,10 +316,10 @@
   (reset)
   (set ctd cwd)
   (set ctf cwf)
-  (set root (copy default-node))
-  (put root :tag :root)
-  (put root :value @[])
-  (set node root)
+  (set rnode (copy default-node))
+  (put rnode :tag :root)
+  (put rnode :value @[])
+  (set node rnode)
   (set t template)
   (while (not-eof?)
     (cond
@@ -353,17 +353,17 @@
       # default
       (do-char)))
   (end-text)
-  root))
+  rnode))
 
 # resolving
 
-(defn- interpolate [node]
-  (def id (get node :id))
+(defn- interpolate [a-node]
+  (def id (get a-node :id))
   (if (= "." id)
-    (break (get node :ctx)))
+    (break (get a-node :ctx)))
   (def ks (string/split "." id))
   (var res nil)
-  (var n node)
+  (var n a-node)
   (var found? false)
   (while (not (nil? n))
     (var ctx (get n :ctx))
@@ -378,11 +378,11 @@
     (set n (get n :parent)))
   res)
 
-(defn- resolve [node]
-  (case (get node :tag)
+(defn- resolve [a-node]
+  (case (get a-node :tag)
     :root
-    (each n (get node :value [])
-      (put n :ctx (get node :ctx))
+    (each n (get a-node :value [])
+      (put n :ctx (get a-node :ctx))
       (resolve n))
     :comment
     (set no-tags? false)
@@ -394,7 +394,7 @@
       (add-line))
     :partial
     (do
-      (def path (get node :value))
+      (def path (get a-node :value))
       (when (and (not= ctf path) (= :file (os/stat path :mode)))
         (def old-only-ws? only-ws?)
         (def ws (leading-ws))
@@ -415,13 +415,13 @@
               (do
                 (def text-node (copy default-node))
                 (put text-node :tag :text)
-                (put text-node :parent (get node :ctx))
+                (put text-node :parent (get a-node :ctx))
                 (put text-node :value ws)
                 (resolve text-node))))
           (if (= :newline (get p-node :tag))
             (set prev-nl? true))
-          (put p-node :parent (get node :ctx))
-          (put p-node :ctx (get node :ctx))
+          (put p-node :parent (get a-node :ctx))
+          (put p-node :ctx (get a-node :ctx))
           (resolve p-node)
           (add-line))
         (set only-ws? old-only-ws?))
@@ -429,34 +429,34 @@
     :section
     (do
       (set no-tags? false)
-      (def val (interpolate node))
-      (def invert? (get node :invert?))
+      (def val (interpolate a-node))
+      (def invert? (get a-node :invert?))
       (cond
         (and (or (not val)
                  (and (indexed? val) (empty? val)))
              invert?)
-        (each n (get node :value)
-          (put n :ctx (get node :ctx))
+        (each n (get a-node :value)
+          (put n :ctx (get a-node :ctx))
           (resolve n))
         (and val (not invert?))
         (do
           (def group (if (indexed? val) val [val]))
           (each item group
-            (each n (get node :value)
+            (each n (get a-node :value)
               (put n :ctx item)
               (resolve n)))))
       (set no-tags? false))
     :text
     (do
       (if only-ws?
-        (set only-ws? (string/check-set hs (get node :value))))
-      (buffer/push line (get node :value)))
+        (set only-ws? (string/check-set hs (get a-node :value))))
+      (buffer/push line (get a-node :value)))
     :variable
     (do
-      (def val (interpolate node))
+      (def val (interpolate a-node))
       (when val
         (def s (to-string val))
-        (->> (if (get node :raw?) s (escape s))
+        (->> (if (get a-node :raw?) s (escape s))
              (buffer/push line))
         (set only-ws? false))
       (set no-tags? false))
