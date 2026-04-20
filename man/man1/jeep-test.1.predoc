@@ -1,6 +1,6 @@
 ---
 Title: JEEP-TEST(1)
-Date: 2026/04/16
+Date: 2026/04/20
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -16,8 +16,9 @@ SYNOPSIS
 
 **jeep-test** [**-c** | **--check**] [**-f** _path_ | **--file** _path_] [**-F**
               _path_ | **--no-file** _path_] [**-t** _name_ | **--test** _name_]
-              [**-T** _name_ | **--no-test** _name_] [**-R** | **--no-result**]
-              [**-w** _level_ | **--warn** _level_] [_check-args_]
+              [**-T** _name_ | **--no-test** _name_] [**-j** _path_ |
+              **--janet** _path_] [**-R** | **--no-result**] [**-w** _level_ |
+              **--warn** _level_] [_check-args_]
 
 DESCRIPTION
 ===========
@@ -42,6 +43,9 @@ Options
   the `./test` directory. Can be used multiple times. This option is
   incompatible with **--file**.
 
+- **-j** _path_, **--janet** _path_:
+  Path of the Janet executable to use to run each test.
+
 - **-R**, **--no-result**:
   Skips printing the pass/fail result that Janet prints by default. This is most
   useful where your test files are responsible for printing their own results.
@@ -55,8 +59,8 @@ Options
   This option is incompatible with **--test**.
 
 - **-w** _level_, **--warn** _level_:
-  Sets the lint warning level to pass to the ``janet`` executable that is used
-  to run the tests. The valid levels are ``none``, ``normal``, ``relaxed`` and
+  Sets the lint warning level to pass to the Janet executable that is used to
+  run the tests. The valid levels are ``none``, ``normal``, ``relaxed`` and
   ``strict``.
 
 - _check-args_:

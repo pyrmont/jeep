@@ -13,6 +13,8 @@
    `Adds <name> to dynamic binding :test/tests.`
    :no-test
    `Adds <name> to dynamic binding :test/skips.`
+   :janet
+   `Sets the path for the Janet executable to use for the tests.`
    :no-result
    `Skips printing pass/fail result.`
    :warn
@@ -45,6 +47,10 @@
                                   :proxy "name"
                                   :help  (helps :no-test)}
                      "---"
+                     "--janet" {:kind  :single
+                                :short "j"
+                                :proxy "path"
+                                :help  (helps :janet)}
                      "--no-result" {:kind  :flag
                                     :short "R"
                                     :help  (helps :no-result)}
@@ -78,7 +84,8 @@
     (print (util/colour c m))))
 
 (defn- run-janet
-  [path exe-args & dyns]
+  [path exe-path exe-args & dyns]
+  (default exe-path (dyn :executable))
   (default exe-args [])
   (prin "running " (relpath path) "... ")
   (flush)
@@ -92,8 +99,7 @@
         (each [k v] (partition 2 dyns)
           (buffer/push b (string "(setdyn :" k " " v ") ")))
         (string b))))
-  (def janet-exe (dyn :executable))
-  (if (zero? (os/execute [janet-exe ;exe-args "-m" (dyn :syspath) "-e" setup path] :p))
+  (if (zero? (os/execute [exe-path ;exe-args "-m" (dyn :syspath) "-e" setup path] :p))
     (result :green "pass")
     (do
       (result :red "fail")
@@ -101,7 +107,7 @@
   (++ script-count))
 
 (defn- run-tests
-  [path &named exe-args use? tests skips]
+  [path &named exe-path exe-args use? tests skips]
   (assert (dyn :syspath) "syspath must be set")
   (each f (sorted (os/dir path))
     (def fpath (string path util/sep f))
@@ -110,13 +116,17 @@
     (case (os/stat fpath :mode)
       :file
       (when (use? fpath)
-        (run-janet fpath exe-args
+        (run-janet fpath exe-path exe-args
                    :test/color? true
                    :test/runner ":jeep"
                    :test/tests dyn-tests
                    :test/skips dyn-skips))
       :directory
-      (run-tests fpath :exe-args exe-args :use? use? :tests tests :skips skips))))
+      (run-tests fpath :exe-path exe-path
+                       :exe-args exe-args
+                       :use? use?
+                       :tests tests
+                       :skips skips))))
 
 (defn run
   [args &opt jeep-config]
@@ -148,10 +158,13 @@
         (os/realpath "test"))))
   (unless (or ok?)
     (error "no directory ./test"))
+  (def exe-path (try (-?> (get opts "janet") os/realpath)
+                     ([_] (errorf "'%s' is not a valid path" (get opts "janet")))))
   (def exe-args (if (def level (get opts "warn"))
                   ["-w" level]
                   []))
-  (run-tests path :exe-args exe-args
+  (run-tests path :exe-path exe-path
+                  :exe-args exe-args
                   :use? use?
                   :tests (get opts "test")
                   :skips (get opts "no-test"))
