@@ -10,11 +10,11 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def script-path "test-script.janet")
       (spit script-path
         ```
-        (defn main [& args] (os/exit 37))
+        (defn main [& _] (os/exit 37))
         ```)
       (def bin "test-exe")
       (def args {:sub {:params {:script script-path

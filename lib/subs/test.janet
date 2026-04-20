@@ -153,7 +153,7 @@
   (def [ok? path]
     (protect
       (do
-        (when (and util/windows? (nil? (os/stat "test")))
+        (when (and (nil? (os/stat "test")) util/windows?)
           (error "No such file or directory: test"))
         (os/realpath "test"))))
   (unless (or ok?)

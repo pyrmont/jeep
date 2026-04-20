@@ -11,7 +11,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-no-script"}
@@ -28,7 +28,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-clean"}
@@ -45,7 +45,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-clean"}
@@ -67,7 +67,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-clean"}
@@ -87,7 +87,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-clean"}
@@ -107,7 +107,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-clean"}
@@ -130,7 +130,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-clean-hook"}
@@ -153,7 +153,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-clean"}

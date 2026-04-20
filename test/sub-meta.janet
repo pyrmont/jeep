@@ -8,7 +8,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def path (h/make-bundle "." :name "test1"))
       (os/cd path)
       (def args {:sub {:params {:kvs [":homepage" "https://example.org"]}
@@ -34,7 +34,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def path (h/make-bundle "." :name "test1"))
       (os/cd path)
       (def args {:sub {:params {:kvs [":homepage" "https://example.org" ":license" "MIT"]}
@@ -62,7 +62,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def path (h/make-bundle "."
                                :name "test1"
                                :description "foo"
@@ -91,7 +91,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def path (h/make-bundle "."
                                :name "test1"
                                :version "1.0.0"))
@@ -119,7 +119,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args {:sub {:params {:kvs [":homepage" "https://example.org"]}
                        :opts {}}})
       (assert-thrown-message "no info.jdn file found"
@@ -132,7 +132,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def path (h/make-bundle "." :name "test1"))
       (os/cd path)
       (spit (string path h/sep "info.jdn") "{:version \"1.0.0\"}")

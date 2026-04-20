@@ -10,7 +10,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-build"}
@@ -28,7 +28,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-no-script"}
@@ -46,7 +46,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-with-build"}
@@ -55,7 +55,7 @@
       (def build-script
         ```
         (defn build
-          [manifest & args]
+          [_ & args]
           (print "Args: " (string/join args " ")))
         ```)
       (spit "bundle.janet" build-script)
@@ -70,7 +70,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-with-args"}
@@ -79,7 +79,7 @@
       (def build-script
         ```
         (defn build
-          [manifest & args]
+          [_ & args]
           (print "Args: " (string/join args ", ")))
         ```)
       (spit "bundle.janet" build-script)
@@ -94,7 +94,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-preserve"}
@@ -116,7 +116,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-error"}
@@ -125,7 +125,7 @@
       (def build-script
         ```
         (defn build
-          [& args]
+          [& _]
           (error "Build failed!"))
         ```)
       (spit "bundle.janet" build-script)

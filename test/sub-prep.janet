@@ -12,7 +12,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def info-file
         ```
         {:name "test-no-script"}
@@ -29,7 +29,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def syspath (h/make-syspath "."))
       (def path (h/make-bundle "." :name "test-prep-default"))
       (os/cd path)
@@ -44,7 +44,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def syspath (h/make-syspath "."))
       (def path (h/make-bundle "." :name "test-prep-default"))
       (os/cd path)
@@ -110,7 +110,7 @@
               :err err]
     (h/in-dir d
       (set dir d)
-      (def syspath (h/make-syspath "."))
+      (h/make-syspath ".")
       (def path (h/make-bundle "." :name "test"))
       (os/cd path)
       (def args {:sub {:params {:profile "build"}}})
@@ -146,8 +146,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
-      (def syspath (h/make-syspath "."))
+    (h/in-dir _
+      (h/make-syspath ".")
       (def dep
         {:name "test"
          :vendored {
@@ -178,8 +178,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
-      (def syspath (h/make-syspath "."))
+    (h/in-dir _
+      (h/make-syspath ".")
       (def dep
         {:name "test"
          :vendored [
@@ -206,8 +206,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
-      (def syspath (h/make-syspath "."))
+    (h/in-dir _
+      (h/make-syspath ".")
       (def dep
         {:name "test"
          :vendored [
@@ -236,8 +236,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
-      (def syspath (h/make-syspath "."))
+    (h/in-dir _
+      (h/make-syspath ".")
       (def dep
         {:name "test"
          :vendored [
@@ -263,8 +263,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
-      (def syspath (h/make-syspath "."))
+    (h/in-dir _
+      (h/make-syspath ".")
       (def dep
         {:name "test"
          :vendored [

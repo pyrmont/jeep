@@ -3,15 +3,12 @@
 
 (import ../lib/subs/test :as subcmd)
 
-(defn- passed [path]
-  )
-
 (deftest no-dir
   (def out @"")
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args {:sub {:opts {"no-result" true}}})
       (def msg "no directory ./test")
       (assert-thrown-message msg (subcmd/run args))))
@@ -23,10 +20,9 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (os/mkdir "test")
       (def args {:sub {:opts {"no-result" true}}})
-      (def msg "no directory ./test")
       (subcmd/run args)))
   (is (== (h/add-nl "All scripts passed.") out))
   (is (empty? err)))
@@ -36,7 +32,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def test-file
         ```
         (defn to-str [k]

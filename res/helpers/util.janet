@@ -51,7 +51,7 @@
     # default
     (os/rm path)))
 
-(var- format (fn :format [v &opt indent]))
+(var- format (fn :format [_v &opt _indent]))
 
 (defn- format-dict [d indent]
   (default indent 0)
@@ -158,7 +158,7 @@
 
 (defn make-syspath
   "Creates a new syspath"
-  [d]
+  [_]
   (mkdirp (string "_system" sep "bundle"))
   (def syspath (os/realpath "_system"))
   (setdyn :syspath syspath))

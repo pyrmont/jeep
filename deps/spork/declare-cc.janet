@@ -266,7 +266,7 @@
    author license]
   (assert name)
   (default dependencies @[])
-  repo version description url tag dependencies author # unused
+  repo version description url tag dependencies author license # unused
   (def br (build-root))
   (def bd (build-dir))
   (def rules (get-rules))

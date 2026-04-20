@@ -8,7 +8,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def path (h/make-bundle "." :name "test1"))
       (os/cd path)
       (def args {:sub {:params {:deps ["testament"]
@@ -34,7 +34,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def path (h/make-bundle "." :name "test1"))
       (os/cd path)
       (def args {:sub {:params {:deps ["testament" "spork"]
@@ -62,7 +62,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def path (h/make-bundle "."
                                :name "test1"
                                :dependencies ["testament" "spork"]))
@@ -90,7 +90,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def path (h/make-bundle "."
                                :name "test1"
                                :dependencies ["testament" "spork"]))
@@ -120,7 +120,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def path (h/make-bundle "." :name "test1"))
       (os/cd path)
       (def args {:sub {:params {:deps ["testament"]}
@@ -146,7 +146,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def path (h/make-bundle "."
                                :name "test1"
                                :vendored ["testament" "spork"]))
@@ -180,7 +180,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args {:sub {:params {:deps ["testament"]
                                 :opts {}}}})
       (assert-thrown-message "no info.jdn file found"
@@ -193,7 +193,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def path (h/make-bundle "." :name "test1"))
       (os/cd path)
       (spit (string path h/sep "info.jdn") "{:version \"1.0.0\"}")

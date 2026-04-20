@@ -109,10 +109,10 @@
   (is (== exp-nested2 (info/rem-from (copy arr-complex) [:foo :qux])))
   (def exp-no-change arr-complex)
   (is (== exp-no-change (info/rem-from (copy arr-complex) [:foo :qux :quux] :where :baz)) )
-  (def msg-no-key ":where not implemented for structs/tables")
-  (assert-thrown-message msg-no-key (info/rem-from (copy arr-complex) [:foo] :where :baz))
-  (def msg-no-key "no match for key path '(:bar)' in metadata")
-  (assert-thrown-message msg-no-key (info/rem-from (copy arr-simple) [:bar] :where :baz)))
+  (def msg-no-key1 ":where not implemented for structs/tables")
+  (assert-thrown-message msg-no-key1 (info/rem-from (copy arr-complex) [:foo] :where :baz))
+  (def msg-no-key2 "no match for key path '(:bar)' in metadata")
+  (assert-thrown-message msg-no-key2 (info/rem-from (copy arr-simple) [:bar] :where :baz)))
 
 (deftest upd-in
   (def arr-simple @[@["{" ":foo" " " @["[" ":bar" "]"] "}"]])
@@ -149,12 +149,12 @@
                                                              "                      " ":foo" " " ":bar"  "}"] "]"] "}"] "\n"
                              "       "    ":garply" " " ":waldo" "}"] "}"]])
   (defn pred-nested4 [x] (= :grault (get x :corge)))
-  (def act-nested4 (info/upd-in (copy arr-complex) [:foo :qux :quux] :where pred-nested3 :add [:foo :bar]))
+  (def act-nested4 (info/upd-in (copy arr-complex) [:foo :qux :quux] :where pred-nested4 :add [:foo :bar]))
   (is (== exp-nested4 act-nested4))
-  (def msg-no-key "no match for key path '(:bar)' in metadata")
-  (assert-thrown-message msg-no-key (info/upd-in (copy arr-simple) [:bar] :where :baz :to :qux))
+  (def msg-no-key1 "no match for key path '(:bar)' in metadata")
+  (assert-thrown-message msg-no-key1 (info/upd-in (copy arr-simple) [:bar] :where :baz :to :qux))
   (def coll-no-key (get-in arr-complex [2 3]))
-  (def msg-no-key (string/format ":where argument requires array/tuple, found %n" coll-no-key))
-  (assert-thrown-message msg-no-key (info/upd-in (copy arr-complex) [:foo] :where :baz :to :qux)))
+  (def msg-no-key2 (string/format ":where argument requires array/tuple, found %n" coll-no-key))
+  (assert-thrown-message msg-no-key2 (info/upd-in (copy arr-complex) [:foo] :where :baz :to :qux)))
 
 (run-tests!)

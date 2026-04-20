@@ -70,7 +70,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args {:sub {:params {:input (string example "/info.jdn")}
                        :opts {"output" "api.md"}}})
       (subcmd/run args)
@@ -85,7 +85,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args {:sub {:params {:input (string example "/info.jdn")}
                        :opts {"output" "-"}}})
       (subcmd/run args)))
@@ -98,7 +98,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def template-path "template.mustache")
       (spit template-path "CUSTOM: {{bundle-name}}")
       (def args {:sub {:params {:input (string example "/info.jdn")}
@@ -116,7 +116,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args {:sub {:params {:input (string example "/info.jdn")}
                        :opts {"output" "api.md"
                               "url" "https://example.org/"}}})
@@ -135,7 +135,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args-1 {:sub {:params {:input (string example "/info.jdn")}
                          :opts {"output" "api-1.md"}}})
       (subcmd/run args-1)
@@ -229,7 +229,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args {:sub {:params {:input (string example "/info.jdn")}
                        :opts {"output" "api.md"
                               "drop" "lib/"}}})
@@ -248,7 +248,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args {:sub {:params {:input (string example "/info.jdn")}
                        :opts {"output" "api.md"
                               "match" ["lib/mod1.janet"]}}})
@@ -267,7 +267,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args {:sub {:params {:input (string example "/info.jdn")}
                        :opts {"output" "api.md"
                               "no-match" ["lib/mod2.janet"]}}})
@@ -286,7 +286,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args {:sub {:params {:input "nonexistent.jdn"}
                        :opts {"output" "api.md"}}})
       (assert-thrown-message "file nonexistent.jdn does not exist"
@@ -299,7 +299,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args {:sub {:params {:input (string example-broken "/no-source.jdn")}
                        :opts {"output" "api.md"}}})
       (assert-thrown-message "info file does not have libraries under [:artifacts :libraries]"
@@ -312,7 +312,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def args {:sub {:params {:input (string example-broken "/no-list.jdn")}
                        :opts {"output" "api.md"}}})
       (assert-thrown-message "info file does not have libraries under [:artifacts :libraries]"

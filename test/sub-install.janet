@@ -10,7 +10,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (os/mkdir "_system")
       (setdyn :syspath (os/realpath "_system"))
       (def path (h/make-bundle "." :name "test-install"))
@@ -30,7 +30,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (os/mkdir "_system")
       (setdyn :syspath (os/realpath "_system"))
       (def path (h/make-bundle "." :name "test-replace"))
@@ -50,7 +50,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (os/mkdir "_system")
       (setdyn :syspath (os/realpath "_system"))
       (os/cd ".")
@@ -70,7 +70,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (os/mkdir "_system")
       (setdyn :syspath (os/realpath "_system"))
       (os/cd ".")
@@ -78,8 +78,7 @@
       (def bundle2 (string "file::" (h/make-bundle "." :name "bundle2")))
       (def args {:sub {:params {:bundle [bundle1 bundle2]}
                        :opts {}}})
-      (subcmd/run args)
-      ))
+      (subcmd/run args)))
   (def expect
     (string "no files installed, is this a valid bundle?\n"
             "installed bundle1\n"

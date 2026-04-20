@@ -10,7 +10,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def syspath (h/make-syspath "."))
       (spit (string syspath h/sep "example.janet") "")
       (def m1 {:name "example"
@@ -29,8 +29,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
-      (def syspath (h/make-syspath "."))
+    (h/in-dir _
+      (h/make-syspath ".")
       (def m1 {:name "example" :version "1.0.0"})
       (h/make-manifests "_system" m1)
       (def bundle-path (h/make-bundle "." :name "example"))
@@ -44,11 +44,10 @@
 (deftest uninstall-nonexistent-bundle
   (def out @"")
   (def err @"")
-  (def error-caught false)
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
-      (def syspath (h/make-syspath "."))
+    (h/in-dir _
+      (h/make-syspath ".")
       (def args {:sub {:params {:name ["example"]}}})
       (assert-thrown-message "no bundle example installed"
                              (subcmd/run args))))
@@ -60,7 +59,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (def syspath (h/make-syspath "."))
       (def m1 {:name "example1" :version "1.0.0"})
       (def m2 {:name "example2" :version "1.0.0"})

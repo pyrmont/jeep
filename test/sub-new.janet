@@ -359,7 +359,7 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir d
+    (h/in-dir _
       (os/mkdir "foo")
       (def args {:sub {:params {:name "foo"}
                        :opts {"no-ask" true}}})
