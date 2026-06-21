@@ -45,7 +45,7 @@
   (each [k v] to-add
     (set changed? true)
     (print "adding " k "...")
-    (info/add-to jdn [k] v))
+    (info/put jdn [k] v))
   jdn)
 
 (defn- rem-kvs
@@ -60,7 +60,7 @@
   (each k to-rem
     (set changed? true)
     (print "removing " (describe k) "...")
-    (info/rem-from jdn [k]))
+    (info/remove jdn [k]))
   jdn)
 
 (defn- upd-kvs
@@ -79,7 +79,7 @@
   (each [k v] to-upd
     (set changed? true)
     (print "updating " (describe k) "...")
-    (info/upd-in jdn [k] :to v))
+    (info/put jdn [k] v))
   jdn)
 
 (defn run
@@ -96,7 +96,7 @@
   (def [ok? meta] (protect (parse info)))
   (assert ok? "info.jdn could not be parsed")
   (assert (get meta :name) "info.jdn file must contain the :name key")
-  (def jdn (info/jdn-str->jdn-arr info))
+  (def jdn (info/parse info))
   (cond
     # remove
     remove?
@@ -106,7 +106,7 @@
     (upd-kvs jdn meta keyvals)
     # default
     (add-kvs jdn meta keyvals))
-  (util/save-info (info/jdn-arr->jdn-str jdn))
+  (util/save-info (info/render jdn))
   (if changed?
     (print "Metadata changed.")
     (print "No metadata changed.")))

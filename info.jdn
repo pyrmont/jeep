@@ -11,6 +11,12 @@
              :prefix "deps/argy-bargy"
              :paths ["argy-bargy.janet"
                      "LICENSE"]}
+            {:name "honeycut"
+             :url "https://github.com/pyrmont/honeycut"
+             :prefix "deps/honeycut"
+             :paths ["init.janet"
+                     "lib"
+                     "LICENSE"]}
             {:name "musty"
              :url "https://github.com/pyrmont/musty"
              :prefix "deps/musty"

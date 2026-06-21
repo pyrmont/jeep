@@ -115,7 +115,7 @@
   (each d to-add
     (set changed? true)
     (print "adding " (if (dictionary? d) (get d :name) d) "...")
-    (info/add-to jdn group [d]))
+    (info/add jdn group [d]))
   jdn)
 
 (defn- bundle-from-url
@@ -147,7 +147,7 @@
   (each d to-rem
     (set changed? true)
     (print "removing " (if (dictionary? d) (get d :name) d) "...")
-    (info/rem-from jdn group :where (fn [x] (or (= x d)
+    (info/remove jdn group :where (fn [x] (or (= x d)
                                                 (= (get x :name) d)))))
   jdn)
 
@@ -207,9 +207,9 @@
         (def keyvals @[])
         (each [k v] (sort (pairs d))
           (array/push keyvals k v))
-        (info/upd-in jdn group :where pred :add keyvals))
+        (info/update jdn group :where pred :add keyvals))
       :swap
-      (info/upd-in jdn group :where pred :to (table/to-struct d))))
+      (info/update jdn group :where pred :to (table/to-struct d))))
   jdn)
 
 (defn run
@@ -228,7 +228,7 @@
   (def [ok? meta] (protect (parse info)))
   (assert ok? "info.jdn could not be parsed")
   (assert (get meta :name) "info.jdn file must contain the :name key")
-  (def jdn (info/jdn-str->jdn-arr info))
+  (def jdn (info/parse info))
   (def cwd (os/cwd))
   (cond
     # remove
@@ -243,7 +243,7 @@
     (defer
       (util/cleanup cwd)
       (add-deps jdn meta group deps autotag?)))
-  (util/save-info (info/jdn-arr->jdn-str jdn))
+  (util/save-info (info/render jdn))
   (if changed?
     (print "Dependencies changed.")
     (print "No dependencies changed.")))

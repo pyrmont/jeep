@@ -257,17 +257,17 @@
             (has-key? meta :vendored)
             (has-key? meta :artifacts))
       (do
-        (def jdn (info/jdn-str->jdn-arr base))
+        (def jdn (info/parse base))
         (when (has-key? meta :dependencies)
-          (info/upd-in jdn [:dependencies] :to (get meta :dependencies)))
+          (info/put jdn [:dependencies] (get meta :dependencies)))
         (when (has-key? meta :vendored)
-          (info/upd-in jdn [:vendored] :to (get meta :vendored)))
+          (info/put jdn [:vendored] (get meta :vendored)))
         (when (has-key? meta :artifacts)
           (each art [:executables :libraries :manpages :natives :scripts]
             (def v (get-in meta [:artifacts art]))
             (when v
-              (info/upd-in jdn [:artifacts art] :to v))))
-        (info/jdn-arr->jdn-str jdn))
+              (info/put jdn [:artifacts art] v))))
+        (info/render jdn))
       base))
   (if (get-in opts [:aliases :info])
     (queue-make [dir "info.jdn"] :contents contents)
