@@ -57,6 +57,36 @@
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
+(deftest add-dependency-orders-name-first
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      # :as sorts before :name alphabetically, so a plain alphabetical
+      # ordering would put it first; by-name keeps :name at the front
+      (def args {:sub {:params {:deps [`{:url "https://example.com" :as "alias" :name "mydep"}`]
+                                :opts {}}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :dependencies [{:name "mydep"
+                          :as "alias"
+                          :url "https://example.com"}]}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        adding mydep...
+        Dependencies changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
 (deftest remove-dependency
   (def out @"")
   (def err @"")

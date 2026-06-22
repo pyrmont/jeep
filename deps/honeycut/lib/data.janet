@@ -115,7 +115,7 @@
   (def n (z/node cz))
   (def kids (slice n 1))
   (def lead (take-while trivia-node? kids))
-  (def lead-text (string/join (map |(in $ 1) lead)))
+  (def lead-text (string/join (map (fn [x] (in x 1)) lead)))
   (def lines (string/split "\n" lead-text))
   (if (one? (length lines))
     (+ (z/column-of cz) (length (get open-delims (first n))) (length lead-text))
@@ -222,6 +222,10 @@
   ```
   Replaces the value at `path` in `tree` with `v`, returning the new tree
 
+  The optional `:key-order` hook maps any dictionary in `v` to its ordered
+  `[key value]` pairs, setting the order in which dictionary keys are emitted
+  when the returned tree is rendered (the default sorts them).
+
   Raises an error if `path` does not resolve to a value.
   ```
   [tree path v &named key-order]
@@ -239,11 +243,18 @@
 
 (defn add
   ```
-  Adds the entries of `v` to the collection at `path` in `tree`
+  Adds the entries of `v` to the collection at `path` in `tree`, returning the
+  new tree
 
-  For a struct or table, `v` must be a dictionary and its key-value pairs are
-  added. For a tuple or array, `v` must be indexed and its elements are
-  appended. Returns the new tree.
+  If `path` resolves to a struct or table, `v` must also be a dictionary and
+  its key-value pairs are added. If `path` resolves to an array or tuple, `v`
+  must be an indexed collection and its elements are appended. The optional
+  `:key-order` hook maps any dictionary in `v` to its ordered `[key value]`
+  pairs, setting the order in which dictionary keys are emitted when the
+  returned tree is rendered (the default sorts them).
+
+  Raises an error if `path` does not resolve to a collection or if `v` is not
+  of a matching type.
   ```
   [tree path v &named key-order]
   (def cz (seek tree path))
@@ -267,6 +278,8 @@
 
   The last segment of `path` selects a key (in a struct/table) or an index (in
   a tuple/array). Surrounding separators are tidied up.
+
+  Raises an error if `path` is empty or does not resolve to an entry.
   ```
   [tree path]
   (assertf (not (empty? path)) "cannot remove at the empty path")

@@ -10,46 +10,48 @@
 
 (deftest add-creates-key
   (is (== "{:foo :bar\n :baz [\"qux\"]}"
-          (edit "{:foo :bar}" |(info/add $ [:baz] ["qux"])))))
+          (edit "{:foo :bar}" (fn [t] (info/add t [:baz] ["qux"]))))))
 
 (deftest add-appends-to-array
   (is (== "@{:deps [{:name \"a\"}\n         {:name \"b\"}]}"
           (edit "@{:deps [{:name \"a\"}]}"
-                |(info/add $ [:deps] [{:name "b"}])))))
+                (fn [t] (info/add t [:deps] [{:name "b"}]))))))
 
 (deftest add-merges-into-empty-dict
   (is (== "{:foo {:bar {:baz [\"qux\"]}}}"
-          (edit "{:foo {:bar {}}}" |(info/add $ [:foo :bar] {:baz ["qux"]})))))
+          (edit "{:foo {:bar {}}}" (fn [t] (info/add t [:foo :bar] {:baz ["qux"]}))))))
 
 (deftest put-creates-key
   (is (== "{:foo :bar\n :baz \"qux\"}"
-          (edit "{:foo :bar}" |(info/put $ [:baz] "qux")))))
+          (edit "{:foo :bar}" (fn [t] (info/put t [:baz] "qux"))))))
 
 (deftest put-replaces-existing
-  (is (== "@{:name \"y\"}" (edit "@{:name \"x\"}" |(info/put $ [:name] "y")))))
+  (is (== "@{:name \"y\"}" (edit "@{:name \"x\"}" (fn [t] (info/put t [:name] "y"))))))
 
 (deftest rem-key
-  (is (== "{:a 1}" (edit "{:a 1\n :b 2}" |(info/remove $ [:b])))))
+  (is (== "{:a 1}" (edit "{:a 1\n :b 2}" (fn [t] (info/remove t [:b]))))))
 
 (deftest rem-where
-  (is (== "{:foo []}" (edit "{:foo [:bar]}" |(info/remove $ [:foo] :where :bar)))))
+  (is (== "{:foo []}" (edit "{:foo [:bar]}" (fn [t] (info/remove t [:foo] :where :bar))))))
 
 (deftest upd-where-to
   (is (== "{:foo [{:baz :bar\n        :qux :quux}]}"
           (edit "{:foo [:bar]}"
-                |(info/update $ [:foo] :where :bar :to {:baz :bar :qux :quux})))))
+                (fn [t] (info/update t [:foo] :where :bar :to {:baz :bar :qux :quux}))))))
 
 (deftest upd-where-add
   (is (== "@{:deps [{:name \"a\"\n          :url \"u\"}]}"
           (edit "@{:deps [{:name \"a\"}]}"
-                |(info/update $ [:deps]
-                              :where (fn [x] (= "a" (get x :name)))
-                              :add [:url "u"])))))
+                (fn [t] (info/update t [:deps]
+                                     :where (fn [x] (= "a" (get x :name)))
+                                     :add [:url "u"]))))))
 
 (deftest name-first-ordering
-  (is (== "@{:deps [{:name \"a\"\n          :tag \"t\"\n          :url \"u\"}]}"
+  # :as sorts before :name alphabetically, so this fails under a plain
+  # alphabetical ordering and only passes because :name is forced first
+  (is (== "@{:deps [{:name \"a\"\n          :as \"x\"\n          :url \"u\"}]}"
           (edit "@{:deps []}"
-                |(info/add $ [:deps] [{:url "u" :tag "t" :name "a"}])))))
+                (fn [t] (info/add t [:deps] [{:url "u" :as "x" :name "a"}]))))))
 
 (deftest edits-mutate-in-place
   (def t (info/parse "@{:name \"x\"}"))

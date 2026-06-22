@@ -17,129 +17,108 @@
 
 # Node builders
 
-(defn- atom-node
+(defn- node
   ```
-  Builds a grammar fragment that captures `peg-form` as an atom node of type
-  `node-type` carrying its literal text.
+  Returns a function that wraps its captures as a node of type `node-type`,
+  i.e. a tuple of the form `[node-type & captures]`.
   ```
-  [node-type peg-form]
-  ~(/ (capture ,peg-form)
-      ,|[node-type $]))
+  [node-type]
+  (fn [& captures] [node-type ;captures]))
 
-(defn- reader-macro-node
+(defn- missing-delim
   ```
-  Builds a grammar fragment for a reader macro node of type `node-type`
-  introduced by `sigil` (e.g. "~" for quasiquote).
+  Returns a function that formats a parse error for a `node-type` collection
+  whose closing `delim` is missing, given the line and column of the failure.
   ```
-  [node-type sigil]
-  ~(/ (sequence ,sigil
-                (group (sequence (any :non-form) :form)))
-      ,|[node-type ;$]))
-
-(defn- collection-node
-  ```
-  Builds a grammar fragment for a collection node of type `node-type` delimited
-  by `open-delim` and `close-delim`. Raises a parse error if the closing
-  delimiter is missing.
-  ```
-  [node-type open-delim close-delim]
-  ~(/
-     (sequence
-       ,open-delim
-       (group (any :input))
-       (choice ,close-delim
-               (error
-                 (replace (sequence (line) (column))
-                          ,|(string/format
-                              "line: %p column: %p missing %p for %p"
-                              $0 $1 close-delim node-type)))))
-     ,|[node-type ;$]))
+  [node-type delim]
+  (fn [line col]
+    (string/format "line: %p column: %p missing %p for %p"
+                   line col delim node-type)))
 
 # Grammar
 
 (def- grammar
-  ~@{:main (some :input)
-     #
-     :input (choice :non-form :form)
-     #
-     :non-form (choice :whitespace :comment)
-     #
-     :whitespace ,(atom-node :whitespace
-                             '(choice (some (set " \0\f\t\v"))
-                                      (choice "\r\n" "\r" "\n")))
-     #
-     :comment ,(atom-node :comment
-                          '(sequence "#" (any (if-not (set "\r\n") 1))))
-     #
-     :form (choice # reader macros
-                   :fn :quasiquote :quote :splice :unquote
-                   # collections
-                   :array :bracket-array :tuple :bracket-tuple :table :struct
-                   # atoms
-                   :number :constant :buffer :string :long-buffer :long-string
-                   :keyword :symbol)
-     #
-     :fn ,(reader-macro-node :fn "|")
-     :quasiquote ,(reader-macro-node :quasiquote "~")
-     :quote ,(reader-macro-node :quote "'")
-     :splice ,(reader-macro-node :splice ";")
-     :unquote ,(reader-macro-node :unquote ",")
-     #
-     :array ,(collection-node :array "@(" ")")
-     :tuple ,(collection-node :tuple "(" ")")
-     :bracket-array ,(collection-node :bracket-array "@[" "]")
-     :bracket-tuple ,(collection-node :bracket-tuple "[" "]")
-     :table ,(collection-node :table "@{" "}")
-     :struct ,(collection-node :struct "{" "}")
-     #
-     :number ,(atom-node :number
-                         ~(drop (sequence (cmt (capture (some :num-char))
-                                               ,scan-number)
-                                          (opt (sequence ":" (range "AZ" "az"))))))
-     #
-     :num-char (choice (range "09" "AZ" "az") (set "&+-._"))
-     #
-     :constant ,(atom-node :constant
-                           '(sequence (choice "false" "nil" "true")
-                                      (not :name-char)))
-     #
-     :name-char (choice (range "09" "AZ" "az" "\x80\xFF")
-                        (set "!$%&*+-./:<?=>@^_"))
-     #
-     :buffer ,(atom-node :buffer
-                         '(sequence `@"`
-                                    (any (choice :escape (if-not "\"" 1)))
-                                    `"`))
-     #
-     :escape (sequence "\\"
-                       (choice (set `"'0?\abefnrtvz`)
-                               (sequence "x" (2 :h))
-                               (sequence "u" (4 :h))
-                               (sequence "U" (6 :h))
-                               (error (constant "bad escape"))))
-     #
-     :string ,(atom-node :string
-                         '(sequence `"`
-                                    (any (choice :escape (if-not "\"" 1)))
-                                    `"`))
-     #
-     :long-string ,(atom-node :long-string :long-bytes)
-     #
-     :long-bytes {:main (drop (sequence :open
-                                        (any (if-not :close 1))
-                                        :close))
-                  :open (capture :delim :n)
-                  :delim (some "`")
-                  :close (cmt (sequence (not (look -1 "`"))
-                                        (backref :n)
-                                        (capture (backmatch :n)))
-                              ,=)}
-     #
-     :long-buffer ,(atom-node :long-buffer '(sequence "@" :long-bytes))
-     #
-     :keyword ,(atom-node :keyword '(sequence ":" (any :name-char)))
-     #
-     :symbol ,(atom-node :symbol '(some :name-char))})
+  (peg/compile
+    ~{:main (some :input)
+      :input (+ :non-form :form)
+      # Whitespace and comments
+      :non-form (+ :whitespace :comment)
+      :whitespace (/ '(+ (some (set " \0\f\t\v"))
+                         (+ "\r\n" "\r" "\n"))
+                     ,(node :whitespace))
+      :comment (/ '(* "#" (any (* (! (set "\r\n")) 1)))
+                  ,(node :comment))
+      # Forms
+      :form (+ # reader macros
+               :fn :quasiquote :quote :splice :unquote
+               # collections
+               :array :bracket-array :tuple :bracket-tuple :table :struct
+               # atoms
+               :number :constant :buffer :string :long-buffer :long-string
+               :keyword :symbol)
+      # Reader macros
+      :fn         (/ (* "|" (any :non-form) :form) ,(node :fn))
+      :quasiquote (/ (* "~" (any :non-form) :form) ,(node :quasiquote))
+      :quote      (/ (* "'" (any :non-form) :form) ,(node :quote))
+      :splice     (/ (* ";" (any :non-form) :form) ,(node :splice))
+      :unquote    (/ (* "," (any :non-form) :form) ,(node :unquote))
+      # Collections
+      :array (/ (* "@(" (any :input)
+                   (+ ")" (error (/ (* (line) (column))
+                                    ,(missing-delim :array ")")))))
+                ,(node :array))
+      :tuple (/ (* "(" (any :input)
+                   (+ ")" (error (/ (* (line) (column))
+                                    ,(missing-delim :tuple ")")))))
+                ,(node :tuple))
+      :bracket-array (/ (* "@[" (any :input)
+                           (+ "]" (error (/ (* (line) (column))
+                                            ,(missing-delim :bracket-array "]")))))
+                        ,(node :bracket-array))
+      :bracket-tuple (/ (* "[" (any :input)
+                           (+ "]" (error (/ (* (line) (column))
+                                            ,(missing-delim :bracket-tuple "]")))))
+                        ,(node :bracket-tuple))
+      :table (/ (* "@{" (any :input)
+                   (+ "}" (error (/ (* (line) (column))
+                                    ,(missing-delim :table "}")))))
+                ,(node :table))
+      :struct (/ (* "{" (any :input)
+                    (+ "}" (error (/ (* (line) (column))
+                                     ,(missing-delim :struct "}")))))
+                 ,(node :struct))
+      # Numbers and constants
+      :number (/ '(drop (* (cmt '(some :num-char) ,scan-number)
+                           (? (* ":" (range "AZ" "az")))))
+                 ,(node :number))
+      :num-char (+ (range "09" "AZ" "az") (set "&+-._"))
+      :constant (/ '(* (+ "false" "nil" "true") (! :name-char))
+                   ,(node :constant))
+      :name-char (+ (range "09" "AZ" "az" "\x80\xFF")
+                    (set "!$%&*+-./:<?=>@^_"))
+      # Strings and buffers
+      :buffer (/ '(* `@"` (any (+ :escape (* (! `"`) 1))) `"`)
+                 ,(node :buffer))
+      :string (/ '(* `"` (any (+ :escape (* (! `"`) 1))) `"`)
+                 ,(node :string))
+      :escape (* "\\"
+                 (+ (set `"'0?\abefnrtvz`)
+                    (* "x" (2 :h))
+                    (* "u" (4 :h))
+                    (* "U" (6 :h))
+                    (error (constant "bad escape"))))
+      :long-string (/ ':long-bytes ,(node :long-string))
+      :long-buffer (/ '(* "@" :long-bytes) ,(node :long-buffer))
+      :long-bytes {:main (drop (* :open (any (* (! :close) 1)) :close))
+                   :open (<- :delim :n)
+                   :delim (some "`")
+                   :close (cmt (* (! (> -1 "`"))
+                                  (backref :n)
+                                  (<- (backmatch :n)))
+                               ,=)}
+      # Keywords and symbols
+      :keyword (/ '(* ":" (any :name-char)) ,(node :keyword))
+      :symbol (/ '(some :name-char) ,(node :symbol))}))
 
 # Parsing
 

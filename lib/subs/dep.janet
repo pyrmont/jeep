@@ -93,7 +93,7 @@
         (assertf (get d :name) "dependency %n requires :name" d)
         (assertf (get d :url) "dependency %n requires :url" d)
         (def tag (if autotag? (fetch-tag (get d :url))))
-        (array/push to-add (struct :tag tag ;(pairs d))))
+        (array/push to-add (struct :tag tag ;(kvs d))))
       (util/url? d)
       (do
         (def url (if (peg/match peg d) d (string "https://" d)))

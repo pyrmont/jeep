@@ -388,7 +388,7 @@
   ```
   [zloc]
   (defn prefix [z]
-    (def left (string/join (map |(parser/render $) (get (state z) :lhs []))))
+    (def left (string/join (map (fn [x] (parser/render x)) (get (state z) :lhs []))))
     (if-let [nl (last (string/find-all "\n" left))]
       (string/slice left (inc nl))
       (if-let [p (up z)]
