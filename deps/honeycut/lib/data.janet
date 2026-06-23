@@ -157,6 +157,142 @@
       (array/push new-kids (ws (string "\n" e-indent)) e-node)))
   (z/replace cz [(first n) ;new-kids]))
 
+(defn- comment-line? [line]
+  (def t (string/triml line))
+  (and (not (empty? t)) (= (t 0) (chr "#"))))
+
+(defn- peel-lead
+  ```
+  Splits trivia text `s` into `[structural lead]`, where `lead` is the trailing
+  run of own-line comments (and the indent before the next entry)
+
+  A blank line detaches a comment from what follows, ending the run. When
+  `first-line?` is true the first line is eligible too, so a comment opening the
+  collection attaches to its first entry; otherwise the first line is the close
+  of the preceding entry's line and stays structural.
+  ```
+  [s first-line?]
+  (def parts (string/split "\n" s))
+  (def min-j (if first-line? 0 1))
+  (var first-comment nil)
+  (var j (- (length parts) 2))
+  (while (and (>= j min-j) (comment-line? (parts j)))
+    (set first-comment j)
+    (-- j))
+  (if (nil? first-comment)
+    [s ""]
+    (do
+      (var off 0)
+      (for k 0 first-comment (+= off (length (parts k)) 1))
+      (def cut (+ off (string/find "#" (parts first-comment))))
+      [(string/slice s 0 cut) (string/slice s cut)])))
+
+(defn- peel-tail
+  ```
+  Splits gap text `s` into `[tail rest]`, where `tail` is a same-line trailing
+  comment of the preceding entry (empty if the gap opens with a newline)
+  ```
+  [s]
+  (def nl (string/find "\n" s))
+  (if (and nl (string/find "#" (string/slice s 0 nl)))
+    [(string/slice s 0 nl) (string/slice s nl)]
+    ["" s]))
+
+(defn- parse-collection
+  ```
+  Splits collection children `kids` into a head, entries and separators
+
+  Each entry spans `width` non-trivia nodes (1 for an element, 2 for a
+  key/value pair). Returns `[head entries seps]` where `head` is the leading
+  structural trivia and each `seps` entry is the structural separator following
+  a slot, both as text; each entry is a struct of `:lead` (own-line comments
+  above it) and `:tail` (a same-line trailing comment), both text, plus
+  `:content` (its own nodes). Comments bind to the entry they document; only
+  the structural separators are positional.
+  ```
+  [kids width]
+  (var i 0)
+  (def head-trivia @[])
+  (while (and (< i (length kids)) (trivia-node? (kids i)))
+    (array/push head-trivia (kids i))
+    (++ i))
+  (def raw @[])
+  (while (< i (length kids))
+    (def content @[])
+    (var seen 0)
+    (while (and (< i (length kids)) (< seen width))
+      (def kid (kids i))
+      (array/push content kid)
+      (when (non-trivia? kid) (++ seen))
+      (++ i))
+    (def gap @"")
+    (while (and (< i (length kids)) (trivia-node? (kids i)))
+      (buffer/push gap (in (kids i) 1))
+      (++ i))
+    (array/push raw {:content content :gap (string gap)}))
+  (def m (length raw))
+  (def [head lead0]
+    (peel-lead (string/join (map |(in $ 1) head-trivia)) true))
+  (def tails @[])
+  (def seps @[])
+  (def next-leads @[])
+  (for idx 0 m
+    (def [tail rest] (peel-tail ((raw idx) :gap)))
+    (def [sep next-lead] (if (= idx (dec m)) [rest ""] (peel-lead rest false)))
+    (array/push tails tail)
+    (array/push seps sep)
+    (array/push next-leads next-lead))
+  (def entries @[])
+  (for idx 0 m
+    (array/push entries
+                {:lead (if (zero? idx) lead0 (next-leads (dec idx)))
+                 :content ((raw idx) :content)
+                 :tail (tails idx)}))
+  [head entries seps])
+
+(defn- reorder
+  ```
+  Rebuilds a collection's children from `head`, the original `entries`, an
+  `order` of entry indices, and the positional `seps`
+
+  Each entry carries its own leading and trailing comments to its new slot,
+  while the structural separators stay where they were, so blank lines and
+  layout are preserved and comments travel with the entry they document.
+  ```
+  [kind head entries order seps]
+  (def buf (buffer head))
+  (for s 0 (length entries)
+    (def e (entries (order s)))
+    (buffer/push buf (e :lead))
+    (each node (e :content) (buffer/push buf (parser/render node)))
+    (buffer/push buf (e :tail))
+    (buffer/push buf (seps s)))
+  # a comment flush against the opening delimiter would swallow it onto its
+  # line, so give it a space to breathe
+  (def body (if (= (get buf 0) (chr "#")) (string " " buf) (string buf)))
+  [kind ;(slice (parser/parse body) 1)])
+
+(defn- sort-collection
+  ```
+  Reorders the entries of the collection at `cz` by `by`, applied to each
+  entry's subject
+
+  An entry spans `width` non-trivia nodes; its subject is the first of them — a
+  key for a struct or table, an element for a tuple or array. The original
+  position breaks ties, keeping the sort stable.
+  ```
+  [cz width by]
+  (def n (z/node cz))
+  (def [head entries seps] (parse-collection (slice n 1) width))
+  (if (<= (length entries) 1)
+    cz
+    (do
+      (def subjects
+        (map (fn [e] (node->value (first (filter non-trivia? (e :content))))) entries))
+      (def order
+        (sort-by (fn [i] [(by (subjects i)) i]) (range (length entries))))
+      (z/replace cz (reorder (first n) head entries order seps)))))
+
 (defn- drop-separator
   ```
   Removes the trivia separating the entry that was at `i` from its neighbours
@@ -222,9 +358,12 @@
   ```
   Replaces the value at `path` in `tree` with `v`, returning the new tree
 
-  The optional `:key-order` hook maps any dictionary in `v` to its ordered
-  `[key value]` pairs, setting the order in which dictionary keys are emitted
-  when the returned tree is rendered (the default sorts them).
+  As in `add`, the optional `:key-order` hook sets the order in which
+  dictionary keys are emitted as `v` is rendered: it maps `v`, and every
+  dictionary nested within it, to its ordered `[key value]` pairs (the default
+  sorts them). It governs only this freshly rendered text; entries already in
+  `tree` keep their order. Use `sort` to reorder a collection already in the
+  tree.
 
   Raises an error if `path` does not resolve to a value.
   ```
@@ -248,10 +387,14 @@
 
   If `path` resolves to a struct or table, `v` must also be a dictionary and
   its key-value pairs are added. If `path` resolves to an array or tuple, `v`
-  must be an indexed collection and its elements are appended. The optional
-  `:key-order` hook maps any dictionary in `v` to its ordered `[key value]`
-  pairs, setting the order in which dictionary keys are emitted when the
-  returned tree is rendered (the default sorts them).
+  must be an indexed collection and its elements are appended.
+
+  As in `put`, the optional `:key-order` hook sets the order in which
+  dictionary keys are emitted as `v` is rendered: it maps `v`, and every
+  dictionary nested within it, to its ordered `[key value]` pairs (the default
+  sorts them). It governs only this freshly rendered text. The added entries
+  follow those already at `path`, which keep their order; use `sort` to
+  reorder a collection already in the tree.
 
   A key in `v` that is already present in the dictionary at `path` is added a
   second time rather than overwriting the existing entry; use `put` to replace
@@ -274,6 +417,39 @@
       (do
         (assertf (indexed? v) "value for path %n must be a tuple/array" path)
         (ind-add-entries cz v key-order))
+      (errorf "path %n resolves to %n, not a collection" path (node->value n)))))
+
+(defn sort
+  ```
+  Reorders the entries of the collection at `path` in `tree`, returning the
+  new tree
+
+  Entries are ordered by applying the optional `:by` hook and sorting on the
+  result. For a struct or table `:by` receives each entry's key; for a tuple or
+  array it receives each element. The default is the identity, so dictionaries
+  sort by key and indexed collections sort by element.
+
+  This rearranges entries already in the tree and touches only the collection
+  at `path`; nested collections are left as they are. By contrast, the
+  `:key-order` hook of `add` and `put` sets the order of dictionaries — nested
+  ones included — only as fresh values are rendered.
+
+  A comment travels with the entry it documents: an own-line comment moves with
+  the entry it sits above, and a same-line trailing comment moves with the entry
+  it follows. A comment cut off from the next entry by a blank line is treated
+  as free-standing and keeps its position, as does the blank-line layout itself.
+
+  Raises an error if `path` does not resolve to a collection.
+  ```
+  [tree path &named by]
+  (def by (or by identity))
+  (def cz (seek tree path))
+  (assertf cz "no collection at path %n" path)
+  (def n (z/node cz))
+  (z/root
+    (cond
+      (dict-node? n) (sort-collection cz 2 by)
+      (ind-node? n) (sort-collection cz 1 by)
       (errorf "path %n resolves to %n, not a collection" path (node->value n)))))
 
 (defn remove
