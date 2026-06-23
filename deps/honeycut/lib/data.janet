@@ -5,8 +5,8 @@
 ### `update-in` work on live data — except the surrounding source (whitespace,
 ### comments, the formatting of untouched entries) is preserved.
 ###
-### A `path` is a tuple of segments. Within a struct or table a segment is a
-### key; within a tuple or array it is a 0-based index. New and replacement
+### A `path` is a tuple of keys. Within a struct or table a key looks up an
+### entry; within a tuple or array it is a 0-based index. New and replacement
 ### values are rendered with `format/value->source`; an optional `:key-order`
 ### hook (a function from a dictionary to its ordered `[key value]` pairs) sets
 ### the order in which dictionary keys are emitted.
@@ -57,10 +57,10 @@
 
 (defn- seek-in
   ```
-  Returns the value z-location for segment `seg` within the collection at
-  `coll-zloc`, or nil if it is absent
+  Returns the value z-location for `k` within the collection at `coll-zloc`,
+  or nil if it is absent
   ```
-  [coll-zloc seg]
+  [coll-zloc k]
   (def n (z/node coll-zloc))
   (cond
     (dict-node? n)
@@ -68,7 +68,7 @@
       (var kz (z/down-skip coll-zloc))
       (var found nil)
       (while kz
-        (if (= seg (z/value kz))
+        (if (= k (z/value kz))
           (do (set found (z/right-skip kz)) (set kz nil))
           (set kz (z/right-skip (z/right-skip kz)))))
       found)
@@ -76,7 +76,7 @@
     (do
       (var ez (z/down-skip coll-zloc))
       (var i 0)
-      (while (and ez (< i seg))
+      (while (and ez (< i k))
         (set ez (z/right-skip ez))
         (++ i))
       ez)
@@ -92,13 +92,13 @@
 
 (defn- seek
   ```
-  Returns the value z-location at `path`, or nil if any segment is absent
+  Returns the value z-location at `path`, or nil if any key is absent
   ```
   [tree path]
   (var cur (top tree))
-  (each seg path
+  (each k path
     (if (nil? cur) (break))
-    (set cur (seek-in cur seg)))
+    (set cur (seek-in cur k)))
   cur)
 
 # Collection mutators (operate on a collection z-location, return a new one)
@@ -253,6 +253,10 @@
   pairs, setting the order in which dictionary keys are emitted when the
   returned tree is rendered (the default sorts them).
 
+  A key in `v` that is already present in the dictionary at `path` is added a
+  second time rather than overwriting the existing entry; use `put` to replace
+  a value in place.
+
   Raises an error if `path` does not resolve to a collection or if `v` is not
   of a matching type.
   ```
@@ -276,8 +280,8 @@
   ```
   Removes the entry at `path` in `tree`, returning the new tree
 
-  The last segment of `path` selects a key (in a struct/table) or an index (in
-  a tuple/array). Surrounding separators are tidied up.
+  The last key of `path` identifies the entry: a key in a struct/table or an
+  index in a tuple/array. Surrounding separators are tidied up.
 
   Raises an error if `path` is empty or does not resolve to an entry.
   ```
@@ -285,10 +289,10 @@
   (assertf (not (empty? path)) "cannot remove at the empty path")
   (def cz (seek tree (slice path 0 -2)))
   (assertf cz "no collection at path %n" (slice path 0 -2))
-  (def seg (last path))
+  (def k (last path))
   (def n (z/node cz))
   (z/root
     (cond
-      (dict-node? n) (dict-remove cz seg)
-      (ind-node? n) (ind-remove cz seg)
+      (dict-node? n) (dict-remove cz k)
+      (ind-node? n) (ind-remove cz k)
       (errorf "path %n resolves to %n, not a collection" path (node->value n)))))
