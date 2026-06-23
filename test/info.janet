@@ -58,6 +58,11 @@
   (info/put t [:version] "1.0.0")
   (is (== "@{:name \"x\"\n  :version \"1.0.0\"}" (info/render t))))
 
+(deftest add-rejects-duplicate-key
+  (assert-thrown-message "key :name already present at key path (:deps 0); use put to replace"
+                         (info/add (info/parse "@{:deps [{:name \"a\"}]}")
+                                   [:deps 0] {:name "b"})))
+
 (deftest errors
   (assert-thrown-message "must provide :where argument"
                          (info/update (info/parse "{:a 1}") [:name] :to 9))

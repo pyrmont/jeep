@@ -59,11 +59,22 @@
   If `kl` already resolves, `v`'s entries are added to the collection there (its
   elements for an array, its pairs for a struct/table). Otherwise the final key
   of `kl` is created in its parent and mapped to `v`.
+
+  Unlike Honeycut's `add`, adding a key already present in the struct/table at
+  `kl` raises an error rather than creating a duplicate entry; use `put` to
+  replace an existing value.
   ```
   [tree kl v]
   (apply! tree
           (if (resolves? tree kl)
-            (h/add tree kl v :key-order by-name)
+            (do
+              (def coll (h/get tree kl))
+              (when (dictionary? coll)
+                (each k (keys v)
+                  (assertf (not (has-key? coll k))
+                           "key %n already present at key path %n; use put to replace"
+                           k kl)))
+              (h/add tree kl v :key-order by-name))
             (h/add tree (slice kl 0 -2) {(last kl) v} :key-order by-name))))
 
 (defn put
