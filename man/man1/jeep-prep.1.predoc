@@ -85,6 +85,10 @@ the directory specified in the ``:prefix`` (if no directory is specified, the
 bundle root). Dependencies can be added to the __info file__ using
 `jeep-dep(1)`.
 
+If a dependency's URL cannot be resolved and the __info file__ includes a
+``:fallbacks`` key, **jeep-prep** tries the alternative URLs listed in the
+__fallbacks file__. For more information, see Fallbacks in `jeep(1)`.
+
 The bundle author optionally binds a function to the prep __bundle hook__ by
 defining a function called ``prep`` in the __bundle script__. When invoked, the
 function will receive two arguments: (1) a table representing the bundle

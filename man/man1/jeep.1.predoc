@@ -125,6 +125,33 @@ The __info file__ may be located at:
 - `./bundle/info.jdn`
 - `./info.jdn`
 
+Fallbacks
+---------
+
+A bundle author can include an optional ``:fallbacks`` key in the __info file__.
+Its value is a URL, or a list of URLs, identifying a __fallbacks file__.
+
+A __fallbacks file__ is written in the same notation as the __info file__. It
+contains a single struct/table that maps a URL to an array/tuple of alternative
+URLs.
+
+When **jeep** installs a dependency listed under the ``:dependencies`` or
+``:vendored`` keys and the dependency's URL cannot be resolved, **jeep**
+retrieves the __fallbacks file__ and looks up the unreachable URL. If the URL is
+present, **jeep** tries each alternative in turn until one resolves. If none
+resolves, or the URL is absent, the original error is raised.
+
+The __fallbacks file__ is only retrieved the first time a dependency fails to
+resolve. Where ``:fallbacks`` is a list, each URL is tried in order until one
+returns a valid __fallbacks file__.
+
+An example __fallbacks file__ might look like this:
+
+````
+{"https://example.org/dep1" ["https://mirror.example.org/dep1"
+                             "https://backup.example.org/dep1"]}
+````
+
 Legacy Bundles
 --------------
 

@@ -231,6 +231,83 @@
                           " >NUL"))))
     (os/execute ["cp" "-a" src dest] :px)))
 
+(defn fetch-url
+  ```
+  Fetches the contents of `url` using curl, returning the body or nil on failure
+  ```
+  [url]
+  (def [r w] (os/pipe))
+  # exec runs with the :x flag, so a non-zero exit (e.g. a 404) throws
+  (def ok? (first (protect (exec :curl {:out w} "-sSL" "--fail" url))))
+  (:close w)
+  (def body (ev/read r :all))
+  (:close r)
+  (when ok? body))
+
+(defn- resolve-fallbacks
+  ```
+  Resolves the `:jeep-fallbacks` dynamic binding into a fallbacks map
+
+  The binding may be nil, a URL string, an indexed collection of URL strings or
+  an already-resolved map. URL sources are tried in order; the first that
+  fetches and parses into a struct/table is used. The result (or an empty map if
+  nothing resolves) is cached back into the binding so the file is fetched at
+  most once per run.
+  ```
+  []
+  (def fb (dyn :jeep-fallbacks))
+  (cond
+    (nil? fb)
+    nil
+    (dictionary? fb)
+    fb
+    # default: one or more URLs to fetch
+    (do
+      (def sources (if (indexed? fb) fb [fb]))
+      (var resolved nil)
+      (each src sources
+        (def body (fetch-url src))
+        (when body
+          (def [ok? data] (protect (parse body)))
+          (when (and ok? (dictionary? data))
+            (set resolved data)
+            (break))))
+      (unless resolved
+        (eprint "warning: could not load fallbacks from "
+                (string/join (map string sources) ", ")))
+      (def result (or resolved {}))
+      (setdyn :jeep-fallbacks result)
+      result)))
+
+(defn with-fallback
+  ```
+  Runs `(thunk url)`, retrying with fallback URLs if it throws
+
+  If the call throws, `url` is looked up in the resolved fallbacks map (see the
+  `:jeep-fallbacks` dynamic binding). Each alternative is tried in turn by
+  calling `(thunk alt)` and the first that succeeds has its result returned. If
+  there are no alternatives or all of them fail, the original error is re-raised.
+  ```
+  [url thunk]
+  # try (rather than a bare fiber) so the thunk inherits dynamic bindings
+  (try
+    (thunk url)
+    ([err fib]
+     (def alts (get (resolve-fallbacks) url))
+     (if (or (nil? alts) (empty? alts))
+       (propagate err fib)
+       (do
+         (var result nil)
+         (var ok? false)
+         (each alt alts
+           (eprint "warning: " url " did not resolve, trying " alt)
+           (def [success v] (protect (thunk alt)))
+           (when success
+             (set result v)
+             (set ok? true)
+             (break)))
+         (if ok? result (propagate err fib)))))))
+
 (defn fetch-git
   [&named url tag dir]
   (assert url "function requires :url argument")
@@ -265,7 +342,15 @@
            (rmrf tmp))
     (def local? (string/has-prefix? "file::" url))
     (def origin (if local? (string/slice url 6) url))
-    (def src-dir (if local? origin (fetch-git :url url :tag tag :dir tmp)))
+    (def src-dir
+      (if local?
+        origin
+        (with-fallback url
+                       (fn [u]
+                         # clone each attempt into a fresh dir so a failed try
+                         # never leaves a half-clone behind for the next one
+                         (def dir (string tmp psep (gensym)))
+                         (fetch-git :url u :tag tag :dir dir)))))
     (def dest-dir (if parent-dir
                     # use POSIX path separator to match info file
                     (string parent-dir (when prefix (string psep prefix)))

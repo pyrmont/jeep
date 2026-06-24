@@ -121,4 +121,48 @@
     (os/mkdir "tmp")
     (is (== nil (util/rmrf "tmp")))))
 
+(deftest fetch-url-reads-local-file
+  (h/in-dir _
+    (spit "data.txt" "hello")
+    (def url (string "file://" (os/cwd) sep "data.txt"))
+    (is (== "hello" (util/fetch-url url)))))
+
+(deftest fetch-url-returns-nil-when-missing
+  (h/in-dir _
+    (def url (string "file://" (os/cwd) sep "missing.txt"))
+    (is (== nil (util/fetch-url url)))))
+
+(deftest with-fallback-returns-first-success
+  (def thunk (fn [u] (string "got " u)))
+  (is (== "got x" (util/with-fallback "x" thunk))))
+
+(deftest with-fallback-uses-alternative
+  (def err @"")
+  (with-dyns [:jeep-fallbacks {"bad" ["good"]}
+              :err err]
+    (def thunk (fn [u] (if (= u "good") :ok (error "unreachable"))))
+    (is (== :ok (util/with-fallback "bad" thunk)))
+    # the fallback attempt is announced on stderr
+    (is (string/has-prefix? "warning: bad did not resolve, trying good" (string err)))))
+
+(deftest with-fallback-reraises-when-exhausted
+  (with-dyns [:jeep-fallbacks {"bad" ["also-bad"]}
+              :err @""]
+    (def thunk (fn [_] (error "original")))
+    (assert-thrown-message "original" (util/with-fallback "bad" thunk))))
+
+(deftest with-fallback-reraises-when-no-entry
+  (with-dyns [:jeep-fallbacks {}]
+    (def thunk (fn [_] (error "boom")))
+    (assert-thrown-message "boom" (util/with-fallback "x" thunk))))
+
+(deftest with-fallback-resolves-map-from-url
+  (h/in-dir _
+    (spit "fallbacks.jdn" `{"bad" ["good"]}`)
+    (def url (string "file://" (os/cwd) sep "fallbacks.jdn"))
+    (with-dyns [:jeep-fallbacks url
+                :err @""]
+      (def thunk (fn [u] (if (= u "good") :ok (error "unreachable"))))
+      (is (== :ok (util/with-fallback "bad" thunk))))))
+
 (run-tests!)

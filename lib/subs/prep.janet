@@ -109,15 +109,16 @@
   (def no-deps? (get opts "no-deps"))
   (def no-hook? (get opts "no-hook"))
   (def force-deps? (get opts "force-deps"))
-  # install deps
+  # install deps, making the local bundle's fallbacks available to every fetch
   (unless no-deps?
-    (case profile
-      "system"
-      (install-system info :force-deps? force-deps?)
-      "build"
-      (install-build info :force-deps? force-deps?)
-      "vendor"
-      (install-vendor info :force-deps? force-deps?)))
+    (with-dyns [:jeep-fallbacks (get info :fallbacks)]
+      (case profile
+        "system"
+        (install-system info :force-deps? force-deps?)
+        "build"
+        (install-build info :force-deps? force-deps?)
+        "vendor"
+        (install-vendor info :force-deps? force-deps?))))
   # run hook
   (unless no-hook?
     (def man @{:info info})

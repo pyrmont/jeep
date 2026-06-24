@@ -40,6 +40,11 @@ accomplished by setting **--local** after the invocation of `jeep(1)`.
 
 For more information about the __syspath__, see CONCEPTS in `jeep(1)`.
 
+If a dependency's URL cannot be resolved and the local bundle's __info file__
+includes a ``:fallbacks`` key, **jeep-install** tries the alternative URLs
+listed in the __fallbacks file__. For more information, see Fallbacks in
+`jeep(1)`.
+
 EXAMPLES
 ========
 

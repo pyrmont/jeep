@@ -38,7 +38,7 @@
     (eprintf "bundle %s is already installed, skipping" installed-name)
     (break))
   (def {:url url :type bundle-type :tag tag} bundle)
-  (def bdir (pm/download-bundle url bundle-type tag))
+  (def bdir (util/with-fallback url (fn [u] (pm/download-bundle u bundle-type tag))))
   (def info (util/load-meta bdir))
   (when (nil? info)
     (errorf "bundle at %s does not include info.jdn file" url))

@@ -1,4 +1,5 @@
 (import ../install)
+(import ../util)
 
 (def- helps
   {:bundle
@@ -26,11 +27,14 @@
   jeep-config # TODO: Add support for configuring via existing file
   (def repo (get-in args [:sub :params :bundle]))
   (def replace? (get-in args [:sub :opts "replace"]))
-  (if (nil? repo)
-    (install/install "file::." :replace? replace? :force-update true)
-    (each rep repo
-      (def [ok? res] (protect (parse rep)))
-      (install/install (if (and ok? (dictionary? res)) res rep)
-                       :replace? replace?
-                       :force-update true)))
+  # read fallbacks from the local bundle, if any, to cover dead dependency URLs
+  (def info (util/load-meta "."))
+  (with-dyns [:jeep-fallbacks (and info (get info :fallbacks))]
+    (if (nil? repo)
+      (install/install "file::." :replace? replace? :force-update true)
+      (each rep repo
+        (def [ok? res] (protect (parse rep)))
+        (install/install (if (and ok? (dictionary? res)) res rep)
+                         :replace? replace?
+                         :force-update true))))
   (print "Installation completed."))
