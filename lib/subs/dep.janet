@@ -14,13 +14,14 @@
    `Update the deps in the bundle.`
    :vendor
    `Change dependencies under the :vendored keyword.`
+   :tidy
+   `Sort the bundle's dependencies by name.`
    :about
    `Adds, updates or removes dependency information in the bundle's info file.`
    :help
    `Add, update or remove dependency information in the current bundle.`})
 
 (def config {:rules [:deps {:splat? true
-                            :req?   true
                             :help   (helps :deps)}
                      "--autotag" {:kind  :flag
                                   :short "a"
@@ -28,6 +29,9 @@
                      "--remove" {:kind  :flag
                                  :short "r"
                                  :help  (helps :remove)}
+                     "--tidy" {:kind  :flag
+                               :short "t"
+                               :help  (helps :tidy)}
                      "--update" {:kind  :flag
                                  :short "u"
                                  :help  (helps :update)}
@@ -222,7 +226,10 @@
   (def autotag? (get opts "autotag"))
   (def remove? (get opts "remove"))
   (def update? (get opts "update"))
+  (def tidy? (get opts "tidy"))
   (assert (not (and remove? update?)) "cannot set --remove and --update")
+  (assert (or tidy? (not (empty? deps)))
+          "must provide at least one dep or set --tidy")
   (def info (util/load-info))
   (assert info "no info.jdn file found")
   (def [ok? meta] (protect (parse info)))
@@ -243,6 +250,12 @@
     (defer
       (util/cleanup cwd)
       (add-deps jdn meta group deps autotag?)))
+  (when (and tidy? (info/has? jdn group))
+    (def before (info/render jdn))
+    (info/sort jdn group :by (fn [d] (if (dictionary? d) (get d :name) d)))
+    (unless (= before (info/render jdn))
+      (set changed? true)
+      (print "tidying...")))
   (util/save-info (info/render jdn))
   (if changed?
     (print "Dependencies changed.")

@@ -2,8 +2,8 @@
 ###
 ### A thin adapter over Honeycut that edits a bundle's `info.jdn` as data while
 ### preserving its formatting. Callers parse the file into an editable tree with
-### `parse`, change it with `add` / `put` / `remove` / `update`, and render it
-### back with `render`.
+### `parse`, change it with `add` / `put` / `remove` / `update` / `sort`, and
+### render it back with `render`.
 ###
 ### The edit functions mutate the tree in place (and also return it), so callers
 ### can keep editing the same value across several calls.
@@ -152,3 +152,24 @@
                          to))
                 (set t (h/put t [;kl i] v :key-order by-name))))
             t)))
+
+(defn has?
+  ```
+  Returns true if key path `kl` resolves to a value in `tree`
+  ```
+  [tree kl]
+  (resolves? tree kl))
+
+(defn sort
+  ```
+  Sorts the entries of the collection at key path `kl` in `tree`, mutating and
+  returning `tree`
+
+  Entries are ordered by applying `by` (a function, default identity) to each
+  entry's subject — its key for a struct/table, its element for an array/tuple
+  — and sorting on the result. Comments and blank-line layout are preserved.
+
+  Raises an error if `kl` does not resolve to a collection.
+  ```
+  [tree kl &named by]
+  (apply! tree (h/sort tree kl :by by)))

@@ -58,6 +58,20 @@
   (info/put t [:version] "1.0.0")
   (is (== "@{:name \"x\"\n  :version \"1.0.0\"}" (info/render t))))
 
+(deftest has-detects-key
+  (def t (info/parse "@{:name \"x\"}"))
+  (is (info/has? t [:name]))
+  (is (not (info/has? t [:nope]))))
+
+(deftest sort-orders-array
+  (is (== "@{:deps [{:name \"a\"}\n         {:name \"b\"}\n         {:name \"c\"}]}"
+          (edit "@{:deps [{:name \"c\"}\n         {:name \"a\"}\n         {:name \"b\"}]}"
+                (fn [t] (info/sort t [:deps] :by (fn [d] (get d :name))))))))
+
+(deftest sort-orders-dict-keys
+  (is (== "@{:m {:a 2\n      :b 3\n      :c 1}}"
+          (edit "@{:m {:c 1\n      :b 3\n      :a 2}}" (fn [t] (info/sort t [:m]))))))
+
 (deftest add-rejects-duplicate-key
   (assert-thrown-message "key :name already present at key path (:deps 0); use put to replace"
                          (info/add (info/parse "@{:deps [{:name \"a\"}]}")

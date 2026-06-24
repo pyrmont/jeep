@@ -14,8 +14,9 @@ NAME
 SYNOPSIS
 ========
 
-**jeep-dep** [**-a** | **--autotag**] [**-r** | **--remove**] [**-u** |
-             **--update**] [**-v** | **--vendor**] _deps_ ...
+**jeep-dep** [**-a** | **--autotag**] [**-r** | **--remove**] [**-t** |
+             **--tidy**] [**-u** | **--update**] [**-v** | **--vendor**]
+             [_deps_ ...]
 
 DESCRIPTION
 ===========
@@ -34,6 +35,11 @@ Options
 - **-r**, **--remove**:
   Removes the dependency information from the bundle's __info file__.
 
+- **-t**, **--tidy**:
+  Sorts the bundle's dependencies by name. Can be given on its own or alongside
+  another operation, in which case the sort is applied afterwards. Comments and
+  blank lines in the __info file__ are preserved.
+
 - **-u**, **--update**:
   Updates the dependency information in the bundle's __info file__.
 
@@ -43,7 +49,8 @@ Options
 
 - _deps_ ...:
   One or more dependencies to add or remove. Dependencies can either be
-  specified by a short name, a URL or a JDN struct/table.
+  specified by a short name, a URL or a JDN struct/table. Optional when
+  **--tidy** is given on its own.
 
 Vendoring
 ---------
@@ -93,6 +100,12 @@ To remove a dependency from the __info file__:
 
 ````
 $ jeep dep -r foo
+````
+
+To sort the dependencies in the __info file__ by name:
+
+````
+$ jeep dep --tidy
 ````
 
 To add two dependencies that will be vendored:

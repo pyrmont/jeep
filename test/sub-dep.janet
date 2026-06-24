@@ -205,6 +205,43 @@
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
+(deftest tidy-sorts-dependencies-by-name
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      # :url is in the reverse order of :name, so sorting by anything other
+      # than the dependency's name would leave the structs out of order
+      (spit (string path h/sep "info.jdn")
+            ```
+            @{:name "test1"
+              :dependencies [{:name "zed" :url "aaa"}
+                             "mid"
+                             {:name "alpha" :url "zzz"}]}
+            ```)
+      (def args {:sub {:params {:deps []}
+                       :opts {"tidy" true}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :dependencies [{:name "alpha" :url "zzz"}
+                         "mid"
+                         {:name "zed" :url "aaa"}]}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        tidying...
+        Dependencies changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
 (deftest error-on-missing-info-jdn
   (def out @"")
   (def err @"")
