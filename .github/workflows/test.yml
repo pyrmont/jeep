@@ -53,7 +53,7 @@ jobs:
     runs-on: macos-latest
     steps:
     - name: "checkout project"
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: true
     - name: "find latest version of janet"
@@ -96,7 +96,7 @@ jobs:
       shell: cmd
       run: git config --global core.autocrlf false
     - name: "checkout project"
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: true
     - name: "find latest version of janet"
@@ -125,6 +125,17 @@ jobs:
         echo JANET_LIBPATH=C:\Program Files\Janet\C>>%GITHUB_ENV%
         echo JANET_MANPATH=C:\Program Files\Janet\docs>>%GITHUB_ENV%
         echo JANET_PATH=C:\Program Files\Janet\Library>>%GITHUB_ENV%
+    # Spork looks for vcvarsall.bat in the install locations of Visual
+    # Studio 2017, 2019 and 2022, and the runner image carries 2026. It
+    # skips that search entirely when INCLUDE, LIB and LIBPATH are already
+    # set, so the environment is prepared here instead, locating whatever
+    # version is present with Microsoft's own vswhere. The tests build an
+    # executable via quickbin, so they have to run in the same invocation
+    # for the environment to survive.
     - name: "run tests"
       shell: cmd
-      run: for %%F in (test\*.janet) do janet "%%F" || exit /b 1
+      run: |
+        for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath`) do set "VSPATH=%%i"
+        if not defined VSPATH exit /b 1
+        call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" x64
+        for %%F in (test\*.janet) do janet "%%F" || exit /b 1
