@@ -77,9 +77,12 @@
       (array/push to-upd [k v])
       (print "skipping " (describe k) ", add as key first")))
   (each [k v] to-upd
-    (set changed? true)
-    (print "updating " (describe k) "...")
-    (info/put jdn [k] v))
+    # an update to a key's current value leaves the info file alone
+    (def before (info/render jdn))
+    (info/put jdn [k] v)
+    (unless (= before (info/render jdn))
+      (set changed? true)
+      (print "updating " (describe k) "...")))
   jdn)
 
 (defn run

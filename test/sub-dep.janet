@@ -145,6 +145,34 @@
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
+(deftest update-dependency-to-current-value-is-a-no-op
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (spit (string path h/sep "info.jdn")
+            ```
+            @{:name "test1"
+              :dependencies [{:name "testament"
+                              :url "https://github.com/pyrmont/testament"}]}
+            ```)
+      (def args {:sub {:params {:deps [`{:name "testament" :url "https://github.com/pyrmont/testament"}`]}
+                       :opts {"update" true}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :dependencies [{:name "testament"
+                          :url "https://github.com/pyrmont/testament"}]}
+        ```)
+      (is (== expect actual))
+      (is (== (h/add-nl "No dependencies changed.") out))
+      (is (empty? err)))))
+
 (deftest add-vendored-dependency
   (def out @"")
   (def err @"")

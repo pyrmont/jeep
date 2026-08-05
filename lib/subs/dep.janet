@@ -196,15 +196,15 @@
       (array/push to-upd [d :swap (get d :url)])))
   (each [d action url] to-upd
     (assertf url "cannot update dependency %s without :url set" (get d :name))
-    (set changed? true)
     (def name (get d :name))
-    (print "updating " name "...")
     (when autotag?
       (put d :tag (fetch-tag url)))
     (defn pred [x]
       (if (dictionary? x)
         (= name (get x :name))
         (= name x)))
+    # an update to a dependency's current value leaves the info file alone
+    (def before (info/render jdn))
     (case action
       :assoc
       (do
@@ -213,7 +213,10 @@
           (array/push keyvals k v))
         (info/update jdn group :where pred :add keyvals))
       :swap
-      (info/update jdn group :where pred :to (table/to-struct d))))
+      (info/update jdn group :where pred :to (table/to-struct d)))
+    (unless (= before (info/render jdn))
+      (set changed? true)
+      (print "updating " name "...")))
   jdn)
 
 (defn run
