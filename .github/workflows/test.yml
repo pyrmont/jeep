@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: "checkout project"
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: true
     - name: "find latest version of janet"
