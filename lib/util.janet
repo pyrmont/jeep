@@ -376,12 +376,19 @@
       (print "  copying " from " to " to)
       (copy from to))))
 
-(defn load-info
+(defn find-info
   [&opt dir]
   (default dir ".")
   (def info-path1 (string/join [dir "bundle" "info.jdn"] sep))
   (def info-path2 (string/join [dir "info.jdn"] sep))
-  (or (slurp-maybe info-path1) (slurp-maybe info-path2)))
+  (cond
+    (fexists? info-path1) info-path1
+    (fexists? info-path2) info-path2))
+
+(defn load-info
+  [&opt dir]
+  (when-let [info-path (find-info dir)]
+    (slurp-maybe info-path)))
 
 (defn load-meta
   [&opt dir]
@@ -400,9 +407,10 @@
 (defn save-info
   [jdn &opt dir]
   (default dir ".")
-  (def info-path1 (string/join [dir "bundle" "info.jdn"] sep))
-  (def info-path2 (string/join [dir "info.jdn"] sep))
-  (or (spit-maybe info-path1 jdn) (spit-maybe info-path2 jdn)))
+  # write back to the file `load-info` reads, creating the aliased info file
+  # only if no info file exists yet
+  (def info-path (or (find-info dir) (string/join [dir "info.jdn"] sep)))
+  (assertf (spit-maybe info-path jdn) "cannot write to %s" info-path))
 
 (defn version
   []

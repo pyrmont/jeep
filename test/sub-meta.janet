@@ -114,6 +114,39 @@
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
+(deftest update-meta-with-bundle-dir
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "."
+                               :name "test1"
+                               :version "1.0.0"))
+      (os/cd path)
+      # `jeep enhance --native` leaves the info file aliased at ./info.jdn but
+      # puts the bundle script in ./bundle/, so both must be able to coexist
+      (os/mkdir "bundle")
+      (def args {:sub {:params {:kvs [":version" "2.0.0"]}
+                       :opts {"update" true}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :version "2.0.0"}
+        ```)
+      (is (== expect actual))
+      # the update must not land in a shadow copy under ./bundle/
+      (is (== nil (os/stat (string "bundle" h/sep "info.jdn") :mode)))
+      (def expect-out
+        ```
+        updating :version...
+        Metadata changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
 (deftest error-on-missing-info-jdn
   (def out @"")
   (def err @"")

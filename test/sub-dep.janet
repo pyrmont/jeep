@@ -205,6 +205,45 @@
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
+(deftest update-dependency-with-bundle-dir
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "."
+                               :name "test1"
+                               :vendored ["testament" "spork"]))
+      (os/cd path)
+      # `jeep enhance --native` leaves the info file aliased at ./info.jdn but
+      # puts the bundle script in ./bundle/, so both must be able to coexist
+      (os/mkdir "bundle")
+      (def args {:sub {:params {:deps [(string `{:name "testament"`
+                                               ` :url "https://github.com/pyrmont/testament"`
+                                               ` :prefix "vendor-dir"}`)]}
+                       :opts {"update" true
+                              "vendor" true}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :vendored [{:name "testament"
+                      :prefix "vendor-dir"
+                      :url "https://github.com/pyrmont/testament"}
+                     "spork"]}
+        ```)
+      (is (== expect actual))
+      # the update must not land in a shadow copy under ./bundle/
+      (is (== nil (os/stat (string "bundle" h/sep "info.jdn") :mode)))
+      (def expect-out
+        ```
+        updating testament...
+        Dependencies changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
 (deftest tidy-sorts-dependencies-by-name
   (def out @"")
   (def err @"")

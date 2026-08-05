@@ -165,4 +165,52 @@
       (def thunk (fn [u] (if (= u "good") :ok (error "unreachable"))))
       (is (== :ok (util/with-fallback "bad" thunk))))))
 
+(deftest find-info-prefers-bundle-dir
+  (h/in-dir _
+    (os/mkdir "bundle")
+    (spit "info.jdn" `@{:name "aliased"}`)
+    (spit (string "bundle" sep "info.jdn") `@{:name "canonical"}`)
+    (is (== (string "." sep "bundle" sep "info.jdn") (util/find-info)))))
+
+(deftest find-info-falls-back-to-aliased-path
+  (h/in-dir _
+    # a bundle directory without an info file in it must not shadow ./info.jdn
+    (os/mkdir "bundle")
+    (spit "info.jdn" `@{:name "aliased"}`)
+    (is (== (string "." sep "info.jdn") (util/find-info)))))
+
+(deftest find-info-returns-nil-when-absent
+  (h/in-dir _
+    (os/mkdir "bundle")
+    (is (== nil (util/find-info)))))
+
+(deftest load-info-reads-aliased-file-alongside-bundle-dir
+  (h/in-dir _
+    (os/mkdir "bundle")
+    (spit "info.jdn" `@{:name "aliased"}`)
+    (is (== `@{:name "aliased"}` (util/load-info)))))
+
+(deftest save-info-writes-to-file-load-info-reads
+  (h/in-dir _
+    (os/mkdir "bundle")
+    (spit "info.jdn" `@{:name "aliased"}`)
+    (util/save-info `@{:name "updated"}`)
+    (is (== `@{:name "updated"}` (slurp "info.jdn")))
+    # no shadow copy is created in the bundle directory
+    (is (== false (util/fexists? (string "bundle" sep "info.jdn"))))))
+
+(deftest save-info-writes-to-bundle-dir-when-canonical
+  (h/in-dir _
+    (os/mkdir "bundle")
+    (spit (string "bundle" sep "info.jdn") `@{:name "canonical"}`)
+    (util/save-info `@{:name "updated"}`)
+    (is (== `@{:name "updated"}` (slurp (string "bundle" sep "info.jdn"))))
+    (is (== false (util/fexists? "info.jdn")))))
+
+(deftest save-info-creates-aliased-file-when-absent
+  (h/in-dir _
+    (os/mkdir "bundle")
+    (util/save-info `@{:name "new"}`)
+    (is (== `@{:name "new"}` (slurp "info.jdn")))))
+
 (run-tests!)
