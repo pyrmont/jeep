@@ -301,6 +301,7 @@
       (is (string/find "## example-native\n" actual))
       (is (string/find "## add\n" actual))
       (is (string/find "Adds two numbers." actual))
+      (is (string/find "src/example-native.c#L" actual))
       (is (string/find "## lib/example-native\n" actual))
       (is (string/find "## wrapper\n" actual))))
   (is (string/has-suffix? confirmation out))
