@@ -18,5 +18,10 @@
                     cc/*msvc-libs* [(cc/msvc-janet-import-lib)]]
           (cc/msvc-compile-and-link-shared output "src/example-native.c")
           (os/execute ["dumpbin.exe" "/dependents" output]
-                      :px {:out stderr :err stderr})))
+                      :px {:out stderr :err stderr})
+          (each dependency ["janet.exe"
+                            "VCRUNTIME140.dll"
+                            "api-ms-win-crt-runtime-l1-1-0.dll"]
+            (os/execute ["where.exe" dependency]
+                        :p {:out stderr :err stderr}))))
       (cc/compile-and-link-shared output "src/example-native.c"))))
