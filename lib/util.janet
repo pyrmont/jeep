@@ -63,7 +63,11 @@
   (def dn (if (or (nil? out) (nil? err)) (devnull)))
   (default out dn)
   (default err dn)
-  (os/execute [(dyn (keyword cmd "path") (string cmd)) ;args] :px {:out out :err err}))
+  (def command [(dyn (keyword cmd "path") (string cmd)) ;args])
+  (try
+    (os/execute command :px {:out out :err err})
+    ([e f]
+     (propagate (string e "; command: " (string/join (map string command) " ")) f))))
 
 (defn fexists?
   [p]
@@ -326,7 +330,8 @@
 
 (defn fetch-dep
   [dep &opt parent-dir]
-  (def {:url url
+  (def {:name name
+        :url url
         :tag tag
         :prefix prefix
         :paths files} dep)
@@ -342,39 +347,44 @@
            (rmrf tmp))
     (def local? (string/has-prefix? "file::" url))
     (def origin (if local? (string/slice url 6) url))
-    (def src-dir
-      (if local?
-        origin
-        (with-fallback url
-                       (fn [u]
-                         # clone each attempt into a fresh dir so a failed try
-                         # never leaves a half-clone behind for the next one
-                         (def dir (string tmp psep (gensym)))
-                         (fetch-git :url u :tag tag :dir dir)))))
-    (def dest-dir (if parent-dir
-                    # use POSIX path separator to match info file
-                    (string parent-dir (when prefix (string psep prefix)))
-                    (or prefix ".")))
     (print "vendoring " (if local? (win-path origin) origin))
-    (mkdir dest-dir true)
-    (def to-plat (if (= wsep sep) win-path identity))
-    (each f files
-      (def [src dest] (if (indexed? f) f [f f]))
-      (def full-src (string src-dir psep src))
-      # use POSIX path separators to match info file
-      (def posix-to (string dest-dir psep dest))
-      (if (string/has-suffix? psep posix-to)
-        (mkdir posix-to true)
-        (mkdir (parent posix-to 1 true) true))
-      (def posix-from
-        (if (and (not (string/has-suffix? dir-suffix full-src))
-                 (= :directory (os/stat full-src :mode)))
-          (string full-src dir-suffix)
-          full-src))
-      (def from (to-plat posix-from))
-      (def to (to-plat posix-to))
-      (print "  copying " from " to " to)
-      (copy from to))))
+    (try
+      (do
+        (def src-dir
+          (if local?
+            origin
+            (with-fallback url
+                           (fn [u]
+                             # clone each attempt into a fresh dir so a failed try
+                             # never leaves a half-clone behind for the next one
+                             (def dir (string tmp psep (gensym)))
+                             (fetch-git :url u :tag tag :dir dir)))))
+        (def dest-dir (if parent-dir
+                        # use POSIX path separator to match info file
+                        (string parent-dir (when prefix (string psep prefix)))
+                        (or prefix ".")))
+        (mkdir dest-dir true)
+        (def to-plat (if (= wsep sep) win-path identity))
+        (each f files
+          (def [src dest] (if (indexed? f) f [f f]))
+          (def full-src (string src-dir psep src))
+          # use POSIX path separators to match info file
+          (def posix-to (string dest-dir psep dest))
+          (if (string/has-suffix? psep posix-to)
+            (mkdir posix-to true)
+            (mkdir (parent posix-to 1 true) true))
+          (def posix-from
+            (if (and (not (string/has-suffix? dir-suffix full-src))
+                     (= :directory (os/stat full-src :mode)))
+              (string full-src dir-suffix)
+              full-src))
+          (def from (to-plat posix-from))
+          (def to (to-plat posix-to))
+          (print "  copying " from " to " to)
+          (copy from to)))
+      ([e f]
+       (def label (if name (string name " (" url ")") url))
+       (propagate (string "failed to vendor " label ": " e) f)))))
 
 (defn find-info
   [&opt dir]

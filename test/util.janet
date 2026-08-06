@@ -84,6 +84,15 @@
   (is (== 0 act-exit))
   (is (> (length act-out) 0)))
 
+(deftest exec-reports-command-on-failure
+  (def exe (dyn :executable))
+  (def msg
+    (string "command failed with non-zero exit code 7; command: "
+            exe " -e (os/exit 7)"))
+  (with-dyns [:janetpath exe]
+    (assert-thrown-message msg
+      (util/exec :janet nil "-e" "(os/exit 7)"))))
+
 (deftest fexists?
   (is (== true (util/fexists? "info.jdn")))
   (is (== false (util/fexists? "foo"))))
@@ -131,6 +140,17 @@
   (h/in-dir _
     (def url (string "file://" (os/cwd) sep "missing.txt"))
     (is (== nil (util/fetch-url url)))))
+
+(deftest fetch-dep-announces-and-contextualizes-failures
+  (def out @"")
+  (def url "file::.")
+  (with-dyns [:out out]
+    (h/in-dir _
+      (def dep {:name "example" :url url :paths 1})
+      (def msg
+        "failed to vendor example (file::.): expected iterable type, got 1")
+      (assert-thrown-message msg (util/fetch-dep dep))))
+  (is (== "vendoring .\n" out)))
 
 (deftest with-fallback-returns-first-success
   (def thunk (fn [u] (string "got " u)))
