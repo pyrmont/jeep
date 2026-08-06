@@ -7,11 +7,10 @@ JANET_FN(cfun_add,
     return janet_wrap_number(janet_getnumber(argv, 0) + janet_getnumber(argv, 1));
 }
 
-static const JanetRegExt cfuns[] = {
-    JANET_REG("add", cfun_add),
-    JANET_REG_END
-};
-
 JANET_MODULE_ENTRY(JanetTable *env) {
+    JanetRegExt cfuns[] = {
+        JANET_REG("add", cfun_add),
+        JANET_REG_END
+    };
     janet_cfuns_ext(env, "example-native", cfuns);
 }
