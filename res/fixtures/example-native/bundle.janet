@@ -13,7 +13,9 @@
     (if (= :windows platform)
       (do
         (cc/msvc-find)
-        (with-dyns [cc/*lflags* ["/NOIMPLIB"]
+        (with-dyns [:err stderr
+                    cc/*defines* @{"JANET_DLL_IMPORT" true}
+                    cc/*lflags* ["/NOIMPLIB"]
                     cc/*msvc-libs* [(cc/msvc-janet-import-lib)]]
           (cc/msvc-compile-and-link-shared output "src/example-native.c")))
       (cc/compile-and-link-shared output "src/example-native.c"))))
