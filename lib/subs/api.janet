@@ -235,22 +235,27 @@
   (->> (string/slice path begin end)
        (string/replace util/sep "/")))
 
+(defn- alias-meta?
+  [meta]
+  (and (one? (length meta))
+       (not (nil? (table/getproto meta)))))
+
 (defn- find-aliases
   ```
   Finds possible aliases
 
   Bindings that are imported into a namespace and then exported have a `meta`
-  length of 1. This can be used as a heuristic to build a table of possible
-  aliases that can be used in the `extract-bindings` function. A more robust
-  implementation would store the value of the aliased binding and use that later
-  to check.
+  length of 1 and inherit the original binding's metadata through their
+  prototype. This can be used as a heuristic to build a table of possible aliases
+  that can be used in the `extract-bindings` function. A more robust implementation
+  would store the value of the aliased binding and use that later to check.
   ```
   [envs bundle-root drop-prefix]
   (def aliases @{})
   (each [path env] (pairs envs)
     (def ns (path->ns path bundle-root drop-prefix))
     (each [name meta] (pairs env)
-      (when (one? (length meta))
+      (when (alias-meta? meta)
         (put aliases name ns))))
   aliases)
 
@@ -282,7 +287,7 @@
           (= :doc name)
           (array/push bindings {:ns ns :doc meta})
           # aliases
-          (one? (length meta)) # Only aliased bindings should have a meta length of 1
+          (alias-meta? meta)
           (->> (binding-details name (table/getproto meta) ns)
                (array/push bindings))
           # ordinary bindings

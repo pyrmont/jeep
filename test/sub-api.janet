@@ -63,25 +63,37 @@
   [3]: lib/mod2.janet#L1
   ````)
 (def native-api-doc
-  ````
-  # example-native API
+  (string/replace "LEGACY_KIND" "**cfunction**  "
+    ````
+    # example-native API
 
-  ## example-native
+    ## example-native
 
-  [add](#add)
+    [add](#add), [legacy](#legacy)
 
-  ## add
+    ## add
 
-  **cfunction**  | [source][1]
+    **cfunction**  | [source][1]
 
-  ```janet
-  (example-native/add x y)
-  ```
+    ```janet
+    (example-native/add x y)
+    ```
 
-  Adds two numbers.
+    Adds two numbers.
 
-  [1]: src/example-native.c#L3
-  ````)
+    [1]: src/example-native.c#L3
+
+
+    ## legacy
+
+    LEGACY_KIND
+
+    ```janet
+    <cfunction example-native/legacy>
+    ```
+
+
+    ````))
 (def mixed-native-api-doc
   (string native-api-doc "\n"
     ````
@@ -93,7 +105,7 @@
 
     ## wrapper
 
-    **function**  | [source][2]
+    **function**  | [source][3]
 
     ```janet
     (wrapper x y)
@@ -101,7 +113,7 @@
 
     Adds two numbers using the native function.
 
-    [2]: lib/example-native.janet#L3
+    [3]: lib/example-native.janet#L3
     ````))
 (def confirmation "Document generated.\n")
 (def example "../res/fixtures/example-1")
