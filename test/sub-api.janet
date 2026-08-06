@@ -80,7 +80,7 @@
 
   Adds two numbers.
 
-  [1]: src/example-native.c#L5
+  [1]: src/example-native.c#L3
   ````)
 (def mixed-native-api-doc
   (string native-api-doc "\n"
