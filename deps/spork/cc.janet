@@ -450,35 +450,17 @@
   (def arch (string (os/arch)))
   (defn loc [pf y e]
     (string `C:\` pf `\Microsoft Visual Studio\` y `\` e `\VC\Auxiliary\Build\vcvarsall.bat`))
-  # added by @pyrmont on 2026/08/06
-  # Visual Studio 2026 installs under a version directory (18) rather than a
-  # year, so the year-and-edition search below cannot reach it. vswhere ships
-  # with the installer of every release since 2017 and reports the location of
-  # the latest, so it is tried first and the search kept as a fallback.
-  (defn vswhere-loc []
-    (def pf86 (or (os/getenv "ProgramFiles(x86)") `C:\Program Files (x86)`))
-    (def vswhere (string pf86 `\Microsoft Visual Studio\Installer\vswhere.exe`))
-    (unless (os/stat vswhere :mode) (break nil))
-    (def [ok? out] (protect (sh/exec-slurp vswhere "-latest" "-products" "*"
-                                           "-property" "installationPath")))
-    (unless ok? (break nil))
-    (def root (string/trim out))
-    (if (empty? root) (break nil))
-    (def path (string root `\VC\Auxiliary\Build\vcvarsall.bat`))
-    (if (os/stat path :mode) path))
   (var found-path nil)
   (if-let [vcv (dyn *msvc-vcvars*)]
     (set found-path vcv)
     (do
-      (set found-path (vswhere-loc))
-      (unless found-path
-        (loop [pf :in ["Program Files" "Program Files (x86)"]
-               y :in [2022 2019 2017]
-               e :in ["Enterprise" "Professional" "Community" "BuildTools"]]
-          (def path (loc pf y e))
-          (when (os/stat path :mode)
-            (set found-path path)
-            (break))))))
+      (loop [pf :in ["Program Files" "Program Files (x86)"]
+             y :in [18 2022 2019 2017] # vc18 -> VS 2026
+             e :in ["Enterprise" "Professional" "Community" "BuildTools"]]
+        (def path (loc pf y e))
+        (when (os/stat path :mode)
+          (set found-path path)
+          (break)))))
   (unless found-path (error "Could not find vcvarsall.bat"))
   (when (dyn :verbose)
     (print "found " found-path))

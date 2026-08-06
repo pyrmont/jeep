@@ -266,6 +266,7 @@
    author license]
   (assert name)
   (default dependencies @[])
+  # patched by Jeep's prep hook
   repo version description url tag dependencies author license # unused
   (def br (build-root))
   (def bd (build-dir))
@@ -920,7 +921,7 @@ int main(int argc, const char **argv) {
       (def target (declare-executable :entry entry :name output))
       (build-rules/build-run rules "build")
       (print "copying " target " to " output)
-      # added by @pyrmont on 2025/11/17
+      # patched by Jeep's prep hook
       (sh/copy-file target output)
       (os/chmod output 8r755))))
 

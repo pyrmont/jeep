@@ -102,6 +102,13 @@
              (string bundle-ver "-" (string/trim (ev/read r :all)))
              bundle-ver)))))
 
+(defn prep [_manifest profile]
+  (when (= "vendor" profile)
+    (-> (string "res" s "tools" s "patch-spork.janet")
+        (dofile)
+        (module/value 'patch-spork)
+        (apply []))))
+
 (defn install [manifest &]
   (install-libs manifest)
   (install-mans manifest)
