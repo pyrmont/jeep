@@ -412,7 +412,7 @@
     (def path (string bundle-root util/sep "_build" util/sep "release"
                       util/sep (module/expand-path name ":all::native:")))
     (when (= :file (os/stat path :mode))
-      path))
+      (string/replace-all "\\" "/" path)))
   (array/push module/paths [check-build-dir :native])
   # determine sources to scan
   (def paths (filter-paths (get-in info [:artifacts :libraries]) bundle-root matches no-matches))

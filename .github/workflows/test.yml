@@ -1,8 +1,10 @@
 name: test
 
 on:
+  # '**' is every branch but no tags, so pushing a topic branch is tested
+  # without a release tag triggering a second identical run.
   push:
-    branches: [ master ]
+    branches: ['**']
   pull_request:
     branches: [ master ]
 

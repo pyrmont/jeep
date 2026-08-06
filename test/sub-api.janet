@@ -62,6 +62,47 @@
 
   [3]: lib/mod2.janet#L1
   ````)
+(def native-api-doc
+  ````
+  # example-native API
+
+  ## example-native
+
+  [add](#add)
+
+  ## add
+
+  **cfunction**  | [source][1]
+
+  ```janet
+  (example-native/add x y)
+  ```
+
+  Adds two numbers.
+
+  [1]: src/example-native.c#L3
+  ````)
+(def mixed-native-api-doc
+  (string native-api-doc "\n"
+    ````
+
+
+    ## lib/example-native
+
+    [wrapper](#wrapper)
+
+    ## wrapper
+
+    **function**  | [source][2]
+
+    ```janet
+    (wrapper x y)
+    ```
+
+    Adds two numbers using the native function.
+
+    [2]: lib/example-native.janet#L3
+    ````))
 (def confirmation "Document generated.\n")
 (def example "../res/fixtures/example-1")
 (def example-broken "../res/fixtures/example-broken")
@@ -71,6 +112,22 @@
   []
   (h/copy-bundle example-native ".")
   (build-subcmd/run {:sub {:params {:args []}}}))
+
+(defn generate-native-api
+  [info-file]
+  (def source
+    (string "(import ../lib/subs/api :as subcmd) "
+            "(subcmd/run {:sub {:params {:input \"" info-file "\"} "
+            ":opts {\"output\" \"api.md\"}}})"))
+  (var status nil)
+  (with [out-file (file/open "api.out" :w)]
+    (with [err-file (file/open "api.err" :w)]
+      (set status (os/execute ["janet" "-e" source] :p
+                              {:out out-file :err err-file}))))
+  (def out (slurp "api.out"))
+  (def err (slurp "api.err"))
+  (assertf (zero? status) "native API subprocess failed:\n%s" err)
+  [out err])
 
 (deftest generate-simple-api
   (def out @"")
@@ -289,38 +346,22 @@
   (is (empty? err)))
 
 (deftest generate-api-for-native-and-importing-library
-  (def out @"")
-  (def err @"")
-  (with-dyns [:out out
-              :err err]
-    (h/in-dir _
-      (build-native-fixture)
-      (subcmd/run {:sub {:params {:input "info.jdn"}
-                           :opts {"output" "api.md"}}})
-      (def actual (slurp "api.md"))
-      (is (string/find "## example-native\n" actual))
-      (is (string/find "## add\n" actual))
-      (is (string/find "Adds two numbers." actual))
-      (is (string/find "## lib/example-native\n" actual))
-      (is (string/find "## wrapper\n" actual))))
-  (is (string/has-suffix? confirmation out))
-  (is (empty? err)))
+  (h/in-dir _
+    (build-native-fixture)
+    (def [out err] (generate-native-api "info.jdn"))
+    (def actual (slurp "api.md"))
+    (is (== (h/add-nl mixed-native-api-doc 2) actual))
+    (is (== "Document generated." (string/trim out)))
+    (is (empty? err))))
 
 (deftest generate-api-for-native-only-bundle
-  (def out @"")
-  (def err @"")
-  (with-dyns [:out out
-              :err err]
-    (h/in-dir _
-      (build-native-fixture)
-      (subcmd/run {:sub {:params {:input "info-native-only.jdn"}
-                           :opts {"output" "api.md"}}})
-      (def actual (slurp "api.md"))
-      (is (string/find "## example-native\n" actual))
-      (is (string/find "## add\n" actual))
-      (is (string/find "Adds two numbers." actual))))
-  (is (string/has-suffix? confirmation out))
-  (is (empty? err)))
+  (h/in-dir _
+    (build-native-fixture)
+    (def [out err] (generate-native-api "info-native-only.jdn"))
+    (def actual (slurp "api.md"))
+    (is (== (h/add-nl native-api-doc 2) actual))
+    (is (== "Document generated." (string/trim out)))
+    (is (empty? err))))
 
 (deftest error-on-missing-info-file
   (def out @"")
