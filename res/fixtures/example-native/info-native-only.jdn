@@ -1,0 +1,3 @@
+{:name "example-native"
+ :artifacts {:natives [{:name "example-native"
+                        :files ["src/example-native.c"]}]}}

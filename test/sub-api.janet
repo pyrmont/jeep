@@ -2,6 +2,7 @@
 (import ../res/helpers/util :as h)
 
 (import ../lib/subs/api :as subcmd)
+(import ../lib/subs/build :as build-subcmd)
 
 (def api-doc
   ````
@@ -64,6 +65,12 @@
 (def confirmation "Document generated.\n")
 (def example "../res/fixtures/example-1")
 (def example-broken "../res/fixtures/example-broken")
+(def example-native "../res/fixtures/example-native")
+
+(defn build-native-fixture
+  []
+  (h/copy-bundle example-native ".")
+  (build-subcmd/run {:sub {:params {:args []}}}))
 
 (deftest generate-simple-api
   (def out @"")
@@ -279,6 +286,40 @@
       (def actual (slurp "api.md"))
       (is (== expect actual))))
   (is (== confirmation out))
+  (is (empty? err)))
+
+(deftest generate-api-for-native-and-importing-library
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (build-native-fixture)
+      (subcmd/run {:sub {:params {:input "info.jdn"}
+                           :opts {"output" "api.md"}}})
+      (def actual (slurp "api.md"))
+      (is (string/find "## example-native\n" actual))
+      (is (string/find "## add\n" actual))
+      (is (string/find "Adds two numbers." actual))
+      (is (string/find "## lib/example-native\n" actual))
+      (is (string/find "## wrapper\n" actual))))
+  (is (string/has-suffix? confirmation out))
+  (is (empty? err)))
+
+(deftest generate-api-for-native-only-bundle
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (build-native-fixture)
+      (subcmd/run {:sub {:params {:input "info-native-only.jdn"}
+                           :opts {"output" "api.md"}}})
+      (def actual (slurp "api.md"))
+      (is (string/find "## example-native\n" actual))
+      (is (string/find "## add\n" actual))
+      (is (string/find "Adds two numbers." actual))))
+  (is (string/has-suffix? confirmation out))
   (is (empty? err)))
 
 (deftest error-on-missing-info-file

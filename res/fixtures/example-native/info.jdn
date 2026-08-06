@@ -1,0 +1,4 @@
+{:name "example-native"
+ :artifacts {:libraries [{:paths ["lib/example-native.janet"]}]
+             :natives [{:name "example-native"
+                        :files ["src/example-native.c"]}]}}
