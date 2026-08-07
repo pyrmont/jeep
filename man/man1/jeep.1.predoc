@@ -46,10 +46,10 @@ Global commands are commands that a user can run inside or outside of a bundle
 directory.
 
 - ***install*** - installs a Janet bundle
-- ***list*** - lists installed Janet bundles
+- ***list*** - lists installed bundles
 - ***new*** - creates a Janet bundle
 - ***quickbin*** - creates a binary executable
-- ***uninstall*** - uninstalls a Janet bundle
+- ***uninstall*** - uninstalls a bundle
 
 Bundle commands are commands that a user must run inside a bundle directory.
 
@@ -57,7 +57,7 @@ Bundle commands are commands that a user must run inside a bundle directory.
 - ***build*** - builds the native targets of a bundle
 - ***clean*** - cleans directories in a bundle
 - ***dep*** - adds, updates or removes dependencies from a bundle
-- ***enhance*** - enhances a legacy bundle into a modern bundle
+- ***enhance*** - enhances a JPM bundle into a Janet bundle
 - ***meta*** - adds, updates or remove metadata from a bundle
 - ***prep*** - prepares dependencies for a bundle
 - ***test*** - runs tests for a bundle
@@ -68,13 +68,13 @@ CONCEPTS
 Bundles are the distributable units of code in Janet. They are akin to packages
 in other languages.
 
-A bundle in Janet is a directory of files. A valid bundle contains an __info
-file__ and a __bundle script__. A bundle author can write functions that are
-registered to a __bundle hook__ that is called during the bundle life cycle.
+A Janet bundle is a directory of files containing an __info file__ and a
+__bundle script__. A bundle author can write functions that are registered to a
+__bundle hook__ that is called during the bundle life cycle.
 
-For historical reasons, Janet's community includes __modern bundles__ and
-__legacy bundles__. Jeep fully supports modern bundles. It only supports the
-listing and uninstallation of legacy bundles.
+For historical reasons, Janet's community includes __Janet bundles__ and
+__JPM bundles__. Jeep fully supports Janet bundles. It only supports the listing
+and uninstallation of JPM bundles.
 
 Bundle Script
 -------------
@@ -153,18 +153,18 @@ An example __fallbacks file__ might look like this:
                              "https://backup.example.org/dep1"]}
 ````
 
-Legacy Bundles
---------------
+JPM Bundles
+-----------
 
-A __legacy bundle__ is a directory that contains a __project file__. It is
-possible for a bundle to be both a legacy bundle and a __modern bundle__.
+A __JPM bundle__ is a directory that contains a __project file__. It is possible
+for a bundle to be both a JPM bundle and a __Janet bundle__.
 
-Modern Bundles
---------------
+Janet Bundles
+-------------
 
-A __modern bundle__ is a directory that contains an __info file__ and a __bundle
-script__. It is possible for a bundle to be both a __legacy bundle__ and a
-modern bundle.
+A __Janet bundle__ is a directory that contains an __info file__ and a __bundle
+script__. It is possible for a bundle to be both a __JPM bundle__ and a Janet
+bundle.
 
 Project File
 ------------

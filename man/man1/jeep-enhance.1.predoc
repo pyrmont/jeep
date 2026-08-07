@@ -9,7 +9,7 @@ Version: DEVEL
 NAME
 ====
 
-**jeep-enhance** - enhance a legacy Janet bundle into a modern Janet bundle
+**jeep-enhance** - enhance a JPM bundle into a Janet bundle
 
 SYNOPSIS
 ========
@@ -27,8 +27,8 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-**jeep-enhance** enhances a __legacy bundle__ in the current directory into a
-__modern bundle__. This command is intended for projects that use the older
+**jeep-enhance** enhances a __JPM bundle__ in the current directory into a
+__Janet bundle__. This command is intended for projects that use the
 `project.janet` format with `declare-project` and `declare-source` calls.
 
 At minimum, the enhancement process:
@@ -39,7 +39,7 @@ At minimum, the enhancement process:
 
 It uses the same underlying logic as `jeep-new(1)` and is intended to create a
 bundle that is equivalent to what the user would get if they ran `jeep-new(1)`
-with metadata equivalent to that of the legacy bundle.
+with metadata equivalent to that of the JPM bundle.
 
 Note that, with the exception of `./project.janet`, if a file exists with the
 same path as one `jeep-new(1)` would create, **jeep-enhance** does not create

@@ -1,16 +1,16 @@
 (import ../util)
 
 (def- helps
-  {:no-legacy
-   `Exclude legacy bundles from the list.`
+  {:no-jpm
+   `Exclude JPM bundles from the list.`
    :about
-   `Lists system information, including the installed Janet bundles.`
+   `Lists system information, including installed bundles.`
    :help
-   `List system information, including installed Janet bundles.`})
+   `List system information, including installed bundles.`})
 
-(def config {:rules ["--no-legacy" {:help  (helps :no-legacy)
-                                    :kind  :flag
-                                    :short "L"}
+(def config {:rules ["--no-jpm" {:help  (helps :no-jpm)
+                                 :kind  :flag
+                                 :short "J"}
                      "---"]
              :info {:about (helps :about)}
              :help (helps :help)})
@@ -18,19 +18,19 @@
 (defn run
   [args &opt jeep-config]
   jeep-config # TODO: Add support for configuring via existing file
-  (def no-legacy? (get-in args [:sub :opts "no-legacy"]))
-  (def mbundles (bundle/list))
-  (def lbundles (if no-legacy? [] (util/legacy-bundles)))
-  (def bundles (array/concat @[] mbundles lbundles))
-  (def pad (if no-legacy? "" " "))
+  (def no-jpm? (get-in args [:sub :opts "no-jpm"]))
+  (def janet-bundles (bundle/list))
+  (def jpm-bundles (if no-jpm? [] (util/jpm-bundles)))
+  (def bundles (array/concat @[] janet-bundles jpm-bundles))
+  (def pad (if no-jpm? "" " "))
   (print "Installed bundles"
-         (if (or no-legacy? (empty? lbundles)) "" " (legacy bundles marked with *)")
+         (if (or no-jpm? (empty? jpm-bundles)) "" " (JPM bundles marked with *)")
          ":")
   (if (empty? bundles)
     (print pad "  No bundles installed")
     (do
       (each b (sort (distinct bundles))
-        (if (index-of b mbundles)
+        (if (index-of b janet-bundles)
           (do
             (def man (bundle/manifest b))
             (def ver (or (get man :version)

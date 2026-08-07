@@ -3,9 +3,9 @@
 # Help strings
 (def- helps
   {:about
-   `Enhances the current bundle into a modern bundle.`
+   `Enhances the current JPM bundle into a Janet bundle.`
    :help
-   `Enhance the current bundle into a modern bundle.`})
+   `Enhance the current JPM bundle into a Janet bundle.`})
 
 (def- extra
   {:info {:about (helps :about)}
@@ -51,7 +51,7 @@
   # scripts
   (def scps (seq [b :in (get project :binscript [])]
               {:path (get b :main)
-               # NOTE Is this needed in modern bundles?
+               # NOTE Is this needed in Janet bundles?
                # :syspath? (get b :hardcode-syspath)
                }))
   (put res :artifacts {:executables []

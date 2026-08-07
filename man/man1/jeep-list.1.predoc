@@ -1,6 +1,6 @@
 ---
 Title: JEEP-LIST(1)
-Date: 2025-09-25
+Date: 2026-08-07
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -14,38 +14,38 @@ NAME
 SYNOPSIS
 ========
 
-**jeep-list** [**-L** | **--no-legacy**]
+**jeep-list** [**-J** | **--no-jpm**]
 
 DESCRIPTION
 ===========
 
-**jeep-list** lists system information, including the Janet bundles that are
-installed in the current __syspath__. By default, **jeep-list** will list both
-modern bundles and legacy bundles. The **--no-legacy** option can be used to
-exclude legacy bundles from the results.
+**jeep-list** lists system information, including the bundles installed in the
+current __syspath__. By default, **jeep-list** will list both Janet bundles and
+JPM bundles. The **--no-jpm** option can be used to exclude JPM bundles from the
+results.
 
 Options
 -------
 
-- **-L** | **--no-legacy**:
-  Exclude legacy bundles from the listing.
+- **-J** | **--no-jpm**:
+  Exclude JPM bundles from the listing.
 
-For more information about __legacy bundles__, __modern bundles__ and the
+For more information about __JPM bundles__, __Janet bundles__ and the
 __syspath__, see CONCEPTS in `jeep(1)`.
 
 EXAMPLES
 ========
 
-To list system information, including all installed Janet bundles:
+To list system information, including all installed bundles:
 
 ````
 $ jeep list
 ````
 
-To list system information, showing installed Janet modern bundles only:
+To list system information, showing installed Janet bundles only:
 
 ````
-$ jeep list -L
+$ jeep list -J
 ````
 
 BUGS

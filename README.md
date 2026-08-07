@@ -8,9 +8,8 @@ Jeep is a bundle management utility for Janet bundles.
 > Jeep is in a beta stage of development. There are likely to be bugs and gaps
 > in its implementation.
 
-Jeep only supports modern bundles. That is bundles that use the `info.jdn`
-format for describing metadata. It does not work with legacy bundles, bundles
-that use `project.janet`.
+Jeep supports Janet bundles, which use `info.jdn` to describe metadata. It also
+supports listing and uninstalling JPM bundles, which use `project.janet`.
 
 ## Installation
 

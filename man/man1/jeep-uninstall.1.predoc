@@ -9,7 +9,7 @@ Version: DEVEL
 NAME
 ====
 
-**jeep-uninstall** - uninstall a Janet bundle
+**jeep-uninstall** - uninstall a bundle
 
 SYNOPSIS
 ========
@@ -19,9 +19,9 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-**jeep-uninstall** uninstalls a Janet bundle. For modern bundles, the bundle is
-uninstalled using the ``bundle/uninstall`` function. For legacy bundles,
-**jeep-uninstall** will use the legacy bundle manifest and remove the paths
+**jeep-uninstall** uninstalls a bundle. For Janet bundles, the bundle is
+uninstalled using the ``bundle/uninstall`` function. For JPM bundles,
+**jeep-uninstall** will use the JPM bundle manifest and remove the paths
 specified in that file.
 
 If _bundle_ is omitted, **jeep-uninstall** will try to uninstall a bundle based
@@ -34,7 +34,7 @@ Options
   One or more bundles to uninstall. Each value must be the name of an installed
   bundle.
 
-For more information about __legacy bundles__ and __modern bundles__, see
+For more information about __JPM bundles__ and __Janet bundles__, see
 CONCEPTS in `jeep(1)`.
 
 EXAMPLES

@@ -73,7 +73,7 @@
   [p]
   (= :file (os/stat p :mode)))
 
-(defn legacy-bundles
+(defn jpm-bundles
   []
   (var res @[])
   (def mpath (string (dyn :syspath) sep ".manifests"))

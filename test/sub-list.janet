@@ -61,7 +61,7 @@
   (is (string/has-suffix? confirm-end out))
   (is (empty? err)))
 
-(deftest list-with-no-legacy-flag
+(deftest list-with-no-jpm-flag
   (def out @"")
   (def err @"")
   (with-dyns [:out out
@@ -69,7 +69,7 @@
     (h/in-dir d
       (setdyn :syspath d)
       (def args {:sub {:params {}
-                       :opts {"no-legacy" true}}})
+                       :opts {"no-jpm" true}}})
       (subcmd/run args)))
   (is (string/has-prefix? confirm-begin out))
   (is (string/find "No bundles installed\n" out (length confirm-begin)))
