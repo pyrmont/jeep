@@ -122,7 +122,7 @@
 
 # Parsing
 
-(defn parse
+(defn parse :shadow
   ```
   Parses a string of Janet `src` into a lossless tree
 
@@ -142,39 +142,39 @@
 # Rendering
 
 (defn- render*
-  [node buf]
-  (case (first node)
-    :code (each child (drop 1 node) (render* child buf))
+  [tree buf]
+  (case (first tree)
+    :code (each child (drop 1 tree) (render* child buf))
     :array (do (buffer/push-string buf "@(")
-               (each child (drop 1 node) (render* child buf))
+               (each child (drop 1 tree) (render* child buf))
                (buffer/push-string buf ")"))
     :tuple (do (buffer/push-string buf "(")
-               (each child (drop 1 node) (render* child buf))
+               (each child (drop 1 tree) (render* child buf))
                (buffer/push-string buf ")"))
     :bracket-array (do (buffer/push-string buf "@[")
-                       (each child (drop 1 node) (render* child buf))
+                       (each child (drop 1 tree) (render* child buf))
                        (buffer/push-string buf "]"))
     :bracket-tuple (do (buffer/push-string buf "[")
-                       (each child (drop 1 node) (render* child buf))
+                       (each child (drop 1 tree) (render* child buf))
                        (buffer/push-string buf "]"))
     :table (do (buffer/push-string buf "@{")
-               (each child (drop 1 node) (render* child buf))
+               (each child (drop 1 tree) (render* child buf))
                (buffer/push-string buf "}"))
     :struct (do (buffer/push-string buf "{")
-                (each child (drop 1 node) (render* child buf))
+                (each child (drop 1 tree) (render* child buf))
                 (buffer/push-string buf "}"))
     :fn (do (buffer/push-string buf "|")
-            (each child (drop 1 node) (render* child buf)))
+            (each child (drop 1 tree) (render* child buf)))
     :quasiquote (do (buffer/push-string buf "~")
-                    (each child (drop 1 node) (render* child buf)))
+                    (each child (drop 1 tree) (render* child buf)))
     :quote (do (buffer/push-string buf "'")
-               (each child (drop 1 node) (render* child buf)))
+               (each child (drop 1 tree) (render* child buf)))
     :splice (do (buffer/push-string buf ";")
-                (each child (drop 1 node) (render* child buf)))
+                (each child (drop 1 tree) (render* child buf)))
     :unquote (do (buffer/push-string buf ",")
-                 (each child (drop 1 node) (render* child buf)))
+                 (each child (drop 1 tree) (render* child buf)))
     # atoms: emit literal text
-    (buffer/push-string buf (in node 1))))
+    (buffer/push-string buf (in tree 1))))
 
 (defn render
   ```

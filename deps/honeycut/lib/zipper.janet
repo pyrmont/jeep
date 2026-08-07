@@ -388,10 +388,10 @@
   ```
   [zloc]
   (defn prefix [z]
-    (def left (string/join (map (fn [x] (parser/render x)) (get (state z) :lhs []))))
-    (if-let [nl (last (string/find-all "\n" left))]
-      (string/slice left (inc nl))
+    (def left-text (string/join (map (fn [x] (parser/render x)) (get (state z) :lhs []))))
+    (if-let [nl (last (string/find-all "\n" left-text))]
+      (string/slice left-text (inc nl))
       (if-let [p (up z)]
-        (string (prefix p) (get open-delims (first (node p)) "") left)
-        left)))
+        (string (prefix p) (get open-delims (first (node p)) "") left-text)
+        left-text)))
   (inc (length (prefix zloc))))

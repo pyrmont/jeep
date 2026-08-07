@@ -122,14 +122,14 @@
     (inc (length (last lines)))))
 
 (defn- dict-add-entries
-  [cz pairs key-order]
+  [cz entries key-order]
   (def n (z/node cz))
   (def kids (slice n 1))
   (def col (content-col cz))
   (def k-indent (spaces (dec col)))
   (var first? (not (find non-trivia? kids)))
   (def new-kids (array ;kids))
-  (each [k v] pairs
+  (each [k v] entries
     (def k-str (f/value->source k "" :key-order key-order))
     (def k-node (in (parser/parse k-str) 1))
     (def v-node (value->node v (spaces (+ (dec col) (length k-str) 1)) key-order))
@@ -342,7 +342,7 @@
 
 # Public API
 
-(defn get
+(defn get :shadow
   ```
   Returns the Janet value at `path` in `tree`
 
@@ -354,7 +354,7 @@
     (z/value vz)
     dflt))
 
-(defn put
+(defn put :shadow
   ```
   Replaces the value at `path` in `tree` with `v`, returning the new tree
 
@@ -373,7 +373,7 @@
   (def v-node (value->node v (spaces (dec (z/column-of vz))) key-order))
   (z/root (z/replace vz v-node)))
 
-(defn update
+(defn update :shadow
   ```
   Replaces the value at `path` in `tree` with `(f current ;args)`
   ```
@@ -419,7 +419,7 @@
         (ind-add-entries cz v key-order))
       (errorf "path %n resolves to %n, not a collection" path (node->value n)))))
 
-(defn sort
+(defn sort :shadow
   ```
   Reorders the entries of the collection at `path` in `tree`, returning the
   new tree
@@ -442,14 +442,14 @@
   Raises an error if `path` does not resolve to a collection.
   ```
   [tree path &named by]
-  (def by (or by identity))
+  (def by-fn (or by identity))
   (def cz (seek tree path))
   (assertf cz "no collection at path %n" path)
   (def n (z/node cz))
   (z/root
     (cond
-      (dict-node? n) (sort-collection cz 2 by)
-      (ind-node? n) (sort-collection cz 1 by)
+      (dict-node? n) (sort-collection cz 2 by-fn)
+      (ind-node? n) (sort-collection cz 1 by-fn)
       (errorf "path %n resolves to %n, not a collection" path (node->value n)))))
 
 (defn remove
