@@ -14,9 +14,13 @@ NAME
 SYNOPSIS
 ========
 
-**jeep-dep** [**-a** | **--autotag**] [**-r** | **--remove**] [**-t** |
-             **--tidy**] [**-u** | **--update**] [**-v** | **--vendor**]
-             [_deps_ ...]
+**jeep-dep** [**-a** | **--autotag**] [**-t** | **--tidy**] [**-v** |
+             **--vendor**] _deps_ ...
+**jeep-dep** [**-a** | **--autotag**] [**-t** | **--tidy**] [**-v** |
+             **--vendor**] [**-u** | **--update**] _deps_ ...
+**jeep-dep** [**-t** | **--tidy**] [**-v** | **--vendor**] [**-r** |
+             **--remove**] _deps_ ...
+**jeep-dep** [**-v** | **--vendor**] [**-t** | **--tidy**]
 
 DESCRIPTION
 ===========

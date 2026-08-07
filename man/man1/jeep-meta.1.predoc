@@ -1,6 +1,6 @@
 ---
 Title: JEEP-META(1)
-Date: 2025-11-05
+Date: 2026-08-07
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -14,7 +14,9 @@ NAME
 SYNOPSIS
 ========
 
-**jeep-meta** [**-r** | **--remove**] [**-u** | **--update**] _key_ [_val_] ...
+**jeep-meta** _key_ _val_ ...
+**jeep-meta** [**-u** | **--update**] _key_ _val_ ...
+**jeep-meta** [**-r** | **--remove**] _key_ ...
 
 DESCRIPTION
 ===========

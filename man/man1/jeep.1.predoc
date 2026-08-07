@@ -14,7 +14,8 @@ NAME
 SYNOPSIS
 ========
 
-**jeep** [**-l** | **--local**] [**-v** | **--version**] _command_ _arguments_
+**jeep** [**-l** | **--local**] _command_ _arguments_
+**jeep** [**-v** | **--version**]
 
 DESCRIPTION
 ===========

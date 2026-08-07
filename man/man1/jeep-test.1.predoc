@@ -14,9 +14,10 @@ NAME
 SYNOPSIS
 ========
 
-**jeep-test** [**-c** | **--check**] [**-f** _path_ | **--file** _path_] [**-F**
-              _path_ | **--no-file** _path_] [**-t** _name_ | **--test** _name_]
-              [**-T** _name_ | **--no-test** _name_] [**-j** _path_ |
+**jeep-test** [**-c** | **--check**]
+              [[**-f** _path_ | **--file** _path_] | [**-F** _path_ |
+              **--no-file** _path_]] [[**-t** _name_ | **--test** _name_] |
+              [**-T** _name_ | **--no-test** _name_]] [**-j** _path_ |
               **--janet** _path_] [**-R** | **--no-result**] [**-w** _level_ |
               **--warn** _level_] [_args_ ...]
 
