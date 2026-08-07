@@ -1,6 +1,6 @@
 ---
 Title: JEEP-DEP(1)
-Date: 2025/11/06
+Date: 2026-08-07
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -71,7 +71,7 @@ are listed in an array/tuple under the ``:vendored`` keyword.
 A vendored dependency is similar to an ordinary dependency. That is, it can be
 a shortname (e.g. "example") or a struct/table. If it is a struct/table, it
 must contain the ``:name`` and ``:url`` keys. It can also include the ``:tag``,
-``:prefix``, and ``:files`` keys. If the ``:files`` key is present, a vendored
+``:prefix``, and ``:paths`` keys. If the ``:paths`` key is present, a vendored
 dependency will be fetched from the specified URL and the values used to copy
 files into the bundle. If the values are strings, the relative path of the
 source file matches the relative path of the destination file. However, if the
@@ -120,7 +120,7 @@ To add a vendored dependency that will selectively copy files:
 $ jeep dep --vendor '{:name "foo" \
                       :url "https://example.org/foo" \
                       :prefix "deps" \
-                      :files [["a.janet" "b.janet"] \
+                      :paths [["a.janet" "b.janet"] \
                               ["c.janet" "c/init.janet"]]}'
 ````
 

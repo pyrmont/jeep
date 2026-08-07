@@ -1,6 +1,6 @@
 ---
 Title: JEEP-INSTALL(1)
-Date: 2025/09/12
+Date: 2026-08-07
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -14,7 +14,7 @@ NAME
 SYNOPSIS
 ========
 
-**jeep-install** [**-r** | **--replace**] _bundle_ ...
+**jeep-install** [**-r** | **--replace**] [_bundle_ ...]
 
 DESCRIPTION
 ===========
@@ -34,8 +34,8 @@ Options
   One or more bundles to install. The value must be either a URL or a local
   path.
 
-Note that while it is not an option passed to **jeep-test**, if a user wants to
-install the dependency to `./_system`, the local __syspath__ , this can be
+Note that while it is not an option passed to **jeep-install**, if a user wants
+to install the dependency to `./_system`, the local __syspath__, this can be
 accomplished by setting **--local** after the invocation of `jeep(1)`.
 
 For more information about the __syspath__, see CONCEPTS in `jeep(1)`.

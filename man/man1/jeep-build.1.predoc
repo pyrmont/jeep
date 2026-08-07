@@ -1,6 +1,6 @@
 ---
 Title: JEEP-BUILD(1)
-Date: 2025/09/11
+Date: 2026-08-07
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -40,7 +40,7 @@ Options
 
 - _build-args_:
   Arguments to pass to the build __bundle hook__. The build __bundle hook__
-  calls a function ``build' defined in your bundle script. The first argument
+  calls a function ``build`` defined in your bundle script. The first argument
   passed to that function is the bundle manifest. The remaining arguments are
   _build-args_.
 

@@ -1,6 +1,6 @@
 ---
 Title: JEEP-ENHANCE(1)
-Date: 2025/11/19
+Date: 2026-08-07
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -22,7 +22,7 @@ SYNOPSIS
                  **--manpage**] [**-n** | **--native**] [**-s** | **--script**]
                  [**-k** _type_ | **--alias** _type_] [**-K** _type_ |
                  **--no-alias** _type_] [**-b** | **--bare**] [**-A** |
-                 **--no-ask**] [**-t** _dir_ | **--templates** _dir_] _name_
+                 **--no-ask**] [**-t** _dir_ | **--templates** _dir_]
 
 DESCRIPTION
 ===========
@@ -129,7 +129,7 @@ TEMPLATES
 enhanced bundle:
 
 - .gitignore
-- README.me
+- README.md
 - binscript
 - bundle.janet
 - info.jdn

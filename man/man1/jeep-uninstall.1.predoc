@@ -1,6 +1,6 @@
 ---
 Title: JEEP-UNINSTALL(1)
-Date: 2025/09/25
+Date: 2026-08-07
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -14,7 +14,7 @@ NAME
 SYNOPSIS
 ========
 
-**jeep-uninstall** _bundle_ ...
+**jeep-uninstall** [_bundle_ ...]
 
 DESCRIPTION
 ===========
@@ -31,7 +31,7 @@ Options
 -------
 
 - _bundle_ ...:
-  One or more bundles to install. Each value must be the name of an installed
+  One or more bundles to uninstall. Each value must be the name of an installed
   bundle.
 
 For more information about __legacy bundles__ and __modern bundles__, see

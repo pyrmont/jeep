@@ -1,6 +1,6 @@
 ---
 Title: JEEP-TEST(1)
-Date: 2026/04/20
+Date: 2026-08-07
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -18,7 +18,7 @@ SYNOPSIS
               _path_ | **--no-file** _path_] [**-t** _name_ | **--test** _name_]
               [**-T** _name_ | **--no-test** _name_] [**-j** _path_ |
               **--janet** _path_] [**-R** | **--no-result**] [**-w** _level_ |
-              **--warn** _level_] [_check-args_]
+              **--warn** _level_] [_args_ ...]
 
 DESCRIPTION
 ===========
@@ -63,11 +63,11 @@ Options
   run the tests. The valid levels are ``none``, ``normal``, ``relaxed`` and
   ``strict``.
 
-- _check-args_:
-  Arguments to pass to the check __bundle hook__. The check __bundle hook__
-  calls a function ``check`` defined in the user's __bundle script__. The first
-  argument passed to that function is the bundle manifest. The remaining
-  arguments are _check-args_.
+- _args_ ...:
+  Arguments to pass to each test script and, when **--check** is set, to the
+  check __bundle hook__. The hook calls a function ``check`` defined in the
+  user's __bundle script__. Its first argument is the bundle manifest and its
+  remaining arguments are _args_.
 
 For more information about the __bundle script__ and __bundle hooks__, see
 CONCEPTS in `jeep(1)`.

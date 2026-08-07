@@ -1,6 +1,6 @@
 ---
 Title: JEEP-CLEAN(1)
-Date: 2025/09/11
+Date: 2026-08-07
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -27,10 +27,10 @@ Options
 -------
 
 - **-b**, **--build**:
-  Deletes the `./build` directory.
+  Deletes the `./_build` directory.
 
 - **-s**, **--system**:
-  Deletes the `./system` directory.
+  Deletes the `./_system` directory.
 
 For more information about the __info file__, the __bundle script__ and __bundle
 hooks__, see CONCEPTS in `jeep(1)`.

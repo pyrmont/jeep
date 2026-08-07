@@ -1,6 +1,6 @@
 ---
 Title: JEEP(1)
-Date: 2025/11/18
+Date: 2026-08-07
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -107,8 +107,9 @@ bundle hook, the user would write this in the bundle script:
 
 ````
 (defn check [manifest]
-  (each file (get-in manifest [:info :source :files])
-    (perform-a-check file))
+  (each library (get-in manifest [:info :artifacts :libraries])
+    (each path (get library :paths)
+      (perform-a-check path)))
   (print "all files checked"))
 ````
 
