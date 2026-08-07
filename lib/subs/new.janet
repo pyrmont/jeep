@@ -257,16 +257,16 @@
             (has-key? meta :vendored)
             (has-key? meta :artifacts))
       (do
-        (def jdn (info/parse base))
+        (var jdn (info/parse base))
         (when (has-key? meta :dependencies)
-          (info/put jdn [:dependencies] (get meta :dependencies)))
+          (set jdn (info/put jdn [:dependencies] (get meta :dependencies))))
         (when (has-key? meta :vendored)
-          (info/put jdn [:vendored] (get meta :vendored)))
+          (set jdn (info/put jdn [:vendored] (get meta :vendored))))
         (when (has-key? meta :artifacts)
           (each art [:executables :libraries :manpages :natives :scripts]
             (def v (get-in meta [:artifacts art]))
             (when v
-              (info/put jdn [:artifacts art] v))))
+              (set jdn (info/put jdn [:artifacts art] v)))))
         (info/render jdn))
       base))
   (if (get-in opts [:aliases :info])

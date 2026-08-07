@@ -116,11 +116,12 @@
     (when pos
       (print "skipping " new-name ", use --update to update existing dependencies")
       (array/pop to-add)))
+  (var result jdn)
   (each d to-add
     (set changed? true)
     (print "adding " (if (dictionary? d) (get d :name) d) "...")
-    (info/add jdn group [d]))
-  jdn)
+    (set result (info/append result group [d])))
+  result)
 
 (defn- bundle-from-url
   [listed url]
@@ -137,7 +138,7 @@
 (defn- rem-deps
   [jdn meta group deps]
   (def listed (get-in meta group []))
-  (if (empty? listed) (break))
+  (if (empty? listed) (break jdn))
   (def to-rem @[])
   (each d deps
     (cond
@@ -148,12 +149,20 @@
         (array/push to-rem name))
       # default
       (array/push to-rem d)))
+  (def positions @{})
   (each d to-rem
     (set changed? true)
     (print "removing " (if (dictionary? d) (get d :name) d) "...")
-    (info/remove jdn group :where (fn [x] (or (= x d)
-                                                (= (get x :name) d)))))
-  jdn)
+    (eachp [i x] listed
+      (when (or (= x d) (= (get x :name) d))
+        (put positions i true))))
+  (var result jdn)
+  (var i (dec (length listed)))
+  (while (>= i 0)
+    (when (get positions i)
+      (set result (info/remove result [;group i])))
+    (-- i))
+  result)
 
 (defn- upd-deps
   [jdn meta group deps &opt autotag?]
@@ -176,48 +185,44 @@
         # default
         @{:name d-str}))
     (def name (get d :name))
-    (def curr (find
-                (fn [x]
-                  (if (dictionary? x)
-                    (= name (get x :name))
-                    (= name x)))
-                listed))
+    (def pos
+      (find-index
+        (fn [x]
+          (if (dictionary? x)
+            (= name (get x :name))
+            (= name x)))
+        listed))
+    (def curr (if (nil? pos) nil (get listed pos)))
     (cond
       # dependency not listed
       (nil? curr)
       (print "skipping " name ", add as dependency first")
       # listed dependency is struct/table
       (dictionary? curr)
-      (array/push to-upd [d :assoc (or (get d :url) (get curr :url))])
+      (array/push to-upd [d :assoc (or (get d :url) (get curr :url)) pos])
       # both are shortnames
       (nil? (get d :url))
       (print "skipping " name ", cannot update shortname dependency")
       # default
-      (array/push to-upd [d :swap (get d :url)])))
-  (each [d action url] to-upd
+      (array/push to-upd [d :swap (get d :url) pos])))
+  (var result jdn)
+  (each [d action url pos] to-upd
     (assertf url "cannot update dependency %s without :url set" (get d :name))
     (def name (get d :name))
     (when autotag?
       (put d :tag (fetch-tag url)))
-    (defn pred [x]
-      (if (dictionary? x)
-        (= name (get x :name))
-        (= name x)))
     # an update to a dependency's current value leaves the info file alone
-    (def before (info/render jdn))
+    (def before (info/render result))
     (case action
       :assoc
-      (do
-        (def keyvals @[])
-        (each [k v] (sort (pairs d))
-          (array/push keyvals k v))
-        (info/update jdn group :where pred :add keyvals))
+      (each [k v] (sort (pairs d))
+        (set result (info/put result [;group pos k] v)))
       :swap
-      (info/update jdn group :where pred :to (table/to-struct d)))
-    (unless (= before (info/render jdn))
+      (set result (info/put result [;group pos] (table/to-struct d))))
+    (unless (= before (info/render result))
       (set changed? true)
       (print "updating " name "...")))
-  jdn)
+  result)
 
 (defn run
   [args &opt jeep-config]
@@ -235,31 +240,36 @@
           "must provide at least one dep or set --tidy")
   (def info (util/load-info))
   (assert info "no info.jdn file found")
-  (def [ok? meta] (protect (parse info)))
+  (def [ok? parsed]
+    (protect
+      (do
+        (def jdn (info/parse info))
+        [jdn (info/value jdn)])))
   (assert ok? "info.jdn could not be parsed")
+  (def [jdn meta] parsed)
   (assert (get meta :name) "info.jdn file must contain the :name key")
-  (def jdn (info/parse info))
   (def cwd (os/cwd))
-  (cond
-    # remove
-    remove?
-    (rem-deps jdn meta group deps)
-    # update
-    update?
-    (defer
-     (util/cleanup cwd)
-     (upd-deps jdn meta group deps autotag?))
-    # default
-    (defer
-      (util/cleanup cwd)
-      (add-deps jdn meta group deps autotag?)))
-  (when (and tidy? (info/has? jdn group))
-    (def before (info/render jdn))
-    (info/sort jdn group :by (fn [d] (if (dictionary? d) (get d :name) d)))
-    (unless (= before (info/render jdn))
+  (var edited
+    (cond
+      # remove
+      remove?
+      (rem-deps jdn meta group deps)
+      # update
+      update?
+      (defer
+       (util/cleanup cwd)
+       (upd-deps jdn meta group deps autotag?))
+      # default
+      (defer
+        (util/cleanup cwd)
+        (add-deps jdn meta group deps autotag?))))
+  (when (and tidy? (has-key? (info/value edited) (first group)))
+    (def before (info/render edited))
+    (set edited (info/sort edited group :by (fn [d] (if (dictionary? d) (get d :name) d))))
+    (unless (= before (info/render edited))
       (set changed? true)
       (print "tidying...")))
-  (util/save-info (info/render jdn))
+  (util/save-info (info/render edited))
   (if changed?
     (print "Dependencies changed.")
     (print "No dependencies changed.")))

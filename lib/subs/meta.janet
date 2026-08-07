@@ -42,11 +42,12 @@
     (if (get meta k)
       (print "skipping " (describe k) ", use --update to update existing keys")
       (array/push to-add [k v])))
+  (var result jdn)
   (each [k v] to-add
     (set changed? true)
     (print "adding " k "...")
-    (info/put jdn [k] v))
-  jdn)
+    (set result (info/put result [k] v)))
+  result)
 
 (defn- rem-kvs
   [jdn meta ks]
@@ -57,11 +58,12 @@
     (if (get meta k)
       (array/push to-rem k)
       (print "skipping " (describe k) ", key not found")))
+  (var result jdn)
   (each k to-rem
     (set changed? true)
     (print "removing " (describe k) "...")
-    (info/remove jdn [k]))
-  jdn)
+    (set result (info/remove result [k])))
+  result)
 
 (defn- upd-kvs
   [jdn meta keyvals]
@@ -76,14 +78,15 @@
     (if (get meta k)
       (array/push to-upd [k v])
       (print "skipping " (describe k) ", add as key first")))
+  (var result jdn)
   (each [k v] to-upd
     # an update to a key's current value leaves the info file alone
-    (def before (info/render jdn))
-    (info/put jdn [k] v)
-    (unless (= before (info/render jdn))
+    (def before (info/render result))
+    (set result (info/put result [k] v))
+    (unless (= before (info/render result))
       (set changed? true)
       (print "updating " (describe k) "...")))
-  jdn)
+  result)
 
 (defn run
   [args &opt jeep-config]
@@ -96,20 +99,25 @@
   (assert (not (and remove? update?)) "cannot set --remove and --update")
   (def info (util/load-info))
   (assert info "no info.jdn file found")
-  (def [ok? meta] (protect (parse info)))
+  (def [ok? parsed]
+    (protect
+      (do
+        (def jdn (info/parse info))
+        [jdn (info/value jdn)])))
   (assert ok? "info.jdn could not be parsed")
+  (def [jdn meta] parsed)
   (assert (get meta :name) "info.jdn file must contain the :name key")
-  (def jdn (info/parse info))
-  (cond
-    # remove
-    remove?
-    (rem-kvs jdn meta keyvals)
-    # update
-    update?
-    (upd-kvs jdn meta keyvals)
-    # default
-    (add-kvs jdn meta keyvals))
-  (util/save-info (info/render jdn))
+  (def edited
+    (cond
+      # remove
+      remove?
+      (rem-kvs jdn meta keyvals)
+      # update
+      update?
+      (upd-kvs jdn meta keyvals)
+      # default
+      (add-kvs jdn meta keyvals)))
+  (util/save-info (info/render edited))
   (if changed?
     (print "Metadata changed.")
     (print "No metadata changed.")))

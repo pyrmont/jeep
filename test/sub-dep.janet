@@ -115,6 +115,35 @@
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
+(deftest remove-multiple-dependencies
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "."
+                               :name "test1"
+                               :dependencies ["testament" "spork" "honeycut"]))
+      (os/cd path)
+      (def args {:sub {:params {:deps ["testament" "honeycut"]}
+                       :opts {"remove" true}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :dependencies ["spork"]}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        removing testament...
+        removing honeycut...
+        Dependencies changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
 (deftest update-dependency
   (def out @"")
   (def err @"")
@@ -171,6 +200,43 @@
         ```)
       (is (== expect actual))
       (is (== (h/add-nl "No dependencies changed.") out))
+      (is (empty? err)))))
+
+(deftest update-dependency-preserves-untouched-source
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (spit (string path h/sep "info.jdn")
+            ```
+            @{:name "test1"
+              :dependencies [{:name "testament"
+                              # Keep this explanation with the URL.
+                              :url "old"
+                              :tag "keep"}]}
+            ```)
+      (def args {:sub {:params {:deps [`{:name "testament" :url "new"}`]}
+                       :opts {"update" true}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :dependencies [{:name "testament"
+                          # Keep this explanation with the URL.
+                          :url "new"
+                          :tag "keep"}]}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        updating testament...
+        Dependencies changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
 (deftest add-vendored-dependency

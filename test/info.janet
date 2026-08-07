@@ -8,18 +8,18 @@
   (def src "@{:name \"x\"\n :deps [{:name \"a\"}]}")
   (is (== src (info/render (info/parse src)))))
 
-(deftest add-creates-key
-  (is (== "{:foo :bar\n :baz [\"qux\"]}"
-          (edit "{:foo :bar}" (fn [t] (info/add t [:baz] ["qux"]))))))
+(deftest value-returns-parsed-value
+  (is (deep= @{:name "x" :deps ["a"]}
+             (info/value (info/parse `@{:name "x" :deps ["a"]}`)))))
 
-(deftest add-appends-to-array
+(deftest append-creates-key
+  (is (== "{:foo :bar\n :baz [\"qux\"]}"
+          (edit "{:foo :bar}" (fn [t] (info/append t [:baz] ["qux"]))))))
+
+(deftest append-adds-to-array
   (is (== "@{:deps [{:name \"a\"}\n         {:name \"b\"}]}"
           (edit "@{:deps [{:name \"a\"}]}"
-                (fn [t] (info/add t [:deps] [{:name "b"}]))))))
-
-(deftest add-merges-into-empty-dict
-  (is (== "{:foo {:bar {:baz [\"qux\"]}}}"
-          (edit "{:foo {:bar {}}}" (fn [t] (info/add t [:foo :bar] {:baz ["qux"]}))))))
+                (fn [t] (info/append t [:deps] [{:name "b"}]))))))
 
 (deftest put-creates-key
   (is (== "{:foo :bar\n :baz \"qux\"}"
@@ -28,40 +28,45 @@
 (deftest put-replaces-existing
   (is (== "@{:name \"y\"}" (edit "@{:name \"x\"}" (fn [t] (info/put t [:name] "y"))))))
 
+(deftest put-adds-at-nested-path
+  (is (== "@{:deps [{:name \"a\"\n          :url \"u\"}]}"
+          (edit "@{:deps [{:name \"a\"}]}"
+                (fn [t] (info/put t [:deps 0 :url] "u"))))))
+
+(deftest put-preserves-nearby-comment
+  (def src
+    ```
+    @{:deps [{:name "a"
+              # Keep this explanation.
+              :url "old"}]}
+    ```)
+  (def expected
+    ```
+    @{:deps [{:name "a"
+              # Keep this explanation.
+              :url "new"}]}
+    ```)
+  (is (== expected (edit src (fn [t] (info/put t [:deps 0 :url] "new"))))))
+
 (deftest rem-key
   (is (== "{:a 1}" (edit "{:a 1\n :b 2}" (fn [t] (info/remove t [:b]))))))
 
-(deftest rem-where
-  (is (== "{:foo []}" (edit "{:foo [:bar]}" (fn [t] (info/remove t [:foo] :where :bar))))))
+(deftest rem-array-element
+  (is (== "{:foo [:baz]}"
+          (edit "{:foo [:bar :baz]}" (fn [t] (info/remove t [:foo 0]))))))
 
-(deftest upd-where-to
-  (is (== "{:foo [{:baz :bar\n        :qux :quux}]}"
-          (edit "{:foo [:bar]}"
-                (fn [t] (info/update t [:foo] :where :bar :to {:baz :bar :qux :quux}))))))
-
-(deftest upd-where-add
-  (is (== "@{:deps [{:name \"a\"\n          :url \"u\"}]}"
-          (edit "@{:deps [{:name \"a\"}]}"
-                (fn [t] (info/update t [:deps]
-                                     :where (fn [x] (= "a" (get x :name)))
-                                     :add [:url "u"]))))))
-
-(deftest name-first-ordering
+(deftest append-orders-name-first
   # :as sorts before :name alphabetically, so this fails under a plain
   # alphabetical ordering and only passes because :name is forced first
   (is (== "@{:deps [{:name \"a\"\n          :as \"x\"\n          :url \"u\"}]}"
           (edit "@{:deps []}"
-                (fn [t] (info/add t [:deps] [{:url "u" :as "x" :name "a"}]))))))
+                (fn [t] (info/append t [:deps] [{:url "u" :as "x" :name "a"}]))))))
 
-(deftest edits-mutate-in-place
-  (def t (info/parse "@{:name \"x\"}"))
-  (info/put t [:version] "1.0.0")
-  (is (== "@{:name \"x\"\n  :version \"1.0.0\"}" (info/render t))))
-
-(deftest has-detects-key
-  (def t (info/parse "@{:name \"x\"}"))
-  (is (info/has? t [:name]))
-  (is (not (info/has? t [:nope]))))
+(deftest edits-return-a-new-tree
+  (def before (info/parse "@{:name \"x\"}"))
+  (def after (info/put before [:version] "1.0.0"))
+  (is (== "@{:name \"x\"}" (info/render before)))
+  (is (== "@{:name \"x\"\n  :version \"1.0.0\"}" (info/render after))))
 
 (deftest sort-orders-array
   (is (== "@{:deps [{:name \"a\"}\n         {:name \"b\"}\n         {:name \"c\"}]}"
@@ -72,17 +77,8 @@
   (is (== "@{:m {:a 2\n      :b 3\n      :c 1}}"
           (edit "@{:m {:c 1\n      :b 3\n      :a 2}}" (fn [t] (info/sort t [:m]))))))
 
-(deftest add-rejects-duplicate-key
-  (assert-thrown-message "key :name already present at key path (:deps 0); use put to replace"
-                         (info/add (info/parse "@{:deps [{:name \"a\"}]}")
-                                   [:deps 0] {:name "b"})))
-
-(deftest errors
-  (assert-thrown-message "must provide :where argument"
-                         (info/update (info/parse "{:a 1}") [:name] :to 9))
-  (assert-thrown-message "no match for key path '(:nope)' in metadata"
-                         (info/update (info/parse "{:a 1}") [:nope] :where 1 :to 9))
-  (assert-thrown-message ":where not implemented for structs/tables"
-                         (info/remove (info/parse "{:a 1}") [:a] :where 1)))
+(deftest append-rejects-non-indexed-value
+  (assert-thrown-message "value to append must be an array/tuple, got :bar"
+                         (info/append (info/parse "{:foo []}") [:foo] :bar)))
 
 (run-tests!)

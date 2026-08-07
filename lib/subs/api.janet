@@ -327,8 +327,8 @@
       (assert (indexed? files) "info file has a library whose paths are not an array/tuple under [:artifacts :libraries]")))
   (when natives
     (assert (indexed? natives) "info file does not have array/tuple under [:artifacts :natives]")
-    (each native natives
-      (assert (get native :name) "info file has a native without a name under [:artifacts :natives]")))
+    (each native-artifact natives
+      (assert (get native-artifact :name) "info file has a native without a name under [:artifacts :natives]")))
   info)
 
 (defn- abspath
@@ -376,8 +376,8 @@
   (def includes (if matches (map (fn [s] (abspath s bundle-root)) matches)))
   (def excludes (if no-matches (map (fn [s] (abspath s bundle-root)) no-matches)))
   (filter
-    (fn [native]
-      (def paths (map (fn [s] (abspath s bundle-root)) (get native :files [])))
+    (fn [native-artifact]
+      (def paths (map (fn [s] (abspath s bundle-root)) (get native-artifact :files [])))
       (if includes
         (find (fn [p]
                 (find (fn [i] (string/has-prefix? i p)) includes))
@@ -424,8 +424,8 @@
   (def natives (filter-natives (get-in info [:artifacts :natives]) bundle-root matches no-matches))
   # get environments
   (def envs (tabseq [p :in paths] p (extract-env p syspath)))
-  (each native natives
-    (def name (get native :name))
+  (each native-artifact natives
+    (def name (get native-artifact :name))
     (put envs name (extract-native-env name)))
   # get bindings
   (def bindings (extract-bindings envs opts))

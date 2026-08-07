@@ -383,8 +383,8 @@
           (print "  copying " from " to " to)
           (copy from to)))
       ([e f]
-       (def label (if name (string name " (" url ")") url))
-       (propagate (string "failed to vendor " label ": " e) f)))))
+       (def ident (if name (string name " (" url ")") url))
+       (propagate (string "failed to vendor " ident ": " e) f)))))
 
 (defn find-info
   [&opt dir]
