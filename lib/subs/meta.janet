@@ -12,6 +12,7 @@
 
 (def config {:rules [:kvs {:splat? true
                            :req?   true
+                           :proxy  "key-value"
                            :help   (helps :kvs)}
                      "----"]
              :info {:about (helps :about)}

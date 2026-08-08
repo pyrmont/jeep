@@ -110,6 +110,7 @@
                      :help (helps :bare)}
            "--no-alias" {:kind :multi
                          :short "K"
+                         :proxy "type"
                          :help (helps :no-alias)}
            "--no-ask" {:kind :flag
                        :short "A"

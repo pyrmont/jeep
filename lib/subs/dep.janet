@@ -63,6 +63,7 @@
   {:rules [:dep {:req? true
                  :help (helps :edit-dep)}
            :data {:splat? true
+                  :proxy  "key-value"
                   :help   (helps :edit-data)}
            "--autotag" {:kind  :flag
                         :short "a"
