@@ -47,18 +47,30 @@ Subcommands
 - **add** [**-a** | **--autotag**] _deps_ ...:
   Adds one or more dependencies to the bundle's __info file__. Each dependency
   can be specified by a URL or a JDN struct/table. A struct/table must contain
-  the ``:name`` and ``:url`` keys. A dependency that cannot be resolved to a URL
-  is an error. A dependency that is already listed is skipped.
+  the ``:name`` and ``:url`` keys and the ``:name`` must be a string. A
+  dependency that cannot be resolved to a URL is an error. A dependency that is
+  already listed is skipped.
 
 - **edit** [**-a** | **--autotag**] _dep_ [_key_ _value_] ...:
   Edits a single dependency in the bundle's __info file__. The dependency can be
   specified by its name or its URL and must already be listed.
 
-  Each _key_ is a keyword and each _value_ is any JDN value. Each pair is set on
-  the dependency: a _key_ that is already present has its _value_ replaced and a
-  _key_ that is absent is added. Keys that are not named are left untouched and
-  a _value_ of ``nil`` removes the _key_. If the dependency is listed as a bare
-  name, it is converted into a struct.
+  Each _key_ is a keyword. Each pair is set on the dependency: a _key_ that is
+  already present has its _value_ replaced and a _key_ that is absent is added.
+  Keys that are not named are left untouched and a _value_ of ``nil`` removes
+  the _key_. If the dependency is listed as a bare name, it is converted into a
+  struct.
+
+  A dependency is found by its ``:name``, so that key must be a string, cannot
+  be removed and cannot be given the name of another listed dependency. The
+  dependency can otherwise be renamed freely. No pair is applied if any pair in
+  the same invocation breaks one of these rules.
+
+  A _value_ is read as a JDN value only if it reads whole and is not a symbol.
+  Anything else is taken as a string, so a URL, a path or a tag needs no quoting
+  beyond what the shell requires. A _value_ that should be a string despite
+  looking like a number or a boolean must be quoted, as described in
+  `<Values>` in `jeep-meta(1)`.
 
 - **rem** _deps_ ...:
   Removes one or more dependencies from the bundle's __info file__. Each

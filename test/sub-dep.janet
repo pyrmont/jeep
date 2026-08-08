@@ -278,6 +278,47 @@
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
+(deftest edit-takes-bare-words-as-strings
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (spit (string path h/sep "info.jdn")
+            ```
+            @{:name "test1"
+              :vendored [{:name "testament"
+                          :url "https://example.org/old"}]}
+            ```)
+      # a URL, a path and a tag all read as symbols, so they must be taken as
+      # strings without the user quoting them
+      (def args {:sub {:opts {"vendor" true}
+                       :sub {:cmd "edit"
+                             :params {:dep "testament"
+                                      :data [":url" "https://github.com/pyrmont/testament"
+                                             ":prefix" "deps/testament"
+                                             ":tag" "abc123def"]}}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :vendored [{:name "testament"
+                      :url "https://github.com/pyrmont/testament"
+                      :prefix "deps/testament"
+                      :tag "abc123def"}]}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        editing testament...
+        Dependencies changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
 (deftest edit-adds-arbitrary-keys
   (def out @"")
   (def err @"")
@@ -548,6 +589,158 @@
       (def expect-out
         ```
         tidying...
+        Dependencies changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
+(deftest edit-renames-dependency
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (spit (string path h/sep "info.jdn")
+            ```
+            @{:name "test1"
+              :dependencies [{:name "testament"
+                              :url "https://example.org/testament"}]}
+            ```)
+      (def args {:sub {:sub {:cmd "edit"
+                             :params {:dep "testament"
+                                      :data [":name" "tester"]}}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :dependencies [{:name "tester"
+                          :url "https://example.org/testament"}]}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        editing testament...
+        Dependencies changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
+(deftest error-on-removing-dep-name
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (spit (string path h/sep "info.jdn")
+            ```
+            @{:name "test1"
+              :dependencies [{:name "testament"
+                              :url "https://example.org/testament"}]}
+            ```)
+      # the check happens before any pair is applied, so :tag is untouched
+      (def args {:sub {:sub {:cmd "edit"
+                             :params {:dep "testament"
+                                      :data [":tag" "abc123" ":name" "nil"]}}}})
+      (assert-thrown-message "cannot remove the :name key"
+                             (subcmd/run args))
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :dependencies [{:name "testament"
+                          :url "https://example.org/testament"}]}
+        ```)
+      (is (== expect actual))))
+  (is (empty? out))
+  (is (empty? err)))
+
+(deftest error-on-editing-name-to-non-string
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "."
+                               :name "test1"
+                               :dependencies ["testament"]))
+      (os/cd path)
+      (def args {:sub {:sub {:cmd "edit"
+                             :params {:dep "testament"
+                                      :data [":name" "42"]}}}})
+      (assert-thrown-message "the :name key must be a string"
+                             (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
+(deftest error-on-adding-non-string-name
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (def args {:sub {:sub {:cmd "add"
+                             :params {:deps [`{:name 42 :url "https://example.org/foo"}`]}}}})
+      (assert-thrown-message
+        `dependency {:name 42 :url "https://example.org/foo"} requires :name to be a string`
+        (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
+(deftest error-on-renaming-to-listed-dependency
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "."
+                               :name "test1"
+                               :dependencies ["testament" "spork"]))
+      (os/cd path)
+      (def args {:sub {:sub {:cmd "edit"
+                             :params {:dep "testament"
+                                      :data [":name" "spork"]}}}})
+      (assert-thrown-message "dependency spork is already listed"
+                             (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
+(deftest edit-name-to-current-value-is-allowed
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (spit (string path h/sep "info.jdn")
+            ```
+            @{:name "test1"
+              :dependencies [{:name "testament"
+                              :url "https://example.org/old"}]}
+            ```)
+      (def args {:sub {:sub {:cmd "edit"
+                             :params {:dep "testament"
+                                      :data [":name" "testament"
+                                             ":url" "https://example.org/new"]}}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :dependencies [{:name "testament"
+                          :url "https://example.org/new"}]}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        editing testament...
         Dependencies changed.
         ```)
       (is (== (h/add-nl expect-out) out))

@@ -128,6 +128,31 @@
   (assert (dyn :jeep-tmpdir) "cannot create temporary directory")
   (dyn :jeep-tmpdir))
 
+(defn- to-value
+  [s]
+  # a value is a JDN value only if it reads whole and is not a symbol, so bare
+  # words, phrases and anything that does not read at all are taken as strings
+  (def [ok? vals] (protect (parse-all s)))
+  (if (and ok?
+           (= 1 (length vals))
+           (not (symbol? (first vals))))
+    (first vals)
+    s))
+
+(defn to-pairs
+  [kvs]
+  (assert (even? (length kvs)) "each key must be followed by a value")
+  (def res @[])
+  (var i 0)
+  (while (< i (length kvs))
+    (def k-str (get kvs i))
+    (def [k-ok? ks] (protect (parse-all k-str)))
+    (def k (if (and k-ok? (= 1 (length ks))) (first ks)))
+    (assertf (keyword? k) "key %s must be a keyword" k-str)
+    (array/push res [k (to-value (get kvs (inc i)))])
+    (+= i 2))
+  res)
+
 (defn url?
   [s]
   (def res (peg/match

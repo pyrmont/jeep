@@ -173,6 +173,7 @@
       (errorf "dependency %s must be a URL or a struct/table with a :url key" d))
     (def new (array/peek to-add))
     (def new-name (if (dictionary? new) (get new :name) new))
+    (assertf (string? new-name) "dependency %n requires :name to be a string" new)
     (when (name-index listed new-name)
       (print "skipping " new-name ", use 'jeep dep edit' to edit existing dependencies")
       (array/pop to-add)))
@@ -222,22 +223,6 @@
     (print "tidying..."))
   result)
 
-(defn- to-pairs
-  [data]
-  (assert (even? (length data)) "each key must be followed by a value")
-  (def res @[])
-  (var i 0)
-  (while (< i (length data))
-    (def k-str (get data i))
-    (def v-str (get data (inc i)))
-    (def [k-ok? k] (protect (parse k-str)))
-    (assertf (and k-ok? (keyword? k)) "key %s must be a keyword" k-str)
-    (def [v-ok? v] (protect (parse v-str)))
-    (assertf v-ok? "value %s could not be parsed" v-str)
-    (array/push res [k v])
-    (+= i 2))
-  res)
-
 (defn- pair-value
   [pairs k]
   (var res nil)
@@ -250,7 +235,7 @@
 (defn- edit-dep
   [jdn meta group dep data &opt autotag?]
   (def listed (get-in meta group []))
-  (def pairs (to-pairs data))
+  (def pairs (util/to-pairs data))
   (assert (or autotag? (not (empty? pairs)))
           "must provide at least one key and value or set --autotag")
   (def name
@@ -260,6 +245,15 @@
   (def pos (name-index listed name))
   (assertf pos "dependency %s is not listed, add it first" name)
   (def curr (get listed pos))
+  # a dependency is found by its name, so an entry cannot lose it and two
+  # entries cannot share it; both are checked before any pair is applied
+  (each [k v] pairs
+    (when (= :name k)
+      (assert (not (nil? v)) "cannot remove the :name key")
+      (assert (string? v) "the :name key must be a string")
+      (def other (name-index listed v))
+      (assertf (or (nil? other) (= pos other))
+               "dependency %s is already listed" v)))
   # the tag is resolved from the new URL if one is being set
   (when autotag?
     (def url (or (pair-value pairs :url)

@@ -233,4 +233,48 @@
     (util/save-info `@{:name "new"}`)
     (is (== `@{:name "new"}` (slurp "info.jdn")))))
 
+(deftest to-pairs-reads-jdn-values
+  (is (== @[[:count 42]] (util/to-pairs [":count" "42"])))
+  (is (== @[[:private true]] (util/to-pairs [":private" "true"])))
+  (is (== @[[:kind :library]] (util/to-pairs [":kind" ":library"])))
+  (is (== @[[:labels [:dev]]] (util/to-pairs [":labels" "[:dev]"])))
+  (is (== @[[:paths ["a.janet" "LICENSE"]]]
+          (util/to-pairs [":paths" `["a.janet" "LICENSE"]`])))
+  (is (== @[[:url "quoted"]] (util/to-pairs [":url" `"quoted"`]))))
+
+(deftest to-pairs-takes-bare-words-as-strings
+  # a bare word reads as a symbol, which never belongs in an info file
+  (is (== @[[:url "https://example.org/foo"]]
+          (util/to-pairs [":url" "https://example.org/foo"])))
+  (is (== @[[:prefix "deps/foo"]] (util/to-pairs [":prefix" "deps/foo"])))
+  (is (== @[[:tag "abc123def"]] (util/to-pairs [":tag" "abc123def"])))
+  (is (== @[[:license "MIT"]] (util/to-pairs [":license" "MIT"]))))
+
+(deftest to-pairs-takes-unreadable-values-as-strings
+  # more than one value, no value at all, or source that does not read
+  (is (== @[[:author "A Programmer"]]
+          (util/to-pairs [":author" "A Programmer"])))
+  (is (== @[[:description "1.0 release"]]
+          (util/to-pairs [":description" "1.0 release"])))
+  (is (== @[[:version "1.0.0"]] (util/to-pairs [":version" "1.0.0"])))
+  (is (== @[[:date "2026-08-09"]] (util/to-pairs [":date" "2026-08-09"])))
+  (is (== @[[:note ""]] (util/to-pairs [":note" ""]))))
+
+(deftest to-pairs-reads-nil-as-nil
+  (def pairs (util/to-pairs [":tag" "nil"]))
+  (is (== 1 (length pairs)))
+  (is (== :tag (first (first pairs))))
+  (is (== nil (last (first pairs)))))
+
+(deftest to-pairs-reads-multiple-pairs
+  (is (== @[[:a 1] [:b "two"]] (util/to-pairs [":a" "1" ":b" "two"]))))
+
+(deftest to-pairs-errors-on-bad-input
+  (assert-thrown-message "each key must be followed by a value"
+                         (util/to-pairs [":a"]))
+  (assert-thrown-message "key a must be a keyword"
+                         (util/to-pairs ["a" "1"]))
+  (assert-thrown-message "key \"a\" must be a keyword"
+                         (util/to-pairs [`"a"` "1"])))
+
 (run-tests!)

@@ -3,7 +3,7 @@
 
 (import ../lib/subs/meta :as subcmd)
 
-(deftest add-simple-meta
+(deftest set-simple-meta
   (def out @"")
   (def err @"")
   (with-dyns [:out out
@@ -11,8 +11,7 @@
     (h/in-dir _
       (def path (h/make-bundle "." :name "test1"))
       (os/cd path)
-      (def args {:sub {:params {:kvs [":homepage" "https://example.org"]}
-                       :opts {}}})
+      (def args {:sub {:params {:kvs [":homepage" "https://example.org"]}}})
       (subcmd/run args)
       (def actual (h/info-file path))
       (def expect
@@ -23,13 +22,13 @@
       (is (== expect actual))
       (def expect-out
         ```
-        adding homepage...
+        setting :homepage...
         Metadata changed.
         ```)
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
-(deftest add-multiple-metas
+(deftest set-multiple-metas
   (def out @"")
   (def err @"")
   (with-dyns [:out out
@@ -37,8 +36,7 @@
     (h/in-dir _
       (def path (h/make-bundle "." :name "test1"))
       (os/cd path)
-      (def args {:sub {:params {:kvs [":homepage" "https://example.org" ":license" "MIT"]}
-                       :opts {}}})
+      (def args {:sub {:params {:kvs [":homepage" "https://example.org" ":license" "MIT"]}}})
       (subcmd/run args)
       (def actual (h/info-file path))
       (def expect
@@ -50,14 +48,14 @@
       (is (== expect actual))
       (def expect-out
         ```
-        adding homepage...
-        adding license...
+        setting :homepage...
+        setting :license...
         Metadata changed.
         ```)
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
-(deftest remove-meta
+(deftest nil-removes-meta
   (def out @"")
   (def err @"")
   (with-dyns [:out out
@@ -68,8 +66,7 @@
                                :description "foo"
                                :version "1.0.0"))
       (os/cd path)
-      (def args {:sub {:params {:kvs [":description"]}
-                       :opts {"remove" true}}})
+      (def args {:sub {:params {:kvs [":description" "nil"]}}})
       (subcmd/run args)
       (def actual (h/info-file path))
       (def expect
@@ -86,7 +83,7 @@
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
-(deftest update-meta
+(deftest set-meta
   (def out @"")
   (def err @"")
   (with-dyns [:out out
@@ -96,8 +93,7 @@
                                :name "test1"
                                :version "1.0.0"))
       (os/cd path)
-      (def args {:sub {:params {:kvs [":version" "2.0.0"]}
-                       :opts {"update" true}}})
+      (def args {:sub {:params {:kvs [":version" "2.0.0"]}}})
       (subcmd/run args)
       (def actual (h/info-file path))
       (def expect
@@ -108,13 +104,13 @@
       (is (== expect actual))
       (def expect-out
         ```
-        updating :version...
+        setting :version...
         Metadata changed.
         ```)
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
-(deftest update-meta-to-current-value-is-a-no-op
+(deftest set-meta-to-current-value-is-a-no-op
   (def out @"")
   (def err @"")
   (with-dyns [:out out
@@ -124,8 +120,7 @@
                                :name "test1"
                                :version "1.0.0"))
       (os/cd path)
-      (def args {:sub {:params {:kvs [":version" "1.0.0"]}
-                       :opts {"update" true}}})
+      (def args {:sub {:params {:kvs [":version" "1.0.0"]}}})
       (subcmd/run args)
       (def actual (h/info-file path))
       (def expect
@@ -137,7 +132,7 @@
       (is (== (h/add-nl "No metadata changed.") out))
       (is (empty? err)))))
 
-(deftest update-meta-with-bundle-dir
+(deftest set-meta-with-bundle-dir
   (def out @"")
   (def err @"")
   (with-dyns [:out out
@@ -150,8 +145,7 @@
       # `jeep enhance --native` leaves the info file aliased at ./info.jdn but
       # puts the bundle script in ./bundle/, so both must be able to coexist
       (os/mkdir "bundle")
-      (def args {:sub {:params {:kvs [":version" "2.0.0"]}
-                       :opts {"update" true}}})
+      (def args {:sub {:params {:kvs [":version" "2.0.0"]}}})
       (subcmd/run args)
       (def actual (h/info-file path))
       (def expect
@@ -164,11 +158,131 @@
       (is (== nil (os/stat (string "bundle" h/sep "info.jdn") :mode)))
       (def expect-out
         ```
-        updating :version...
+        setting :version...
         Metadata changed.
         ```)
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
+
+(deftest set-meta-keeps-phrases-as-strings
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      # a value is only JDN if it parses whole, so '1.0 release' must not be
+      # truncated to the number it begins with
+      (def args {:sub {:params {:kvs [":description" "1.0 release"
+                                      ":author" "A Programmer"]}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :description "1.0 release"
+          :author "A Programmer"}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        setting :description...
+        setting :author...
+        Metadata changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
+(deftest nil-on-absent-key-is-skipped
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (def args {:sub {:params {:kvs [":homepage" "nil"]}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        skipping :homepage, key not found
+        No metadata changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
+(deftest error-on-removing-name
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "."
+                               :name "test1"
+                               :version "1.0.0"))
+      (os/cd path)
+      # the check happens before any pair is applied, so :version is untouched
+      (def args {:sub {:params {:kvs [":version" "2.0.0" ":name" "nil"]}}})
+      (assert-thrown-message "cannot remove the :name key"
+                             (subcmd/run args))
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :version "1.0.0"}
+        ```)
+      (is (== expect actual))))
+  (is (empty? out))
+  (is (empty? err)))
+
+(deftest error-on-setting-name-to-non-string
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (def args {:sub {:params {:kvs [":name" "42"]}}})
+      (assert-thrown-message "the :name key must be a string"
+                             (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
+(deftest error-on-odd-number-of-values
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (def args {:sub {:params {:kvs [":homepage"]}}})
+      (assert-thrown-message "each key must be followed by a value"
+                             (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
+(deftest error-on-non-keyword-key
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (def args {:sub {:params {:kvs ["homepage" "https://example.org"]}}})
+      (assert-thrown-message "key homepage must be a keyword"
+                             (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
 
 (deftest error-on-missing-info-jdn
   (def out @"")
@@ -176,8 +290,7 @@
   (with-dyns [:out out
               :err err]
     (h/in-dir _
-      (def args {:sub {:params {:kvs [":homepage" "https://example.org"]}
-                       :opts {}}})
+      (def args {:sub {:params {:kvs [":homepage" "https://example.org"]}}})
       (assert-thrown-message "no info.jdn file found"
                              (subcmd/run args))))
   (is (empty? out))
@@ -192,8 +305,7 @@
       (def path (h/make-bundle "." :name "test1"))
       (os/cd path)
       (spit (string path h/sep "info.jdn") "{:version \"1.0.0\"}")
-      (def args {:sub {:params {:kvs [":homepage" "https://example.org"]}
-                       :opts {}}})
+      (def args {:sub {:params {:kvs [":homepage" "https://example.org"]}}})
       (assert-thrown-message "info.jdn file must contain the :name key"
                              (subcmd/run args))))
   (is (empty? out))
