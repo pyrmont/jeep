@@ -233,6 +233,45 @@
     (util/save-info `@{:name "new"}`)
     (is (== `@{:name "new"}` (slurp "info.jdn")))))
 
+(def- labelled-deps
+  [{:name "a" :labels [:dev]}
+   {:name "b" :labels [:dev :docs]}
+   {:name "c" :labels [:docs]}
+   {:name "d"}
+   "e"])
+
+(deftest filter-deps-without-labels-returns-everything
+  (is (== labelled-deps (util/filter-deps labelled-deps)))
+  (is (== labelled-deps (util/filter-deps labelled-deps :labels [] :no-labels []))))
+
+(deftest filter-deps-with-labels-keeps-only-those-labelled
+  (def names (map (fn :namer [d] (get d :name d))
+                  (util/filter-deps labelled-deps :labels [:dev])))
+  (is (== @["a" "b"] names)))
+
+(deftest filter-deps-with-several-labels-matches-any
+  (def names (map (fn :namer [d] (get d :name d))
+                  (util/filter-deps labelled-deps :labels [:dev :docs])))
+  (is (== @["a" "b" "c"] names)))
+
+(deftest filter-deps-with-no-labels-keeps-the-unlabelled
+  # a dep without :labels, and a dep listed as a bare name, are both unlabelled
+  (def names (map (fn :namer [d] (get d :name d))
+                  (util/filter-deps labelled-deps :no-labels [:dev])))
+  (is (== @["c" "d" "e"] names)))
+
+(deftest filter-deps-excludes-before-including
+  (def names (map (fn :namer [d] (get d :name d))
+                  (util/filter-deps labelled-deps
+                                    :labels [:docs]
+                                    :no-labels [:dev])))
+  (is (== @["c"] names)))
+
+(deftest filter-deps-treats-a-malformed-labels-key-as-unlabelled
+  (def deps [{:name "a" :labels :dev} {:name "b" :labels [:dev]}])
+  (is (== @[{:name "b" :labels [:dev]}] (util/filter-deps deps :labels [:dev])))
+  (is (== @[{:name "a" :labels :dev}] (util/filter-deps deps :no-labels [:dev]))))
+
 (deftest to-pairs-reads-jdn-values
   (is (== @[[:count 42]] (util/to-pairs [":count" "42"])))
   (is (== @[[:private true]] (util/to-pairs [":private" "true"])))

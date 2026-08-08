@@ -96,10 +96,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir _
-      (def path (h/make-bundle "." :name "test1"))
-      (os/cd path)
-      (spit (string path h/sep "info.jdn")
+    (h/in-dir dir
+      (spit "info.jdn"
             ```
             @{:name "test1"
               :dependencies [{:name "testament"
@@ -109,7 +107,7 @@
                              :params {:deps [`{:name "testament" :url "https://example.org/testament"}`
                                              `{:name "spork" :url "https://example.org/spork"}`]}}}})
       (subcmd/run args)
-      (def actual (h/info-file path))
+      (def actual (h/info-file dir))
       (def expect
         ```
         @{:name "test1"
@@ -283,10 +281,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir _
-      (def path (h/make-bundle "." :name "test1"))
-      (os/cd path)
-      (spit (string path h/sep "info.jdn")
+    (h/in-dir dir
+      (spit "info.jdn"
             ```
             @{:name "test1"
               :vendored [{:name "testament"
@@ -301,7 +297,7 @@
                                              ":prefix" "deps/testament"
                                              ":tag" "abc123def"]}}}})
       (subcmd/run args)
-      (def actual (h/info-file path))
+      (def actual (h/info-file dir))
       (def expect
         ```
         @{:name "test1"
@@ -324,10 +320,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir _
-      (def path (h/make-bundle "." :name "test1"))
-      (os/cd path)
-      (spit (string path h/sep "info.jdn")
+    (h/in-dir dir
+      (spit "info.jdn"
             ```
             @{:name "test1"
               :dependencies [{:name "testament"
@@ -337,7 +331,7 @@
                              :params {:dep "testament"
                                       :data [":labels" "[:dev]" ":note" `"a note"`]}}}})
       (subcmd/run args)
-      (def actual (h/info-file path))
+      (def actual (h/info-file dir))
       (def expect
         ```
         @{:name "test1"
@@ -360,10 +354,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir _
-      (def path (h/make-bundle "." :name "test1"))
-      (os/cd path)
-      (spit (string path h/sep "info.jdn")
+    (h/in-dir dir
+      (spit "info.jdn"
             ```
             @{:name "test1"
               :dependencies [{:name "testament"
@@ -374,7 +366,7 @@
                              :params {:dep "testament"
                                       :data [":tag" "nil"]}}}})
       (subcmd/run args)
-      (def actual (h/info-file path))
+      (def actual (h/info-file dir))
       (def expect
         ```
         @{:name "test1"
@@ -395,10 +387,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir _
-      (def path (h/make-bundle "." :name "test1"))
-      (os/cd path)
-      (spit (string path h/sep "info.jdn")
+    (h/in-dir dir
+      (spit "info.jdn"
             ```
             @{:name "test1"
               :dependencies [{:name "testament"
@@ -408,7 +398,7 @@
                              :params {:dep "testament"
                                       :data [":url" `"https://github.com/pyrmont/testament"`]}}}})
       (subcmd/run args)
-      (def actual (h/info-file path))
+      (def actual (h/info-file dir))
       (def expect
         ```
         @{:name "test1"
@@ -424,10 +414,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir _
-      (def path (h/make-bundle "." :name "test1"))
-      (os/cd path)
-      (spit (string path h/sep "info.jdn")
+    (h/in-dir dir
+      (spit "info.jdn"
             ```
             @{:name "test1"
               :dependencies [{:name "testament"
@@ -439,7 +427,7 @@
                              :params {:dep "testament"
                                       :data [":url" `"new"`]}}}})
       (subcmd/run args)
-      (def actual (h/info-file path))
+      (def actual (h/info-file dir))
       (def expect
         ```
         @{:name "test1"
@@ -563,12 +551,10 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir _
-      (def path (h/make-bundle "." :name "test1"))
-      (os/cd path)
+    (h/in-dir dir
       # :url is in the reverse order of :name, so sorting by anything other
       # than the dependency's name would leave the structs out of order
-      (spit (string path h/sep "info.jdn")
+      (spit "info.jdn"
             ```
             @{:name "test1"
               :dependencies [{:name "zed" :url "aaa"}
@@ -577,7 +563,7 @@
             ```)
       (def args {:sub {:sub {:cmd "tidy"}}})
       (subcmd/run args)
-      (def actual (h/info-file path))
+      (def actual (h/info-file dir))
       (def expect
         ```
         @{:name "test1"
@@ -599,10 +585,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir _
-      (def path (h/make-bundle "." :name "test1"))
-      (os/cd path)
-      (spit (string path h/sep "info.jdn")
+    (h/in-dir dir
+      (spit "info.jdn"
             ```
             @{:name "test1"
               :dependencies [{:name "testament"
@@ -612,7 +596,7 @@
                              :params {:dep "testament"
                                       :data [":name" "tester"]}}}})
       (subcmd/run args)
-      (def actual (h/info-file path))
+      (def actual (h/info-file dir))
       (def expect
         ```
         @{:name "test1"
@@ -633,10 +617,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir _
-      (def path (h/make-bundle "." :name "test1"))
-      (os/cd path)
-      (spit (string path h/sep "info.jdn")
+    (h/in-dir dir
+      (spit "info.jdn"
             ```
             @{:name "test1"
               :dependencies [{:name "testament"
@@ -648,7 +630,7 @@
                                       :data [":tag" "abc123" ":name" "nil"]}}}})
       (assert-thrown-message "cannot remove the :name key"
                              (subcmd/run args))
-      (def actual (h/info-file path))
+      (def actual (h/info-file dir))
       (def expect
         ```
         @{:name "test1"
@@ -716,10 +698,8 @@
   (def err @"")
   (with-dyns [:out out
               :err err]
-    (h/in-dir _
-      (def path (h/make-bundle "." :name "test1"))
-      (os/cd path)
-      (spit (string path h/sep "info.jdn")
+    (h/in-dir dir
+      (spit "info.jdn"
             ```
             @{:name "test1"
               :dependencies [{:name "testament"
@@ -730,7 +710,7 @@
                                       :data [":name" "testament"
                                              ":url" "https://example.org/new"]}}}})
       (subcmd/run args)
-      (def actual (h/info-file path))
+      (def actual (h/info-file dir))
       (def expect
         ```
         @{:name "test1"
@@ -834,9 +814,7 @@
   (with-dyns [:out out
               :err err]
     (h/in-dir _
-      (def path (h/make-bundle "." :name "test1"))
-      (os/cd path)
-      (spit (string path h/sep "info.jdn") "{:version \"1.0.0\"}")
+      (spit "info.jdn" "{:version \"1.0.0\"}")
       (def args {:sub {:sub {:cmd "add"
                              :params {:deps [`{:name "testament" :url "https://example.org/testament"}`]}}}})
       (assert-thrown-message "info.jdn file must contain the :name key"

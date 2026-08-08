@@ -281,4 +281,122 @@
   (is (string/has-suffix? confirmation out))
   (is (empty? err)))
 
+(deftest prep-vendor-profile-with-label
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (h/make-syspath ".")
+      (def dep
+        {:name "test"
+         :vendored [
+            {:name "example-1"
+             :url "file::../../res/fixtures/example-1"
+             :prefix "deps/one"
+             :paths ["lib"]}
+            {:name "example-2"
+             :url "file::../../res/fixtures/example-2"
+             :prefix "deps/two"
+             :labels [:dev]
+             :paths ["lib"]}]})
+      (def path (h/make-bundle "." ;(kvs dep)))
+      (os/cd path)
+      (def args {:sub {:params {:profile "vendor"}
+                       :opts {"label" [:dev]}}})
+      (subcmd/run args)
+      # only the labelled dep is vendored, so ./deps/one is never created
+      (is (== ["two"] (sorted (os/dir "deps"))))))
+  (is (string/has-suffix? confirmation out))
+  (is (empty? err)))
+
+(deftest prep-vendor-profile-with-no-label
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (h/make-syspath ".")
+      (def dep
+        {:name "test"
+         :vendored [
+            {:name "example-1"
+             :url "file::../../res/fixtures/example-1"
+             :prefix "deps/one"
+             :paths ["lib"]}
+            {:name "example-2"
+             :url "file::../../res/fixtures/example-2"
+             :prefix "deps/two"
+             :labels [:dev]
+             :paths ["lib"]}]})
+      (def path (h/make-bundle "." ;(kvs dep)))
+      (os/cd path)
+      (def args {:sub {:params {:profile "vendor"}
+                       :opts {"no-label" [:dev]}}})
+      (subcmd/run args)
+      # an unlabelled dep is kept when a label is being excluded
+      (is (== ["one"] (sorted (os/dir "deps"))))))
+  (is (string/has-suffix? confirmation out))
+  (is (empty? err)))
+
+(deftest prep-vendor-profile-with-label-matching-nothing
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (h/make-syspath ".")
+      (def dep
+        {:name "test"
+         :vendored [
+            {:name "example-1"
+             :url "file::../../res/fixtures/example-1"
+             :prefix "deps/one"
+             :paths ["lib"]}]})
+      (def path (h/make-bundle "." ;(kvs dep)))
+      (os/cd path)
+      (def args {:sub {:params {:profile "vendor"}
+                       :opts {"label" [:missing]}}})
+      (subcmd/run args)
+      (is (== nil (os/stat "deps" :mode)))))
+  (is (== (string "no dependencies matched" nl confirmation) out))
+  (is (empty? err)))
+
+(deftest prep-build-profile-rejects-labels
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test"))
+      (os/cd path)
+      (def args {:sub {:params {:profile "build"}
+                       :opts {"label" [:dev]}}})
+      (def msg "--label and --no-label cannot be used with the build profile")
+      (assert-thrown-message msg (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
+(deftest prep-legacy-vendor-profile-rejects-labels
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (h/make-syspath ".")
+      (def path (h/make-bundle "." :name "test"))
+      (os/cd path)
+      (spit "info.jdn"
+            ```
+            @{:name "test"
+              :vendored {"deps" [{:name "example-1"
+                                  :url "file::../../res/fixtures/example-1"}]}}
+            ```)
+      (def args {:sub {:params {:profile "vendor"}
+                       :opts {"label" [:dev]}}})
+      (def msg "--label and --no-label require :vendored to be an array/tuple")
+      (assert-thrown-message msg (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
 (run-tests!)

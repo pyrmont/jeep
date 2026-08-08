@@ -73,6 +73,26 @@
   [p]
   (= :file (os/stat p :mode)))
 
+(defn- labelled?
+  [dep labels]
+  (def dep-labels (if (dictionary? dep) (get dep :labels)))
+  (if (indexed? dep-labels)
+    (not (nil? (some (fn :matcher [l] (has-value? dep-labels l)) labels)))
+    false))
+
+(defn filter-deps
+  [deps &named labels no-labels]
+  (default labels [])
+  (default no-labels [])
+  # an unfiltered list is returned as it is, so a legacy dictionary of
+  # vendored deps still reaches its own installer
+  (if (and (empty? labels) (empty? no-labels))
+    deps
+    (filter (fn :selector [d]
+              (and (or (empty? labels) (labelled? d labels))
+                   (not (labelled? d no-labels))))
+            deps)))
+
 (defn jpm-bundles
   []
   (var res @[])

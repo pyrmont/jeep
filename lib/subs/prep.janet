@@ -10,11 +10,20 @@
    `Skip installation of dependencies.`
    :no-hook
    `Skip running the prep hook.`
+   :label
+   `Only install deps carrying the label. Can be given more than once.`
+   :no-label
+   `Skip deps carrying the label. Can be given more than once.`
    :about
    `Prepares the bundle for a given profile by installing dependencies and
    running the optional prep hook. For more information, see jeep-prep(1).`
    :help
    `Prepare dependencies for a given profile for the current bundle.`})
+
+(defn- to-label
+  [s]
+  (def name (string/trim s ":"))
+  (if (empty? name) nil (keyword name)))
 
 (def config
   {:rules [:profile       {:default "system"
@@ -22,6 +31,15 @@
            "--force-deps" {:kind  :flag
                            :short "f"
                            :help (helps :force-deps)}
+           "--label"      {:kind  :multi
+                           :short "l"
+                           :value to-label
+                           :help (helps :label)}
+           "--no-label"   {:kind  :multi
+                           :short "L"
+                           :proxy "label"
+                           :value to-label
+                           :help (helps :no-label)}
            "--no-deps"    {:kind :flag
                            :short "D"
                            :help (helps :no-deps)}
@@ -87,18 +105,29 @@
     (util/copy from to)))
 
 (defn- install-system
-  [info &named force-deps?]
-  (def system-deps (get info :dependencies []))
-  (each d system-deps
-    (install/install d :force-update force-deps?)))
+  [info &named force-deps? labels no-labels]
+  (def listed (get info :dependencies []))
+  (def system-deps (util/filter-deps listed :labels labels :no-labels no-labels))
+  (if (and (not (empty? listed)) (empty? system-deps))
+    (print "no dependencies matched")
+    (each d system-deps
+      (install/install d :force-update force-deps?))))
 
 (defn- install-vendor
-  [info &named force-deps?]
+  [info &named force-deps? labels no-labels]
   (def vendored (get info :vendored))
   (assert (and vendored (not (empty? vendored)))
           "no vendored dependencies in info.jdn")
-  (def vendor-f (if (dictionary? vendored) vendor-deps-legacy vendor-deps))
-  (vendor-f vendored :force-deps? force-deps?))
+  # the deprecated dictionary form has nowhere to hang a label
+  (when (dictionary? vendored)
+    (assert (and (empty? labels) (empty? no-labels))
+            "--label and --no-label require :vendored to be an array/tuple"))
+  (def deps (util/filter-deps vendored :labels labels :no-labels no-labels))
+  (if (empty? deps)
+    (print "no dependencies matched")
+    (do
+      (def vendor-f (if (dictionary? vendored) vendor-deps-legacy vendor-deps))
+      (vendor-f deps :force-deps? force-deps?))))
 
 (defn run
   [args &opt jeep-config]
@@ -109,16 +138,23 @@
   (def no-deps? (get opts "no-deps"))
   (def no-hook? (get opts "no-hook"))
   (def force-deps? (get opts "force-deps"))
+  (def labels (get opts "label" []))
+  (def no-labels (get opts "no-label" []))
   # install deps, making the local bundle's fallbacks available to every fetch
   (unless no-deps?
     (with-dyns [:jeep-fallbacks (get info :fallbacks)]
       (case profile
         "system"
-        (install-system info :force-deps? force-deps?)
+        (install-system info :force-deps? force-deps?
+                        :labels labels :no-labels no-labels)
         "build"
-        (install-build info :force-deps? force-deps?)
+        (do
+          (assert (and (empty? labels) (empty? no-labels))
+                  "--label and --no-label cannot be used with the build profile")
+          (install-build info :force-deps? force-deps?))
         "vendor"
-        (install-vendor info :force-deps? force-deps?))))
+        (install-vendor info :force-deps? force-deps?
+                        :labels labels :no-labels no-labels))))
   # run hook
   (unless no-hook?
     (def man @{:info info})

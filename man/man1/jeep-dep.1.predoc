@@ -103,7 +103,9 @@ are listed in an array/tuple under the ``:vendored`` keyword.
 
 A vendored dependency is similar to an ordinary dependency. That is, it is a
 struct/table containing the ``:name`` and ``:url`` keys. It can also include the
-``:tag``, ``:prefix``, and ``:paths`` keys. If the ``:paths`` key is present, a
+``:tag``, ``:prefix``, ``:labels`` and ``:paths`` keys. The ``:labels`` key
+holds an array/tuple of keywords that `jeep-prep(1)` can use to select which
+dependencies it acts on. If the ``:paths`` key is present, a
 vendored dependency will be fetched from the specified URL and the values used
 to copy files into the bundle. If the values are strings, the relative path of
 the source file matches the relative path of the destination file. However, if

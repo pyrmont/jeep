@@ -1,6 +1,6 @@
 ---
 Title: JEEP-PREP(1)
-Date: 2026-08-07
+Date: 2026-08-09
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -15,7 +15,8 @@ SYNOPSIS
 ========
 
 **jeep-prep** [**-f** | **--force-deps**] [**-D** | **--no-deps**] [**-H** |
-              **--no-hook**] [_profile_]
+              **--no-hook**] [**-L** | **--no-label** _label_] [**-l** |
+              **--label** _label_] [_profile_]
 
 DESCRIPTION
 ===========
@@ -34,9 +35,21 @@ Options
   This skips running the prep hook. In other words, it only installs
   the dependencies for the given profile.
 
+- **-L**, **--no-label** _label_:
+  This skips each dependency carrying the _label_. A dependency carrying no
+  label is still installed. This option can be invoked multiple times, in which
+  case a dependency is skipped if it carries any of the labels.
+
 - **-f**, **--force-deps**:
   This forces the installation of dependencies. By default, Janet will not
   install a dependency if it is already installed.
+
+- **-l**, **--label** _label_:
+  This installs only the dependencies carrying the _label_. A dependency
+  carrying no label is not installed. This option can be invoked multiple times,
+  in which case a dependency is installed if it carries any of the labels. If a
+  dependency carries a label given to both **--label** and **--no-label**, it is
+  not installed.
 
 - _profile_:
   Specifies one of the following profiles to use:
@@ -64,6 +77,11 @@ Options
     If the user specifies the ***vendor*** profile, this vendors the
     dependencies listed under the ``:vendored`` key in the __info file__.
 
+A _label_ is written with or without a leading colon, so ***dev*** and
+***:dev*** are the same label. Labels are only meaningful for the ***system***
+and ***vendor*** profiles and it is an error to give one with the ***build***
+profile.
+
 For more information about the __info file__, the __bundle script__,  __bundle
 hooks__ and the __syspath__, see CONCEPTS in `jeep(1)`. For more information
 about vendoring, see Vendoring in `jeep-dep(1)`.
@@ -84,6 +102,11 @@ is relative to the root of the dependency. The destination path is relative to
 the directory specified in the ``:prefix`` (if no directory is specified, the
 bundle root). Dependencies can be added to the __info file__ using
 `jeep-dep(1)`.
+
+A dependency can carry any number of labels, listed as keywords under its
+``:labels`` key. Labels have no meaning to **jeep-prep** beyond selecting which
+dependencies it acts on, so a bundle author is free to choose them. Labels can
+be set using `jeep-dep(1)`.
 
 If a dependency's URL cannot be resolved and the __info file__ includes a
 ``:fallbacks`` key, **jeep-prep** tries the alternative URLs listed in the
@@ -121,6 +144,7 @@ The following examples assume an __info file__ as follows:
    {:name "dep5"
     :url "https://example.org/dep5"
     :prefix "deps/dep5"
+    :labels [:dev]
     :paths ["foo.janet"
             "LICENSE"]}]}
 ````
@@ -152,6 +176,22 @@ copies the default build-time files to `./bundle`.
 
 ````
 $ jeep prep build
+````
+
+The following command prepares the bundle using the ***vendor*** profile but
+skips every dependency labelled 'dev'. This installs 'dep3' and 'dep4' but not
+'dep5'.
+
+````
+$ jeep prep vendor --no-label dev
+````
+
+The following command prepares the bundle using the ***vendor*** profile and
+installs only the dependencies labelled 'dev'. This copies 'foo.janet' and
+'LICENSE' to the `./deps/dep5` directory and installs nothing else.
+
+````
+$ jeep prep vendor --label dev
 ````
 
 BUGS

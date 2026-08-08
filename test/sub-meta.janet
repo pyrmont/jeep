@@ -302,9 +302,7 @@
   (with-dyns [:out out
               :err err]
     (h/in-dir _
-      (def path (h/make-bundle "." :name "test1"))
-      (os/cd path)
-      (spit (string path h/sep "info.jdn") "{:version \"1.0.0\"}")
+      (spit "info.jdn" "{:version \"1.0.0\"}")
       (def args {:sub {:params {:kvs [":homepage" "https://example.org"]}}})
       (assert-thrown-message "info.jdn file must contain the :name key"
                              (subcmd/run args))))
