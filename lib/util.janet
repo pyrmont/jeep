@@ -148,7 +148,7 @@
   (assert (dyn :jeep-tmpdir) "cannot create temporary directory")
   (dyn :jeep-tmpdir))
 
-(defn- to-value
+(defn to-value
   [s]
   # a value is a JDN value only if it reads whole and is not a symbol, so bare
   # words, phrases and anything that does not read at all are taken as strings

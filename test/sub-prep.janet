@@ -310,6 +310,35 @@
   (is (string/has-suffix? confirmation out))
   (is (empty? err)))
 
+(deftest prep-vendor-profile-with-string-label
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (h/make-syspath ".")
+      (def dep
+        {:name "test"
+         :vendored [
+            {:name "example-1"
+             :url "file::../../res/fixtures/example-1"
+             :prefix "deps/one"
+             :paths ["lib"]}
+            {:name "example-2"
+             :url "file::../../res/fixtures/example-2"
+             :prefix "deps/two"
+             :labels ["dev"]
+             :paths ["lib"]}]})
+      (def path (h/make-bundle "." ;(kvs dep)))
+      (os/cd path)
+      # a label written as a string in the info file is matched by the string
+      (def args {:sub {:params {:profile "vendor"}
+                       :opts {"label" ["dev"]}}})
+      (subcmd/run args)
+      (is (== ["two"] (sorted (os/dir "deps"))))))
+  (is (string/has-suffix? confirmation out))
+  (is (empty? err)))
+
 (deftest prep-vendor-profile-with-no-label
   (def out @"")
   (def err @"")

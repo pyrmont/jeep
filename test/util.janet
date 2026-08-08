@@ -267,6 +267,13 @@
                                     :no-labels [:dev])))
   (is (== @["c"] names)))
 
+(deftest filter-deps-matches-string-labels
+  # a label written as a string is a different label from the keyword
+  (def deps [{:name "kw" :labels [:dev]} {:name "str" :labels ["dev"]}])
+  (is (== @[{:name "kw" :labels [:dev]}] (util/filter-deps deps :labels [:dev])))
+  (is (== @[{:name "str" :labels ["dev"]}]
+          (util/filter-deps deps :labels ["dev"]))))
+
 (deftest filter-deps-treats-a-malformed-labels-key-as-unlabelled
   (def deps [{:name "a" :labels :dev} {:name "b" :labels [:dev]}])
   (is (== @[{:name "b" :labels [:dev]}] (util/filter-deps deps :labels [:dev])))

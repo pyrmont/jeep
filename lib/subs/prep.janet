@@ -22,8 +22,10 @@
 
 (defn- to-label
   [s]
-  (def name (string/trim s ":"))
-  (if (empty? name) nil (keyword name)))
+  # a label is read like any other value, so a leading colon makes a keyword
+  # and a bare word makes a string
+  (def v (util/to-value s))
+  (if (or (keyword? v) (and (string? v) (not (empty? v)))) v))
 
 (def config
   {:rules [:profile       {:default "system"
