@@ -68,7 +68,7 @@
     (when (= "--" arg)
       (array/concat res (array/slice args i))
       (break))
-    (array/concat res (peg/match grammar arg))
+    (array/concat res (or (peg/match grammar arg) [arg]))
     (++ i))
   res)
 
