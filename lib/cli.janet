@@ -62,6 +62,16 @@
 
 (def file-env (curenv))
 
+(defn- deepest
+  ```
+  Returns the innermost subcommand result in `parsed`
+  ```
+  [parsed]
+  (var res parsed)
+  (while (get res :sub)
+    (set res (get res :sub)))
+  res)
+
 (defn run []
   (def config (merge top-config {:subs top-subcommands}))
   (def parsed (argy/parse-args "jeep" config))
@@ -75,10 +85,11 @@
     # --help
     (not (empty? help))
     (do
+      (def innermost (deepest parsed))
       (def long? (or (get-in parsed [:opts "help"])
-                     (get-in parsed [:sub :opts "help"])))
+                     (get-in innermost [:opts "help"])))
       (def short? (or (get-in parsed [:opts :h?])
-                      (get-in parsed [:sub :opts :h?])))
+                      (get-in innermost [:opts :h?])))
       (if (or (nil? long?)
               short?
               (get {:windows true :mingw true :cygwin true} (os/which)))

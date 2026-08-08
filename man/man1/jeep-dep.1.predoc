@@ -1,6 +1,6 @@
 ---
 Title: JEEP-DEP(1)
-Date: 2026-08-07
+Date: 2026-08-09
 Authors: Michael Camilleri <mike@inqk.net>
 Project: Jeep
 Version: DEVEL
@@ -9,59 +9,76 @@ Version: DEVEL
 NAME
 ====
 
-**jeep-dep** - add, update or remove dependency information in a Janet bundle
+**jeep-dep** - add, edit or remove dependency information in a Janet bundle
 
 SYNOPSIS
 ========
 
-**jeep-dep** [**-a** | **--autotag**] [**-t** | **--tidy**] [**-v** |
-             **--vendor**] _deps_ ...
-**jeep-dep** [**-a** | **--autotag**] [**-t** | **--tidy**] [**-v** |
-             **--vendor**] [**-u** | **--update**] _deps_ ...
-**jeep-dep** [**-t** | **--tidy**] [**-v** | **--vendor**] [**-r** |
-             **--remove**] _deps_ ...
-**jeep-dep** [**-v** | **--vendor**] [**-t** | **--tidy**]
+**jeep-dep** [**-v** | **--vendor**] **add** [**-a** | **--autotag**] _deps_ ...
+
+**jeep-dep** [**-v** | **--vendor**] **edit** [**-a** | **--autotag**] _dep_
+             [_key_ _value_] ...
+
+**jeep-dep** [**-v** | **--vendor**] **rem** _deps_ ...
+
+**jeep-dep** [**-v** | **--vendor**] **tidy**
 
 DESCRIPTION
 ===========
 
-**jeep-dep** adds, updates or removes dependency information in a bundle's __info
+**jeep-dep** adds, edits or removes dependency information in a bundle's __info
 file__. This command does not install dependencies; that is the responsibility
 of `jeep-prep(1)`.
+
+Each operation is a subcommand. The **--vendor** option applies to whichever
+subcommand is used and so is given before the subcommand's name.
 
 Options
 -------
 
-- **-a**, **--autotag**:
-  Adds a ``:tag`` key to the dependency information that is added or updated
-  with the SHA of the current commit as the associated value.
-
-- **-r**, **--remove**:
-  Removes the dependency information from the bundle's __info file__.
-
-- **-t**, **--tidy**:
-  Sorts the bundle's dependencies by name. Can be given on its own or alongside
-  another operation, in which case the sort is applied afterwards. Comments and
-  blank lines in the __info file__ are preserved.
-
-- **-u**, **--update**:
-  Updates the dependency information in the bundle's __info file__.
-
 - **-v**, **--vendor**:
-  Changes the dependencies that will be vendored. Vendoring is discussed below
-  in `<Vendoring>`.
+  Operates on the dependencies that will be vendored rather than the
+  dependencies that will be installed to the __syspath__. Vendoring is discussed
+  below in `<Vendoring>`.
 
-- _deps_ ...:
-  One or more dependencies to add or remove. Dependencies can either be
-  specified by a short name, a URL or a JDN struct/table. Optional when
-  **--tidy** is given on its own.
+Subcommands
+-----------
+
+- **add** [**-a** | **--autotag**] _deps_ ...:
+  Adds one or more dependencies to the bundle's __info file__. Each dependency
+  can be specified by a URL or a JDN struct/table. A struct/table must contain
+  the ``:name`` and ``:url`` keys. A dependency that cannot be resolved to a URL
+  is an error. A dependency that is already listed is skipped.
+
+- **edit** [**-a** | **--autotag**] _dep_ [_key_ _value_] ...:
+  Edits a single dependency in the bundle's __info file__. The dependency can be
+  specified by its name or its URL and must already be listed.
+
+  Each _key_ is a keyword and each _value_ is any JDN value. Each pair is set on
+  the dependency: a _key_ that is already present has its _value_ replaced and a
+  _key_ that is absent is added. Keys that are not named are left untouched and
+  a _value_ of ``nil`` removes the _key_. If the dependency is listed as a bare
+  name, it is converted into a struct.
+
+- **rem** _deps_ ...:
+  Removes one or more dependencies from the bundle's __info file__. Each
+  dependency can be specified by its name or its URL.
+
+- **tidy**:
+  Sorts the bundle's dependencies by name. Comments and blank lines in the
+  __info file__ are preserved.
+
+The **--autotag** option, available on **add** and **edit**, sets the
+``:tag`` key of each dependency to the SHA of the current commit of the
+dependency's repository. The dependency must have a ``:url`` key for this to be
+possible.
 
 Vendoring
 ---------
 
 A bundle's __info file__ can contain dependency information in an array/tuple
 mapped to the ``:dependencies`` key. By default, dependencies that are added,
-updated or removed using **jeep-dep** are added to, updated in or removed from
+edited or removed using **jeep-dep** are added to, edited in or removed from
 this data structure. Dependencies that are listed in this data structure are
 installed into the __syspath__. This will either be the global syspath or
 `./_system`, the local syspath, if the user is using the **--local** flag as
@@ -72,15 +89,15 @@ To avoid version conflicts, a user may prefer to vendor dependencies.
 **jeep-dep** supports this with the **--vendor** option. Vendored dependencies
 are listed in an array/tuple under the ``:vendored`` keyword.
 
-A vendored dependency is similar to an ordinary dependency. That is, it can be
-a shortname (e.g. "example") or a struct/table. If it is a struct/table, it
-must contain the ``:name`` and ``:url`` keys. It can also include the ``:tag``,
-``:prefix``, and ``:paths`` keys. If the ``:paths`` key is present, a vendored
-dependency will be fetched from the specified URL and the values used to copy
-files into the bundle. If the values are strings, the relative path of the
-source file matches the relative path of the destination file. However, if the
-value is a two-element array/tuple, the file located at the path in the first
-value will be copied to the path in the second value. See `<EXAMPLES>` below.
+A vendored dependency is similar to an ordinary dependency. That is, it is a
+struct/table containing the ``:name`` and ``:url`` keys. It can also include the
+``:tag``, ``:prefix``, and ``:paths`` keys. If the ``:paths`` key is present, a
+vendored dependency will be fetched from the specified URL and the values used
+to copy files into the bundle. If the values are strings, the relative path of
+the source file matches the relative path of the destination file. However, if
+the value is a two-element array/tuple, the file located at the path in the
+first value will be copied to the path in the second value. See `<EXAMPLES>`
+below.
 
 For more information about the __info file__, the __bundle script__ and the
 __syspath__, see CONCEPTS in `jeep(1)`.
@@ -91,41 +108,54 @@ EXAMPLES
 To add a dependency to the __info file__:
 
 ````
-$ jeep dep https://example.org/foo.git
+$ jeep dep add https://example.org/foo.git
 ````
 
-To update a dependency in the __info file__ with the SHA of the current commit:
+To edit a dependency in the __info file__ so it has the SHA of the current
+commit:
 
 ````
-$ jeep dep -a -u foo
+$ jeep dep edit -a foo
 ````
 
 To remove a dependency from the __info file__:
 
 ````
-$ jeep dep -r foo
+$ jeep dep rem foo
 ````
 
 To sort the dependencies in the __info file__ by name:
 
 ````
-$ jeep dep --tidy
+$ jeep dep tidy
 ````
 
 To add two dependencies that will be vendored:
 
 ````
-$ jeep dep --vendor https://example.org/foo.git https://example.org/bar.git
+$ jeep dep -v add https://example.org/foo.git https://example.org/bar.git
 ````
 
 To add a vendored dependency that will selectively copy files:
 
 ````
-$ jeep dep --vendor '{:name "foo" \
-                      :url "https://example.org/foo" \
-                      :prefix "deps" \
-                      :paths [["a.janet" "b.janet"] \
-                              ["c.janet" "c/init.janet"]]}'
+$ jeep dep -v add '{:name "foo" \
+                    :url "https://example.org/foo" \
+                    :prefix "deps" \
+                    :paths [["a.janet" "b.janet"] \
+                            ["c.janet" "c/init.janet"]]}'
+````
+
+To set a key on a vendored dependency:
+
+````
+$ jeep dep -v edit foo :prefix '"deps/foo"'
+````
+
+To remove a key from a vendored dependency:
+
+````
+$ jeep dep -v edit foo :prefix nil
 ````
 
 BUGS
