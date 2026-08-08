@@ -391,6 +391,22 @@
   (is (== (string "no dependencies matched" nl confirmation) out))
   (is (empty? err)))
 
+(deftest prep-rejects-unknown-profile
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test"))
+      (os/cd path)
+      # the profile is checked even when no deps are being installed, since it
+      # is passed to the prep hook either way
+      (def args {:sub {:params {:profile "bogus"}
+                       :opts {"no-deps" true}}})
+      (assert-thrown-message `unknown profile "bogus"` (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
 (deftest prep-build-profile-rejects-labels
   (def out @"")
   (def err @"")

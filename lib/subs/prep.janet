@@ -52,6 +52,7 @@
    :info {:about (get helps :about)}
    :help (get helps :help)})
 
+(def- profiles ["system" "build" "vendor"])
 (def- bundle-dir "bundle")
 (def- this-file (os/realpath (dyn :current-file)))
 
@@ -135,7 +136,10 @@
   [args &opt jeep-config]
   jeep-config # TODO: Add support for configuring via existing file
   (def info (util/load-meta "."))
-  (def profile (get-in args [:sub :params :profile]))
+  # the profile is checked before any work, and whether or not deps are being
+  # installed, because it is also passed to the prep hook
+  (def profile (get-in args [:sub :params :profile] "system"))
+  (assertf (has-value? profiles profile) "unknown profile %n" profile)
   (def opts (get-in args [:sub :opts]))
   (def no-deps? (get opts "no-deps"))
   (def no-hook? (get opts "no-hook"))

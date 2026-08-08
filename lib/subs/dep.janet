@@ -174,6 +174,7 @@
     (def new (array/peek to-add))
     (def new-name (if (dictionary? new) (get new :name) new))
     (assertf (string? new-name) "dependency %n requires :name to be a string" new)
+    (assertf (not (empty? new-name)) "dependency %n requires :name to be set" new)
     (when (name-index listed new-name)
       (print "skipping " new-name ", use 'jeep dep edit' to edit existing dependencies")
       (array/pop to-add)))
@@ -197,11 +198,17 @@
       (array/push to-rem d)))
   (def positions @{})
   (each d to-rem
-    (set changed? true)
-    (print "removing " (if (dictionary? d) (get d :name) d) "...")
+    # a dep that matches nothing is not a change, so it is reported as skipped
+    (def found @[])
     (eachp [i x] listed
       (when (or (= x d) (= (get x :name) d))
-        (put positions i true))))
+        (array/push found i)))
+    (if (empty? found)
+      (print "skipping " d ", not listed")
+      (do
+        (set changed? true)
+        (print "removing " d "...")
+        (each i found (put positions i true)))))
   (var result jdn)
   (var i (dec (length listed)))
   (while (>= i 0)
@@ -251,6 +258,7 @@
     (when (= :name k)
       (assert (not (nil? v)) "cannot remove the :name key")
       (assert (string? v) "the :name key must be a string")
+      (assert (not (empty? v)) "the :name key must not be empty")
       (def other (name-index listed v))
       (assertf (or (nil? other) (= pos other))
                "dependency %s is already listed" v)))

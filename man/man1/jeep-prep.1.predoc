@@ -52,7 +52,8 @@ Options
   not installed.
 
 - _profile_:
-  Specifies one of the following profiles to use:
+  Specifies one of the following profiles to use. Any other value is an error,
+  which is reported whether or not dependencies are being installed:
 
   - ***system***:
     By default, **jeep-prep** will use the ***system*** profile. This installs

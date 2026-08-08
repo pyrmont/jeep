@@ -256,6 +256,20 @@
   (is (empty? out))
   (is (empty? err)))
 
+(deftest error-on-setting-name-to-empty-string
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (def args {:sub {:params {:kvs [":name" `""`]}}})
+      (assert-thrown-message "the :name key must not be empty"
+                             (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
 (deftest error-on-odd-number-of-values
   (def out @"")
   (def err @"")

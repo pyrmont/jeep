@@ -214,6 +214,97 @@
       (is (== (h/add-nl expect-out) out))
       (is (empty? err)))))
 
+(deftest remove-skips-unlisted-dependency
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "."
+                               :name "test1"
+                               :dependencies ["testament" "spork"]))
+      (os/cd path)
+      (def args {:sub {:sub {:cmd "rem"
+                             :params {:deps ["testament" "nosuchdep"]}}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :dependencies ["spork"]}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        removing testament...
+        skipping nosuchdep, not listed
+        Dependencies changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
+(deftest remove-reports-no-change-when-nothing-matches
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "."
+                               :name "test1"
+                               :dependencies ["spork"]))
+      (os/cd path)
+      (def args {:sub {:sub {:cmd "rem"
+                             :params {:deps ["nosuchdep"]}}}})
+      (subcmd/run args)
+      (def actual (h/info-file path))
+      (def expect
+        ```
+        @{:name "test1"
+          :dependencies ["spork"]}
+        ```)
+      (is (== expect actual))
+      (def expect-out
+        ```
+        skipping nosuchdep, not listed
+        No dependencies changed.
+        ```)
+      (is (== (h/add-nl expect-out) out))
+      (is (empty? err)))))
+
+(deftest error-on-editing-name-to-empty-string
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "."
+                               :name "test1"
+                               :dependencies ["testament"]))
+      (os/cd path)
+      (def args {:sub {:sub {:cmd "edit"
+                             :params {:dep "testament"
+                                      :data [":name" `""`]}}}})
+      (assert-thrown-message "the :name key must not be empty"
+                             (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
+(deftest error-on-adding-empty-name
+  (def out @"")
+  (def err @"")
+  (with-dyns [:out out
+              :err err]
+    (h/in-dir _
+      (def path (h/make-bundle "." :name "test1"))
+      (os/cd path)
+      (def args {:sub {:sub {:cmd "add"
+                             :params {:deps [`{:name "" :url "https://example.org/foo"}`]}}}})
+      (assert-thrown-message
+        `dependency {:name "" :url "https://example.org/foo"} requires :name to be set`
+        (subcmd/run args))))
+  (is (empty? out))
+  (is (empty? err)))
+
 (deftest edit-converts-bare-name-to-struct
   (def out @"")
   (def err @"")

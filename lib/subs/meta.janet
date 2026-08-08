@@ -26,7 +26,8 @@
   (each [k v] pairs
     (when (= :name k)
       (assert (not (nil? v)) "cannot remove the :name key")
-      (assert (string? v) "the :name key must be a string")))
+      (assert (string? v) "the :name key must be a string")
+      (assert (not (empty? v)) "the :name key must not be empty")))
   (var result jdn)
   (each [k v] pairs
     (if (nil? v)
