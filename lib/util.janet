@@ -373,6 +373,46 @@
         (exec :git nil "-C" dir "checkout" tag))))
   dir)
 
+(defn- dir-listing
+  ```
+  Summarises the entries in `dir` for use in an error message
+  ```
+  [dir]
+  # .git is an artefact of the clone, not something a dependency can vendor
+  (def entries (sort (filter (fn :vendorable? [e] (not= ".git" e)) (os/dir dir))))
+  (def total 10)
+  (cond
+    (empty? entries)
+    "is empty"
+    (> (length entries) total)
+    (string "contains " (string/join (slice entries 0 total) ", ") ", ...")
+    # default
+    (string "contains " (string/join entries ", "))))
+
+(defn- missing-path-error
+  ```
+  Creates the message for a `:paths` entry that is not in the fetched source
+
+  The components of `src` are walked down from `src-dir` so that the message
+  names the deepest directory that does exist and what that directory holds.
+  `rev` is the revision the source was fetched at, or nil if the dependency was
+  not fetched from a revision.
+  ```
+  [src-dir src &opt rev]
+  (var dir src-dir)
+  (def found @[])
+  (each part (apart src true)
+    (def subdir (string dir psep part))
+    (unless (= :directory (os/stat subdir :mode))
+      (break))
+    (set dir subdir)
+    (array/push found part))
+  (def at (if rev (string " at " rev) ""))
+  (def where (if (empty? found)
+               "the top level"
+               (describe (string/join found psep))))
+  (string/format "no path %v%s; %s %s" src at where (dir-listing dir)))
+
 (defn fetch-dep
   [dep &opt parent-dir]
   (def {:name name
@@ -413,6 +453,13 @@
         (each f files
           (def [src dest] (if (indexed? f) f [f f]))
           (def full-src (string src-dir psep src))
+          # lstat rather than stat: a dangling symlink is still copyable
+          # (on Windows lstat is stat, which needs the trailing separator gone)
+          (def stat-src (if (string/has-suffix? psep full-src)
+                          (string/slice full-src 0 -2)
+                          full-src))
+          (when (nil? (os/lstat stat-src :mode))
+            (error (missing-path-error src-dir src (unless local? (or tag "HEAD")))))
           # use POSIX path separators to match info file
           (def posix-to (string dest-dir psep dest))
           (if (string/has-suffix? psep posix-to)
@@ -425,7 +472,9 @@
               full-src))
           (def from (to-plat posix-from))
           (def to (to-plat posix-to))
-          (print "  copying " from " to " to)
+          # the source is reported relative to the dependency: the absolute path
+          # is a temporary directory that means nothing to the user
+          (print "  copying " (to-plat src) " to " to)
           (copy from to)))
       ([e f]
        (def ident (if name (string name " (" url ")") url))

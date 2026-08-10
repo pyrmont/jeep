@@ -168,7 +168,7 @@
             "refer to the man page for more information" nl
             "warning: use of :files is deprecated in vendored dependencies" nl
             "vendoring " origin nl
-            "  copying " origin h/sep "lib" h/sep ". to deps" h/sep "example" h/sep "lib" nl
+            "  copying lib to deps" h/sep "example" h/sep "lib" nl
             confirmation))
   (is (== expect-out out))
   (is (empty? err)))
@@ -196,7 +196,7 @@
   (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example-1"))
   (def expect-out
     (string "vendoring " origin nl
-            "  copying " origin h/sep "lib" h/sep ". to deps" h/sep "example" h/sep "lib" nl
+            "  copying lib to deps" h/sep "example" h/sep "lib" nl
             confirmation))
   (is (== expect-out out))
   (is (empty? err)))
@@ -225,8 +225,8 @@
   (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example-1"))
   (def expect-out
     (string "vendoring " origin nl
-            "  copying " origin h/sep "lib" h/sep "mod1.janet to deps" h/sep "example" h/sep "foo" h/sep nl
-            "  copying " origin h/sep "lib" h/sep "mod2.janet to deps" h/sep "example" h/sep "foo" h/sep "mod2.janet" nl
+            "  copying lib" h/sep "mod1.janet to deps" h/sep "example" h/sep "foo" h/sep nl
+            "  copying lib" h/sep "mod2.janet to deps" h/sep "example" h/sep "foo" h/sep "mod2.janet" nl
             confirmation))
   (is (== expect-out out))
   (is (empty? err)))
@@ -253,7 +253,7 @@
   (def origin (string ".." h/sep ".." h/sep "res" h/sep "fixtures" h/sep "example-1"))
   (def expect-out
     (string "vendoring " origin nl
-            "  copying " origin h/sep "lib" h/sep ". to ." h/sep "lib" nl
+            "  copying lib to ." h/sep "lib" nl
             confirmation))
   (is (== expect-out out))
   (is (empty? err)))

@@ -152,6 +152,30 @@
       (assert-thrown-message msg (util/fetch-dep dep))))
   (is (== "vendoring .\n" out)))
 
+(deftest fetch-dep-reports-a-path-missing-from-the-top-level
+  (h/in-dir _
+    (os/mkdir "example")
+    (os/mkdir (string "example" sep "src"))
+    (spit (string "example" sep "LICENSE") "")
+    (def dep {:name "example" :url "file::example" :paths ["inc"]})
+    (def msg
+      (string "failed to vendor example (file::example): no path \"inc\"; "
+              "the top level contains LICENSE, src"))
+    (with-dyns [:out @""]
+      (assert-thrown-message msg (util/fetch-dep dep)))))
+
+(deftest fetch-dep-reports-a-path-missing-from-a-subdirectory
+  (h/in-dir _
+    (os/mkdir "example")
+    (os/mkdir (string "example" sep "src"))
+    (spit (string "example" sep "src" sep "mod.janet") "")
+    (def dep {:name "example" :url "file::example" :paths ["src/nope.c"]})
+    (def msg
+      (string "failed to vendor example (file::example): no path \"src/nope.c\"; "
+              "\"src\" contains mod.janet"))
+    (with-dyns [:out @""]
+      (assert-thrown-message msg (util/fetch-dep dep)))))
+
 (deftest with-fallback-returns-first-success
   (def thunk (fn [u] (string "got " u)))
   (is (== "got x" (util/with-fallback "x" thunk))))
